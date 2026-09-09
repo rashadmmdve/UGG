@@ -39,3 +39,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# База данных — содержит персональные данные покупателей и хеши паролей
+/data/*.db
+/data/*.db-shm
+/data/*.db-wal
+
+# Фотографии товаров, загруженные через админку
+/public/uploads/*
+!/public/uploads/.gitkeep
+
+# Пример переменных окружения коммитим, реальные значения — нет
+!.env.example

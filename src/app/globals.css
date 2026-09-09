@@ -1,1 +1,140 @@
 @import "tailwindcss";
+
+/**
+ * Оформление витрины.
+ *
+ * Пропорции и ритм взяты из шаблона ChawkBazar, палитра — своя, под товар:
+ * тёплая песочно-коричневая гамма вокруг фирменного оттенка chestnut,
+ * в котором выпускается большая часть моделей.
+ *
+ * Витрина живёт только в светлой теме — это осознанное решение: обувь
+ * снимается на светлом фоне, и тёмный вариант потребовал бы второго
+ * комплекта фотографий.
+ */
+
+:root {
+  /* Поверхности */
+  --bg: #ffffff;
+  --bg-sand: #faf7f3;
+  --bg-elevated: #f4efe9;
+
+  /* Текст */
+  --fg: #1f1a16;
+  --muted: #7c7168;
+
+  /* Линии */
+  --line: #e5ddd3;
+  --line-strong: #c9bcae;
+
+  /* Акценты */
+  --accent: #a05c33;
+  --accent-hover: #8a4d29;
+  --accent-soft: #f0e2d6;
+
+  /* Состояния */
+  --danger: #b3261e;
+  --success: #1e7a3c;
+  --sale: #c0392b;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-sand: var(--bg-sand);
+  --color-elevated: var(--bg-elevated);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+  --color-sale: var(--sale);
+
+  --font-sans: var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+@layer base {
+  body {
+    background-color: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    /* Базовый кегль 16px — как в исходном шаблоне. */
+    font-size: 1rem;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Tailwind 4 сбрасывает курсор у кнопок — возвращаем ожидаемое поведение. */
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  ::selection {
+    background-color: var(--accent-soft);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* Горизонтальные поля страницы. Максимальной ширины намеренно нет:
+     сетка товаров должна использовать широкие мониторы полностью. */
+  .container-page {
+    width: 100%;
+    padding-inline: 1rem;
+  }
+
+  @media (min-width: 768px) {
+    .container-page {
+      padding-inline: 2rem;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .container-page {
+      padding-inline: 3.5rem;
+    }
+  }
+
+  /* Заголовок раздела: 30px/700 из шаблона, но с плавным уменьшением
+     на узких экранах. */
+  .heading-section {
+    font-size: clamp(1.5rem, 4vw, 1.875rem);
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+
+  .label-caps {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
