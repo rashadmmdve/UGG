@@ -23,8 +23,8 @@ const nextConfig: NextConfig = {
      * изображений, а выигрыш для фотографий обуви незначительный.
      */
     formats: ["image/webp"],
-    /** Фотографии товаров, загруженные через админку. */
-    localPatterns: [{ pathname: "/uploads/**" }],
+    /** Фотографии товаров из админки и фирменные изображения. */
+    localPatterns: [{ pathname: "/uploads/**" }, { pathname: "/brand/**" }],
   },
 
   /**

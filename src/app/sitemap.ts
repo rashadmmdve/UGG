@@ -9,6 +9,7 @@ import {
   getPublishedProducts,
 } from "@/server/repositories/catalog";
 import { getPublishedArticles } from "@/server/repositories/articles";
+import { getContent } from "@/server/repositories/settings";
 import { getPublishedLandings, isLandingIndexable } from "@/server/repositories/seo";
 import { availableCount, filterByFacet } from "@/server/catalog/facets";
 
@@ -30,6 +31,8 @@ export async function generateSitemaps() {
 
 /** Статические страницы: главная, информационные, справочные. */
 function staticSitemap(): MetadataRoute.Sitemap {
+  const legal = getContent().legal;
+
   const pages = [
     { path: "", changeFrequency: "daily" as const, priority: 1 },
     { path: "/catalog", changeFrequency: "daily" as const, priority: 0.9 },
@@ -41,9 +44,15 @@ function staticSitemap(): MetadataRoute.Sitemap {
     { path: "/obmen-i-vozvrat", changeFrequency: "monthly" as const, priority: 0.6 },
     { path: "/o-magazine", changeFrequency: "monthly" as const, priority: 0.5 },
     { path: "/kontakty", changeFrequency: "monthly" as const, priority: 0.5 },
-    { path: "/oferta", changeFrequency: "yearly" as const, priority: 0.3 },
-    { path: "/politika-konfidentsialnosti", changeFrequency: "yearly" as const, priority: 0.3 },
     { path: "/articles", changeFrequency: "weekly" as const, priority: 0.7 },
+    // Юридические страницы попадают в карту, только когда заполнены —
+    // пустые отдаются с noindex.
+    ...(legal.oferta
+      ? [{ path: "/oferta", changeFrequency: "yearly" as const, priority: 0.3 }]
+      : []),
+    ...(legal.privacy
+      ? [{ path: "/politika-konfidentsialnosti", changeFrequency: "yearly" as const, priority: 0.3 }]
+      : []),
   ];
 
   return pages.map((page) => ({

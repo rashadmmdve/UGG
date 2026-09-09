@@ -117,6 +117,21 @@ export function ContentForm({ content }: { content: SiteContent }) {
         </ul>
       </section>
 
+      <section className="rounded-lg border border-line bg-bg p-5">
+        <h2 className="font-semibold">Юридические документы</h2>
+        <p className="mt-1 text-xs text-muted">
+          Пока поле пустое, страница закрыта от индексации и показывает заглушку.
+          Тексты согласуйте с юристом: оферта — это договор с покупателем,
+          политика — требование 152-ФЗ.
+        </p>
+        <div className="mt-4 grid gap-4">
+          <ATextarea id="legalOferta" name="legalOferta" label="Публичная оферта"
+            defaultValue={content.legal.oferta} rows={12} hint="HTML-разметка: <h2>, <p>, <ol>" />
+          <ATextarea id="legalPrivacy" name="legalPrivacy" label="Политика конфиденциальности"
+            defaultValue={content.legal.privacy} rows={12} hint="HTML-разметка: <h2>, <p>, <ol>" />
+        </div>
+      </section>
+
       <div className="flex justify-end">
         <SubmitButton>Сохранить</SubmitButton>
       </div>

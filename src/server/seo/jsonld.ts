@@ -32,6 +32,9 @@ export function organizationLd(): Json {
     "@id": `${SITE_URL}/#organization`,
     name: SITE_NAME,
     url: SITE_URL,
+    // По этому полю Яндекс и Google берут знак для карточки организации.
+    logo: `${SITE_URL}/brand/ugg-logo.png`,
+    image: `${SITE_URL}/brand/ugg-logo.png`,
     ...(contacts.phone
       ? {
           contactPoint: {

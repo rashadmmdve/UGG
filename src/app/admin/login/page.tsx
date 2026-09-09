@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { LoginForm } from "@/components/admin/LoginForm";
-import { SITE_NAME } from "@/lib/constants";
+import { Logo } from "@/components/Logo";
 import { getCurrentAdmin } from "@/server/auth/session";
 
 /**
@@ -18,8 +18,8 @@ export default async function AdminLoginPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-sand px-4">
       <div className="w-full max-w-sm rounded-lg border border-line bg-bg p-8">
-        <p className="label-caps">{SITE_NAME}</p>
-        <h1 className="mt-2 text-xl font-bold">Панель управления</h1>
+        <Logo width={120} href={null} eager />
+        <h1 className="mt-4 text-xl font-bold">Панель управления</h1>
         <p className="mt-1 text-sm text-muted">
           Вход только для сотрудников магазина.
         </p>

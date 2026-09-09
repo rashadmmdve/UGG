@@ -96,6 +96,10 @@ export async function saveContentAction(
       ogrn,
     },
     faq,
+    legal: {
+      oferta: text(formData, "legalOferta"),
+      privacy: text(formData, "legalPrivacy"),
+    },
   };
 
   saveContent(content);

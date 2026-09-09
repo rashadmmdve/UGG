@@ -37,6 +37,15 @@ export function formatPrice(value: number): string {
   return `${value.toLocaleString("ru-RU")} ₽`;
 }
 
+/** Дата для покупателя: «9 сентября 2026». */
+export function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("ru-RU", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
 /** Склонение существительного после числа: 1 товар, 2 товара, 5 товаров. */
 export function plural(
   count: number,

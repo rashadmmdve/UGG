@@ -29,6 +29,16 @@ export function catalogCrumbs(): Crumb[] {
   return [HOME, { ...CATALOG, url: null }];
 }
 
+/** Информационная страница первого уровня: Главная → Заголовок. */
+export function pageCrumbs(title: string): Crumb[] {
+  return [HOME, { title, url: null }];
+}
+
+/** Статья: Главная → Статьи → Заголовок. */
+export function articleCrumbs(title: string): Crumb[] {
+  return [HOME, { title: "Статьи", url: `${SITE_URL}/articles` }, { title, url: null }];
+}
+
 export function sectionCrumbs(sectionSlug: string): Crumb[] {
   return [HOME, CATALOG, { title: sectionTitle(sectionSlug), url: null }];
 }

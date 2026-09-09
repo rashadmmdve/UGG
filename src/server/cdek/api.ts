@@ -243,7 +243,15 @@ export async function createCdekOrder(
       number: order.number,
       tariff_code: order.delivery.mode === "pvz" ? TARIFF_TO_PVZ : TARIFF_TO_DOOR,
       comment: order.comment || undefined,
-      shipment_point: logistics.shipmentPointCode || undefined,
+      /**
+       * Откуда забирают посылку. СДЭК требует одно из двух — иначе
+       * отклоняет заказ с «[shipment_point] is empty, [from_location] is
+       * empty». Пункт приёма задаётся в админке; пока он не выбран,
+       * подставляем город отправления, как это делает расчёт тарифа.
+       */
+      ...(logistics.shipmentPointCode
+        ? { shipment_point: logistics.shipmentPointCode }
+        : { from_location: { code: logistics.fromCityCode } }),
       // Для ПВЗ адрес не нужен — он определяется кодом пункта.
       delivery_point:
         order.delivery.mode === "pvz"

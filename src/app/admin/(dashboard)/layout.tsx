@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { AdminNav } from "@/components/admin/AdminNav";
-import { SITE_NAME } from "@/lib/constants";
+import { Logo } from "@/components/Logo";
 import { requireAdmin } from "@/server/admin/guard";
 import { logoutAdminAction } from "@/server/auth/actions";
 
@@ -20,10 +20,12 @@ export default async function AdminDashboardLayout({
   return (
     <div className="flex min-h-screen bg-sand">
       <aside className="flex w-60 shrink-0 flex-col border-r border-line bg-bg px-3 py-5">
-        <Link href="/admin" className="px-3">
-          <span className="label-caps">{SITE_NAME}</span>
-          <span className="block text-sm font-semibold">Панель управления</span>
-        </Link>
+        <div className="px-3">
+          <Logo width={96} href="/admin" eager />
+          <span className="mt-1 block text-xs font-medium text-muted">
+            Панель управления
+          </span>
+        </div>
 
         <div className="mt-6 flex-1 overflow-y-auto">
           <AdminNav />

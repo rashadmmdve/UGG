@@ -73,6 +73,15 @@ export type SiteContent = {
     ogrn: string;
   };
   faq: { question: string; answer: string }[];
+  /**
+   * Юридические тексты. Пустые — страницы отдаются с noindex и заглушкой:
+   * индексировать «текст будет позже» нельзя, а публиковать без
+   * согласования с юристом — тем более.
+   */
+  legal: {
+    oferta: string;
+    privacy: string;
+  };
 };
 
 const DEFAULT_CONTENT: SiteContent = {
@@ -91,6 +100,7 @@ const DEFAULT_CONTENT: SiteContent = {
     ogrn: "",
   },
   faq: [],
+  legal: { oferta: "", privacy: "" },
 };
 
 export const getContent = cache((): SiteContent =>
