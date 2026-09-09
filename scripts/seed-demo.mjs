@@ -33,8 +33,10 @@ if (clear) {
       "DELETE FROM seo_landings WHERE section_slug = 'zhenskie' AND category_slug = 'classic-mini' AND facet_slug = 'chernye'",
     )
     .run();
+  const orders = db.prepare("DELETE FROM orders WHERE id LIKE 'demo-%'").run();
   console.log(`Удалено демо-товаров: ${products.changes}`);
   console.log(`Удалено демо-посадочных: ${landings.changes}`);
+  console.log(`Удалено демо-заказов: ${orders.changes}`);
   db.close();
   process.exit(0);
 }
@@ -263,6 +265,61 @@ if (!landingExists) {
     now,
   );
   console.log("Демо-посадочная создана: /catalog/zhenskie/classic-mini/chernye");
+}
+
+// ─── Демо-заказ ──────────────────────────────────────────────────────────────
+// Нужен, чтобы посмотреть страницу заказа в админке до появления оформления.
+// Остатки не списывает: это иллюстрация, а не покупка.
+if (!db.prepare("SELECT id FROM orders WHERE id = 'demo-order-1'").get()) {
+  const chestnut = db
+    .prepare("SELECT p.id, p.slug, p.title, p.price, p.images, v.id AS vid, v.size_eu FROM products p JOIN product_variants v ON v.product_id = p.id WHERE p.slug = 'demo-classic-mini-chestnut' AND v.size_eu = 38")
+    .get();
+  const tasman = db
+    .prepare("SELECT p.id, p.slug, p.title, p.price, p.images, v.id AS vid, v.size_eu FROM products p JOIN product_variants v ON v.product_id = p.id WHERE p.slug = 'demo-tasman-chestnut' AND v.size_eu = 38")
+    .get();
+
+  if (chestnut && tasman) {
+    const items = [chestnut, tasman].map((row) => ({
+      productId: row.id,
+      variantId: row.vid,
+      title: row.title,
+      slug: row.slug,
+      sizeEu: row.size_eu,
+      image: JSON.parse(row.images)[0] ?? null,
+      price: row.price,
+      quantity: 1,
+    }));
+    const subtotal = items.reduce((sum, item) => sum + item.price, 0);
+    const deliveryPrice = 350;
+
+    db.prepare(
+      `INSERT INTO orders
+         (id, number, user_id, customer, delivery, comment, items, subtotal, discount,
+          delivery_price, package_weight, total, promocode, status, payment_status, cdek,
+          created_at, updated_at)
+       VALUES ('demo-order-1', 'UG-DEMO1', NULL, ?, ?, ?, ?, ?, 0, ?, 1800, ?, NULL,
+               'new', 'unpaid', NULL, ?, ?)`,
+    ).run(
+      JSON.stringify({ name: "Анна Демидова", email: "demo@example.com", phone: "+7 900 000-00-00" }),
+      JSON.stringify({
+        mode: "pvz",
+        cityCode: 44,
+        city: "Москва",
+        address: "ул. Тверская, 1",
+        pointCode: "MSK123",
+        periodMin: 2,
+        periodMax: 4,
+      }),
+      "Позвоните перед доставкой, пожалуйста.",
+      JSON.stringify(items),
+      subtotal,
+      deliveryPrice,
+      subtotal + deliveryPrice,
+      now,
+      now,
+    );
+    console.log("Демо-заказ создан: /admin/orders/demo-order-1");
+  }
 }
 
 console.log(`Демо-товаров создано: ${created}`);
