@@ -107,6 +107,24 @@ export function CatalogGrid({
     startTransition(() => setFilters(filtersFromUrl()));
   }, []);
 
+  // Пока открыта шторка фильтров, страница под ней не прокручивается,
+  // а Escape её закрывает — этого ждут от любой модальной панели.
+  useEffect(() => {
+    if (!panelOpen) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setPanelOpen(false);
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [panelOpen]);
+
   /**
    * Применить фильтр и отразить его в адресной строке.
    *
@@ -384,35 +402,66 @@ export function CatalogGrid({
         )}
       </div>
 
-      {/* Фильтры на мобильном — шторка */}
-      {panelOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <button
-            type="button"
-            aria-label="Закрыть фильтры"
-            onClick={() => setPanelOpen(false)}
-            className="absolute inset-0 bg-fg/30"
-          />
-          <div className="absolute inset-y-0 left-0 flex w-80 max-w-full flex-col bg-bg">
-            <div className="flex items-center justify-between border-b border-line px-5 py-4">
-              <p className="font-semibold">Фильтры</p>
-              <button type="button" onClick={() => setPanelOpen(false)} aria-label="Закрыть">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto px-5">{panel}</div>
-            <div className="border-t border-line p-5">
-              <button
-                type="button"
-                onClick={() => setPanelOpen(false)}
-                className="h-11 w-full rounded-md bg-fg text-sm font-semibold text-bg"
-              >
-                Показать {filtered.length}
-              </button>
-            </div>
+      {/*
+        Фильтры на мобильном — шторка.
+
+        Разметка не размонтируется при закрытии: иначе панель появлялась бы
+        рывком, без анимации выезда. Видимость и доступность выключаются
+        через aria-hidden, inert и pointer-events.
+      */}
+      <div
+        aria-hidden={!panelOpen}
+        className={cn(
+          "fixed inset-0 z-50 lg:hidden",
+          !panelOpen && "pointer-events-none",
+        )}
+      >
+        <button
+          type="button"
+          aria-label="Закрыть фильтры"
+          tabIndex={panelOpen ? undefined : -1}
+          onClick={() => setPanelOpen(false)}
+          className={cn(
+            "absolute inset-0 bg-fg/30 transition-opacity duration-300",
+            panelOpen ? "opacity-100" : "opacity-0",
+          )}
+        />
+
+        <div
+          className={cn(
+            "absolute inset-y-0 left-0 flex w-80 max-w-full flex-col bg-bg transition-transform duration-300 ease-out",
+            panelOpen ? "translate-x-0" : "-translate-x-full",
+          )}
+          inert={!panelOpen}
+        >
+          {/* Та же высота, что у шапки сайта: иначе линия под заголовком
+              шторки не совпадает с линией под шапкой. */}
+          <div className="flex h-16 shrink-0 items-center justify-between border-b border-line px-5">
+            <p className="font-semibold">Фильтры</p>
+            <button
+              type="button"
+              onClick={() => setPanelOpen(false)}
+              aria-label="Закрыть"
+              className="-mr-2 flex h-10 w-10 items-center justify-center"
+            >
+              <X className="h-5 w-5" strokeWidth={1.6} />
+            </button>
+          </div>
+
+          {/* Нижний отступ — чтобы последний фильтр не упирался в кнопку. */}
+          <div className="flex-1 overflow-y-auto px-5 pb-4">{panel}</div>
+
+          <div className="shrink-0 border-t border-line px-5 py-4">
+            <button
+              type="button"
+              onClick={() => setPanelOpen(false)}
+              className="h-11 w-full rounded-md bg-accent text-sm font-semibold text-white transition-colors hover:bg-accent-hover"
+            >
+              Показать {filtered.length}
+            </button>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
