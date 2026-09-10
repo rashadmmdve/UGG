@@ -1,0 +1,32 @@
+# Служба сайта. Ставится deploy/setup.sh в /etc/systemd/system/.
+#
+# Next читает .env.local из рабочей папки сам, отдельно передавать
+# переменные не нужно. Порт 3000 слушает только localhost — наружу
+# смотрит Caddy.
+
+[Unit]
+Description=UGG shop (Next.js)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ugg
+Group=ugg
+WorkingDirectory=/srv/ugg/app
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=HOSTNAME=127.0.0.1
+ExecStart=/usr/bin/npm run start
+Restart=always
+RestartSec=5
+
+# Приложению не нужны ни запись в систему, ни новые права.
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=/srv/ugg/app/data /srv/ugg/app/public/uploads /srv/ugg/app/.next
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
