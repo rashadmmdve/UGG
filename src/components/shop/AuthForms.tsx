@@ -14,6 +14,11 @@ export function LoginForm() {
   return (
     <form action={action} noValidate className="flex flex-col gap-4">
       <FormMessage error={state.error} />
+      {state.action && (
+        <Link href={state.action.href} className="-mt-2 text-sm text-accent underline underline-offset-4">
+          {state.action.label}
+        </Link>
+      )}
       <AField id="login-email" name="email" type="email" label="Почта" autoComplete="email" error={state.fieldErrors?.email} />
       <AField id="login-password" name="password" type="password" label="Пароль" autoComplete="current-password" error={state.fieldErrors?.password} />
       <ACheckbox id="login-remember" name="remember" label="Запомнить меня" />
@@ -32,6 +37,11 @@ export function RegisterForm() {
   return (
     <form action={action} noValidate className="flex flex-col gap-4">
       <FormMessage error={state.error} />
+      {state.action && (
+        <Link href={state.action.href} className="-mt-2 text-sm text-accent underline underline-offset-4">
+          {state.action.label}
+        </Link>
+      )}
       <AField id="reg-name" name="name" label="Имя" autoComplete="name" error={state.fieldErrors?.name} />
       <AField id="reg-email" name="email" type="email" label="Почта" autoComplete="email" error={state.fieldErrors?.email} />
       <AField id="reg-phone" name="phone" type="tel" label="Телефон" autoComplete="tel" placeholder="+7 900 000-00-00" error={state.fieldErrors?.phone} />

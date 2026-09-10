@@ -8,9 +8,11 @@ import {
   quoteDelivery,
 } from "@/server/cdek/api";
 import { decreaseStock, getProductById } from "@/server/repositories/catalog";
+import { isMailEnabled, sendMail } from "@/server/mail/mailer";
+import { orderMail } from "@/server/mail/templates";
 import { startPayment } from "@/server/payments/flow";
 import { isYookassaEnabled } from "@/server/payments/yookassa";
-import { createOrder, patchOrder } from "@/server/repositories/orders";
+import { createOrder, getOrderById, patchOrder } from "@/server/repositories/orders";
 import {
   checkPromocode,
   getPromocodeByCode,
@@ -248,6 +250,15 @@ export async function submitOrder(input: unknown): Promise<CheckoutResult> {
   if (data.paymentMethod === "online") {
     const payment = await startPayment(order);
     if (payment.ok) paymentUrl = payment.url;
+  }
+
+  // Письмо покупателю — не критично: заказ уже есть, а сбой почты не
+  // должен показывать покупателю ошибку оформления.
+  if (isMailEnabled()) {
+    const fresh = getOrderById(order.id) ?? order;
+    sendMail(orderMail(fresh, paymentUrl)).catch((error) =>
+      console.error(`Не удалось отправить письмо о заказе ${order.number}:`, error),
+    );
   }
 
   return { ok: true, orderId: order.id, orderNumber: order.number, paymentUrl };

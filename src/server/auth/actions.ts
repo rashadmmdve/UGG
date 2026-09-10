@@ -10,6 +10,7 @@ import {
 } from "@/server/auth/rateLimit";
 import { hashPassword, verifyPassword } from "@/server/auth/password";
 import { createSession, destroySession } from "@/server/auth/session";
+import { isVerificationRequired, issueVerification } from "@/server/auth/verification";
 import {
   createUser,
   getUserByEmail,
@@ -17,6 +18,7 @@ import {
 } from "@/server/repositories/users";
 import { fieldErrorsFrom, type ActionState } from "@/server/validation/errors";
 import {
+  emailSchema,
   loginSchema,
   profileSchema,
   registerSchema,
@@ -90,6 +92,19 @@ export async function loginAction(
 
   resetAttempts(key);
 
+  // Покупатель без подтверждённой почты не входит: ссылка из письма —
+  // единственный способ доказать, что адрес его. Администраторов это
+  // не касается — их заводят вручную.
+  if (role === "customer" && !user.emailVerifiedAt && isVerificationRequired()) {
+    return {
+      error: "Почта ещё не подтверждена — откройте ссылку из письма.",
+      action: {
+        href: `/account/verify?email=${encodeURIComponent(user.email)}`,
+        label: "Отправить письмо ещё раз",
+      },
+    };
+  }
+
   const remember = formData.get("remember") === "on";
   await createSession(user.id, user.role, remember);
 
@@ -142,16 +157,74 @@ export async function registerAction(
     return { fieldErrors: { email: "Такая почта уже зарегистрирована" } };
   }
 
+  // Без настроенного SMTP письмо не уйдёт — тогда аккаунт активируется
+  // сразу, иначе регистрация была бы заперта.
+  const verify = isVerificationRequired();
+
   const user = createUser({
     email: parsed.data.email,
     passwordHash: await hashPassword(parsed.data.password),
     name: parsed.data.name,
     phone: parsed.data.phone,
     role: "customer",
+    emailVerified: !verify,
   });
 
-  await createSession(user.id, "customer", true);
-  redirect("/account");
+  if (!verify) {
+    await createSession(user.id, "customer", true);
+    redirect("/account");
+  }
+
+  try {
+    await issueVerification(user);
+  } catch (error) {
+    console.error(`Не удалось отправить письмо подтверждения на ${user.email}:`, error);
+    return {
+      error: "Аккаунт создан, но письмо отправить не удалось. Попробуйте запросить его ещё раз.",
+      action: {
+        href: `/account/verify?email=${encodeURIComponent(user.email)}`,
+        label: "Отправить письмо",
+      },
+    };
+  }
+
+  redirect(`/account/verify?email=${encodeURIComponent(user.email)}`);
+}
+
+/**
+ * Письмо подтверждения ещё раз.
+ *
+ * Ответ одинаковый для любой почты: по нему нельзя узнать, есть ли такой
+ * аккаунт. Счётчик попыток — тот же, что у входа: без него через форму
+ * можно было бы заваливать чужой ящик письмами.
+ */
+export async function resendVerificationAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const parsed = emailSchema.safeParse(formData.get("email"));
+  if (!parsed.success) {
+    return { fieldErrors: { email: "Укажите почту" } };
+  }
+
+  const key = await rateLimitKey(`resend:${parsed.data}`);
+  const limit = checkRateLimit(key);
+  if (!limit.allowed) {
+    return { error: `Слишком много запросов. Повторите через ${limit.retryAfterMinutes} мин.` };
+  }
+  registerFailedAttempt(key);
+
+  const user = getUserByEmail(parsed.data);
+  if (user && !user.emailVerifiedAt && isVerificationRequired()) {
+    try {
+      await issueVerification(user);
+    } catch (error) {
+      console.error(`Не удалось отправить письмо подтверждения на ${user.email}:`, error);
+      return { error: "Не удалось отправить письмо. Попробуйте через минуту." };
+    }
+  }
+
+  return { success: "Если такая почта зарегистрирована и ещё не подтверждена, письмо уже в пути." };
 }
 
 export async function updateProfileAction(

@@ -24,6 +24,7 @@ export function toPublicUser(user: User): PublicUser {
     phone: user.phone,
     role: user.role,
     createdAt: user.createdAt,
+    emailVerifiedAt: user.emailVerifiedAt,
   };
 }
 
@@ -54,7 +55,10 @@ export function createUser(input: {
   name: string;
   phone: string;
   role?: UserRole;
+  /** Сразу подтверждённый — для администраторов и режима без почты. */
+  emailVerified?: boolean;
 }): User {
+  const now = nowIso();
   const user: User = {
     id: nanoid(12),
     email: normalizeEmail(input.email),
@@ -62,13 +66,16 @@ export function createUser(input: {
     name: input.name,
     phone: input.phone,
     role: input.role ?? "customer",
-    createdAt: nowIso(),
+    createdAt: now,
+    emailVerifiedAt: input.emailVerified ? now : null,
+    verifyTokenHash: null,
+    verifyTokenExpiresAt: null,
   };
 
   getDb()
     .prepare(
-      `INSERT INTO users (id, email, password_hash, name, phone, role, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO users (id, email, password_hash, name, phone, role, created_at, email_verified_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .run(
       user.id,
@@ -78,9 +85,37 @@ export function createUser(input: {
       user.phone,
       user.role,
       user.createdAt,
+      user.emailVerifiedAt,
     );
 
   return user;
+}
+
+// ── Подтверждение почты ──
+
+export function setVerificationToken(id: string, tokenHash: string, expiresAt: string): void {
+  getDb()
+    .prepare("UPDATE users SET verify_token_hash = ?, verify_token_expires_at = ? WHERE id = ?")
+    .run(tokenHash, expiresAt, id);
+}
+
+export function getUserByVerificationToken(tokenHash: string): User | null {
+  const row = getDb()
+    .prepare("SELECT * FROM users WHERE verify_token_hash = ?")
+    .get(tokenHash) as UserRow | undefined;
+  return row ? mapUser(row) : null;
+}
+
+/** Почта подтверждена; ссылка сгорает, чтобы не сработать второй раз. */
+export function markEmailVerified(id: string): void {
+  getDb()
+    .prepare(
+      `UPDATE users
+       SET email_verified_at = COALESCE(email_verified_at, ?),
+           verify_token_hash = NULL, verify_token_expires_at = NULL
+       WHERE id = ?`,
+    )
+    .run(nowIso(), id);
 }
 
 /** Правка профиля. Роль и хеш пароля через этот путь не меняются. */

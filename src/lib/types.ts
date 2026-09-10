@@ -297,10 +297,15 @@ export type User = {
   phone: string;
   role: UserRole;
   createdAt: string;
+  /** Когда почта подтверждена по ссылке из письма; null — ещё нет. */
+  emailVerifiedAt: string | null;
+  /** Хеш живой ссылки подтверждения и её срок. */
+  verifyTokenHash: string | null;
+  verifyTokenExpiresAt: string | null;
 };
 
 /** Пользователь без секретов — то, что безопасно отдать в браузер. */
-export type PublicUser = Omit<User, "passwordHash">;
+export type PublicUser = Omit<User, "passwordHash" | "verifyTokenHash" | "verifyTokenExpiresAt">;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Заказы

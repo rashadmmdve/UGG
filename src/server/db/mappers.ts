@@ -367,6 +367,9 @@ export type UserRow = {
   phone: string;
   role: string;
   created_at: string;
+  email_verified_at: string | null;
+  verify_token_hash: string | null;
+  verify_token_expires_at: string | null;
 };
 
 export function mapUser(row: UserRow): User {
@@ -378,6 +381,9 @@ export function mapUser(row: UserRow): User {
     phone: row.phone,
     role: row.role === "admin" ? "admin" : "customer",
     createdAt: row.created_at,
+    emailVerifiedAt: row.email_verified_at ?? null,
+    verifyTokenHash: row.verify_token_hash ?? null,
+    verifyTokenExpiresAt: row.verify_token_expires_at ?? null,
   };
 }
 

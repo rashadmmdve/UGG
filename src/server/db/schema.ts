@@ -18,7 +18,7 @@ import type { Database } from "better-sqlite3";
  * IF NOT EXISTS. Версия схемы хранится в user_version — по ней будут
  * добавляться миграции, когда структура изменится.
  */
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3;
 
 function readDdl(): string {
   return fs.readFileSync(
@@ -35,6 +35,15 @@ export function applySchema(db: Database): void {
   // Миграции по возрастанию версии. CREATE TABLE IF NOT EXISTS новых
   // столбцов в существующую таблицу не добавит — для этого и нужны они.
   if (current < 2) addColumn(db, "orders", "payment_method", "TEXT NOT NULL DEFAULT 'on_delivery'");
+  if (current < 3) {
+    addColumn(db, "users", "email_verified_at", "TEXT");
+    addColumn(db, "users", "verify_token_hash", "TEXT");
+    addColumn(db, "users", "verify_token_expires_at", "TEXT");
+    // Кто зарегистрировался до подтверждения почты, тот считается
+    // подтверждённым — иначе все существующие аккаунты оказались бы заперты.
+    db.exec("UPDATE users SET email_verified_at = created_at WHERE email_verified_at IS NULL");
+    db.exec("CREATE INDEX IF NOT EXISTS idx_users_verify_token ON users(verify_token_hash)");
+  }
 
   if (current < SCHEMA_VERSION) {
     db.pragma(`user_version = ${SCHEMA_VERSION}`);

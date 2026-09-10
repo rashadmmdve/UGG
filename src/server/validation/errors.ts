@@ -10,6 +10,8 @@ export type ActionState = {
   error?: string;
   success?: string;
   fieldErrors?: Record<string, string>;
+  /** Что можно сделать с ошибкой — например, отправить письмо ещё раз. */
+  action?: { href: string; label: string };
 };
 
 export const DENIED: ActionState = { error: "Нет доступа" };
