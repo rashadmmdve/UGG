@@ -70,10 +70,7 @@ export function ProductCard({
         </p>
       </Link>
 
-      <FavoriteButton
-        productId={product.id}
-        className="absolute top-1 right-1 rounded-full bg-bg/80 backdrop-blur-sm"
-      />
+      <FavoriteButton productId={product.id} className="absolute top-2 right-2" />
     </article>
   );
 }

@@ -71,10 +71,7 @@ export function ProductGallery({
           </div>
         )}
 
-        <FavoriteButton
-          productId={productId}
-          className="absolute top-2 right-2 z-10 rounded-full bg-bg/80 backdrop-blur-sm"
-        />
+        <FavoriteButton productId={productId} className="absolute top-3 right-3 z-10" />
 
         {total > 1 && (
           <>
