@@ -69,4 +69,4 @@ if (existing) {
 }
 
 db.close();
-console.log("Вход в панель управления: /admin/login");
+console.log("Вход — на сайте: /account/login. Панель управления после входа: /admin");

@@ -27,7 +27,6 @@ import {
   registerSchema,
   resetPasswordSchema,
 } from "@/server/validation/schemas";
-import type { UserRole } from "@/lib/types";
 
 /**
  * Вход, регистрация и правка профиля.
@@ -54,8 +53,12 @@ async function rateLimitKey(email: string): Promise<string> {
   return `${ip}:${email}`;
 }
 
+/**
+ * Вход на сайт. Один для всех: владелец входит здесь же, а панель
+ * управления открывается ему потому, что в базе у него роль
+ * администратора, — отдельной страницы входа в панель нет.
+ */
 export async function loginAction(
-  role: UserRole,
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
@@ -87,19 +90,18 @@ export async function loginAction(
     ? await verifyPassword(user.passwordHash, parsed.data.password)
     : await verifyPassword("$argon2id$v=19$m=19456,t=2,p=1$aaaa$aaaa", "dummy");
 
-  // Формулировка одна на все случаи: неизвестная почта, неверный пароль и
-  // попытка войти в админку под обычной учётной записью выглядят одинаково.
-  if (!user || !valid || user.role !== role) {
+  // Формулировка одна на оба случая: неизвестная почта и неверный пароль
+  // выглядят одинаково.
+  if (!user || !valid) {
     registerFailedAttempt(key);
     return { error: "Неверная почта или пароль" };
   }
 
   resetAttempts(key);
 
-  // Покупатель без подтверждённой почты не входит: ссылка из письма —
-  // единственный способ доказать, что адрес его. Администраторов это
-  // не касается — их заводят вручную.
-  if (role === "customer" && !user.emailVerifiedAt && isVerificationRequired()) {
+  // Без подтверждённой почты входа нет: ссылка из письма — единственный
+  // способ доказать, что адрес его.
+  if (!user.emailVerifiedAt && isVerificationRequired()) {
     return {
       error: "Почта ещё не подтверждена — откройте ссылку из письма.",
       action: {
@@ -110,36 +112,15 @@ export async function loginAction(
   }
 
   const remember = formData.get("remember") === "on";
-  await createSession(user.id, user.role, remember);
+  await createSession(user.id, remember);
 
-  redirect(role === "admin" ? "/admin" : "/account");
+  redirect("/account");
 }
 
-export async function loginAdminAction(
-  prev: FormState,
-  formData: FormData,
-): Promise<FormState> {
-  return loginAction("admin", prev, formData);
-}
-
-export async function loginCustomerAction(
-  prev: FormState,
-  formData: FormData,
-): Promise<FormState> {
-  return loginAction("customer", prev, formData);
-}
-
-export async function logoutAction(role: UserRole): Promise<void> {
-  await destroySession(role);
-  redirect(role === "admin" ? "/admin/login" : "/");
-}
-
-export async function logoutAdminAction(): Promise<void> {
-  return logoutAction("admin");
-}
-
-export async function logoutCustomerAction(): Promise<void> {
-  return logoutAction("customer");
+/** Выход. Панель управления закрывается вместе с сессией сайта. */
+export async function logoutAction(): Promise<void> {
+  await destroySession();
+  redirect("/");
 }
 
 export async function registerAction(
@@ -175,7 +156,7 @@ export async function registerAction(
   });
 
   if (!verify) {
-    await createSession(user.id, "customer", true);
+    await createSession(user.id, true);
     redirect("/account");
   }
 
@@ -257,7 +238,7 @@ export async function requestPasswordResetAction(
   registerFailedAttempt(key);
 
   const user = getUserByEmail(parsed.data);
-  if (user && user.role === "customer") {
+  if (user) {
     try {
       await issuePasswordReset(user);
     } catch (error) {
@@ -294,7 +275,7 @@ export async function resetPasswordAction(
   }
 
   resetPassword(lookup.user.id, await hashPassword(parsed.data.password));
-  await createSession(lookup.user.id, "customer", true);
+  await createSession(lookup.user.id, true);
   redirect("/account");
 }
 

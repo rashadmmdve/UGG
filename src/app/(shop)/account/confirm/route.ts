@@ -20,6 +20,6 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${SITE_URL}/account/verify?error=${result.reason}`, 303);
   }
 
-  await createSession(result.user.id, "customer", true);
+  await createSession(result.user.id, true);
   return NextResponse.redirect(`${SITE_URL}/account?verified=1`, 303);
 }

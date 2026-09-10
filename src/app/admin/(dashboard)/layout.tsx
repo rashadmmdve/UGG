@@ -3,7 +3,7 @@ import Link from "next/link";
 import { AdminNav } from "@/components/admin/AdminNav";
 import { Logo } from "@/components/Logo";
 import { requireAdmin } from "@/server/admin/guard";
-import { logoutAdminAction } from "@/server/auth/actions";
+import { logoutAction } from "@/server/auth/actions";
 
 /**
  * Защищённая часть админки.
@@ -39,7 +39,7 @@ export default async function AdminDashboardLayout({
             <Link href="/" className="hover:text-accent" target="_blank">
               Открыть сайт
             </Link>
-            <form action={logoutAdminAction}>
+            <form action={logoutAction}>
               <button type="submit" className="hover:text-accent">
                 Выйти
               </button>

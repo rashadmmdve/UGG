@@ -4,12 +4,12 @@ import Link from "next/link";
 import { useActionState } from "react";
 
 import { ACheckbox, AField, FormMessage, SubmitButton } from "@/components/admin/ui";
-import { loginCustomerAction, registerAction, type FormState } from "@/server/auth/actions";
+import { loginAction, registerAction, type FormState } from "@/server/auth/actions";
 
 const EMPTY: FormState = {};
 
 export function LoginForm() {
-  const [state, action] = useActionState(loginCustomerAction, EMPTY);
+  const [state, action] = useActionState(loginAction, EMPTY);
 
   return (
     <form action={action} noValidate className="flex flex-col gap-4">

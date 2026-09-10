@@ -4,17 +4,22 @@ import { cookies } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
 
 import { getUserById, toPublicUser } from "@/server/repositories/users";
-import type { PublicUser, UserRole } from "@/lib/types";
+import type { PublicUser } from "@/lib/types";
 
 /**
- * Сессии на подписанном JWT в httpOnly-cookie.
+ * Сессия на подписанном JWT в httpOnly-cookie.
  *
- * Витрина и админка используют РАЗНЫЕ cookie: даже если клиентская сессия
- * утечёт, доступа к /admin она не даст.
+ * Вход на сайт один для всех: и покупатель, и владелец входят через
+ * /account/login. Отдельной страницы входа в панель управления нет —
+ * права даёт роль в базе, а не особая сессия. Роль читается из базы при
+ * каждом запросе, поэтому снятая роль закрывает доступ сразу, не
+ * дожидаясь, пока истечёт выданный токен.
  */
 
-const CUSTOMER_COOKIE = "ugg_session";
-const ADMIN_COOKIE = "ugg_admin";
+const SESSION_COOKIE = "ugg_session";
+
+/** Кука прежней, отдельной сессии админки — осталась, чтобы её стереть. */
+const LEGACY_ADMIN_COOKIE = "ugg_admin";
 
 // «Запомнить меня» — кука на 30 дней, переживает закрытие браузера.
 // Без галочки — обычная сессионная кука, а сам токен живёт сутки: если
@@ -35,40 +40,22 @@ function secret(): Uint8Array {
   return new TextEncoder().encode(value);
 }
 
-function cookieName(role: UserRole): string {
-  return role === "admin" ? ADMIN_COOKIE : CUSTOMER_COOKIE;
-}
-
-type SessionPayload = {
-  userId: string;
-  role: UserRole;
-};
-
-async function signSession(
-  payload: SessionPayload,
-  maxAgeSeconds: number,
-): Promise<string> {
-  return new SignJWT({ role: payload.role })
+async function signSession(userId: string, maxAgeSeconds: number): Promise<string> {
+  return new SignJWT({})
     .setProtectedHeader({ alg: "HS256" })
-    .setSubject(payload.userId)
+    .setSubject(userId)
     .setIssuedAt()
     .setExpirationTime(`${maxAgeSeconds}s`)
     .sign(secret());
 }
 
-async function readSession(token: string): Promise<SessionPayload | null> {
+async function readSession(token: string): Promise<string | null> {
   try {
     const { payload } = await jwtVerify(token, secret(), {
       algorithms: ["HS256"],
     });
 
-    const userId = payload.sub;
-    const role = payload.role;
-
-    if (typeof userId !== "string") return null;
-    if (role !== "customer" && role !== "admin") return null;
-
-    return { userId, role };
+    return typeof payload.sub === "string" ? payload.sub : null;
   } catch {
     // Просроченный или подделанный токен — просто «нет сессии».
     return null;
@@ -79,16 +66,12 @@ async function readSession(token: string): Promise<SessionPayload | null> {
  * @param remember «Запомнить меня». true — кука на 30 дней. false —
  * сессионная кука без maxAge плюс короткоживущий токен.
  */
-export async function createSession(
-  userId: string,
-  role: UserRole,
-  remember: boolean,
-): Promise<void> {
+export async function createSession(userId: string, remember: boolean): Promise<void> {
   const maxAge = remember ? REMEMBER_MAX_AGE_SECONDS : SESSION_MAX_AGE_SECONDS;
-  const token = await signSession({ userId, role }, maxAge);
+  const token = await signSession(userId, maxAge);
   const store = await cookies();
 
-  store.set(cookieName(role), token, {
+  store.set(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
@@ -97,38 +80,38 @@ export async function createSession(
   });
 }
 
-export async function destroySession(role: UserRole): Promise<void> {
+export async function destroySession(): Promise<void> {
   const store = await cookies();
-  store.delete(cookieName(role));
+  store.delete(SESSION_COOKIE);
+  store.delete(LEGACY_ADMIN_COOKIE);
 }
 
-/**
- * Текущий пользователь для запрошенной роли.
- *
- * Роль из токена сверяется с ролью в базе: если администратора понизили,
- * выданный ранее токен перестаёт работать сразу, без ожидания истечения.
- */
-export async function getCurrentUser(
-  role: UserRole = "customer",
-): Promise<PublicUser | null> {
+/** Кто вошёл на сайт; null — никто. */
+export async function getCurrentUser(): Promise<PublicUser | null> {
   const store = await cookies();
-  const token = store.get(cookieName(role))?.value;
+  const token = store.get(SESSION_COOKIE)?.value;
 
   if (!token) return null;
 
-  const session = await readSession(token);
-  if (!session || session.role !== role) return null;
+  const userId = await readSession(token);
+  if (!userId) return null;
 
-  const user = getUserById(session.userId);
-  if (!user || user.role !== role) return null;
+  const user = getUserById(userId);
+  if (!user) return null;
 
   return toPublicUser(user);
 }
 
 export async function getCurrentCustomer(): Promise<PublicUser | null> {
-  return getCurrentUser("customer");
+  return getCurrentUser();
 }
 
+/**
+ * Тот же вошедший пользователь, но только если в базе у него роль
+ * администратора. Для всех остальных — null, и панель отвечает так же,
+ * как незнакомцу.
+ */
 export async function getCurrentAdmin(): Promise<PublicUser | null> {
-  return getCurrentUser("admin");
+  const user = await getCurrentUser();
+  return user && user.role === "admin" ? user : null;
 }

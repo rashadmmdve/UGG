@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 
 import { AField, FormMessage, SubmitButton } from "@/components/admin/ui";
-import { logoutCustomerAction, updateProfileAction, type FormState } from "@/server/auth/actions";
+import { logoutAction, updateProfileAction, type FormState } from "@/server/auth/actions";
 import type { PublicUser } from "@/lib/types";
 
 export function ProfileForm({ user }: { user: PublicUser }) {
@@ -22,7 +22,7 @@ export function ProfileForm({ user }: { user: PublicUser }) {
         <SubmitButton className="h-11 w-fit">Сохранить</SubmitButton>
       </form>
 
-      <form action={logoutCustomerAction} className="mt-8 border-t border-line pt-6">
+      <form action={logoutAction} className="mt-8 border-t border-line pt-6">
         <button type="submit" className="text-sm text-muted underline underline-offset-4 hover:text-fg">
           Выйти из аккаунта
         </button>

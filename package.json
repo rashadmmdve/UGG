@@ -9,6 +9,7 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "create-admin": "node scripts/create-admin.mjs",
+    "reset-users": "node scripts/reset-users.mjs",
     "seed": "node scripts/seed.mjs",
     "seed:demo": "node scripts/seed-demo.mjs",
     "import-photos": "node scripts/import-photos.mjs",
