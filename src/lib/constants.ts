@@ -86,9 +86,6 @@ export type SectionSlug = (typeof SECTIONS)[number]["slug"];
  */
 export const SALE_SECTION = { slug: "rasprodazha", title: "Распродажа" } as const;
 
-/** Полы, товары которых могут попасть в распродажу. */
-export const SALE_GENDERS = ["women", "men"] as const;
-
 /** Плитки каталога: разделы по полу плюс распродажа. */
 export const CATALOG_TILES = [
   ...SECTIONS.map((section) => ({ slug: section.slug, title: section.title })),

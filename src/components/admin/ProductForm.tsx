@@ -613,8 +613,7 @@ export function ProductForm({
           defaultChecked={product?.isBestseller ?? false} />
         {/*
           Раздел «Распродажа» собирается вручную этой галочкой, а не по
-          наличию старой цены: скидка бывает и вне распродажи. Работает
-          для женских и мужских товаров — см. SALE_GENDERS.
+          наличию старой цены: скидка бывает и вне распродажи.
         */}
         <ACheckbox id="isSale" name="isSale" label="В распродаже"
           defaultChecked={product?.isSale ?? false} />

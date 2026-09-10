@@ -57,7 +57,7 @@ export default function SalePage() {
       <h1 className="heading-section">{sectionTitle(SALE_SECTION.slug)}</h1>
       {products.length > 0 && (
         <p className="mt-2 text-sm text-muted">
-          Женские и мужские модели по сниженным ценам. Размеры разбирают быстро.
+          Модели по сниженным ценам. Размеры разбирают быстро.
         </p>
       )}
     </>

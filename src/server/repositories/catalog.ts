@@ -2,8 +2,6 @@ import "server-only";
 
 import { cache } from "react";
 
-import { SALE_GENDERS } from "@/lib/constants";
-
 import { getDb, transaction } from "@/server/db/connection";
 import {
   mapCategory,
@@ -219,19 +217,18 @@ export const getProductsBySection = cache((sectionSlug: string): Product[] => {
 /**
  * Товары распродажи — отмеченные галочкой в карточке.
  *
- * Ограничены женским и мужским разделом: так распорядился владелец
- * магазина. Отметка у детского товара останется в базе, но на витрину
- * не выйдет — чтобы расширить, достаточно поменять SALE_GENDERS.
+ * Пол не ограничивается: сначала подборка бралась только из женского и
+ * мужского разделов, и отметка у детского товара молча ничего не давала.
+ * Галочка должна работать везде, где её видно.
  */
 export const getSaleProducts = cache((): Product[] => {
-  const genders = SALE_GENDERS.map(() => "?").join(", ");
   const rows = getDb()
     .prepare(
       `SELECT * FROM products
-       WHERE is_sale = 1 AND is_published = 1 AND gender IN (${genders})
+       WHERE is_sale = 1 AND is_published = 1
        ORDER BY created_at DESC`,
     )
-    .all(...SALE_GENDERS) as ProductRow[];
+    .all() as ProductRow[];
   return hydrate(rows);
 });
 
