@@ -71,14 +71,15 @@ export default function HomePage() {
         </div>
 
         {/* Разделы — рядом под героем */}
-        {/* Три плитки без распродажи или четыре с ней — сетка подстраивается. */}
-        <div className={cn("mt-4 grid grid-cols-2 gap-4", tiles.length === 4 ? "lg:grid-cols-4" : "lg:grid-cols-3")}>
+        {/* Сетка всегда на четыре колонки: без распродажи четвёртое место
+            пустует, зато плитки не растягиваются и фото не теряют резкость. */}
+        <div className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
           {tiles.map((section) => (
-            // Пропорция 3:4, а не фиксированная высота: плитки останутся
-            // вертикальными на любой ширине экрана, и в них без переделки
-            // встанут фотографии разделов, когда их загрузят.
+            // Высота фиксированная и небольшая: снимок вписывается по центру
+            // без увеличения — растянутая вверх плитка заставляла бы
+            // масштабировать фото и терять резкость.
             <Link key={section.slug} href={`/catalog/${section.slug}`}
-              className="group relative flex aspect-[3/4] flex-col justify-end overflow-hidden rounded-xl border border-line bg-bg p-5 transition hover:border-accent">
+              className="group relative flex h-56 flex-col justify-end overflow-hidden rounded-xl border border-line bg-bg p-5 transition hover:border-accent sm:h-64 lg:h-80">
               {content.sectionImages?.[section.slug] && (
                 <>
                   <Image
