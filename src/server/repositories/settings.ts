@@ -62,6 +62,14 @@ export type SiteContent = {
     heroSubtitle: string;
     heroImage: string | null;
   };
+  /**
+   * Фото разделов на главной: слаг раздела → адрес картинки.
+   *
+   * Лежит верхним полем, а не внутри home: настройки читаются поверхностным
+   * слиянием с запасным значением, и вложенный объект из базы затёр бы
+   * запасной целиком — новое поле у старой записи оказалось бы undefined.
+   */
+  sectionImages: Record<string, string | null>;
   about: { title: string; body: string };
   contacts: {
     phone: string;
@@ -90,6 +98,7 @@ const DEFAULT_CONTENT: SiteContent = {
     heroSubtitle: "Женские, мужские и детские модели с доставкой по России",
     heroImage: null,
   },
+  sectionImages: {},
   about: { title: "О магазине", body: "" },
   contacts: {
     phone: "",

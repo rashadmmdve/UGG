@@ -6,6 +6,7 @@ import { JsonLd } from "@/components/JsonLd";
 import { Logo } from "@/components/Logo";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { SECTIONS, SITE_DESCRIPTION, SITE_NAME } from "@/lib/constants";
+import { cn } from "@/lib/utils";
 import {
   getBestsellers,
   getCategoriesBySection,
@@ -72,8 +73,28 @@ export default function HomePage() {
             // вертикальными на любой ширине экрана, и в них без переделки
             // встанут фотографии разделов, когда их загрузят.
             <Link key={section.slug} href={`/catalog/${section.slug}`}
-              className="group flex aspect-[3/4] flex-col justify-end rounded-xl border border-line bg-bg p-5 transition hover:border-accent">
-              <span className="text-lg font-semibold group-hover:text-accent">{section.title}</span>
+              className="group relative flex aspect-[3/4] flex-col justify-end overflow-hidden rounded-xl border border-line bg-bg p-5 transition hover:border-accent">
+              {content.sectionImages?.[section.slug] && (
+                <>
+                  <Image
+                    src={content.sectionImages[section.slug]!}
+                    alt=""
+                    fill
+                    sizes="(min-width: 1024px) 25vw, 50vw"
+                    className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                  />
+                  {/* Затемнение снизу: белое название на светлом снимке иначе не читается. */}
+                  <span className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent" />
+                </>
+              )}
+              <span
+                className={cn(
+                  "relative text-lg font-semibold",
+                  content.sectionImages?.[section.slug] ? "text-white" : "group-hover:text-accent",
+                )}
+              >
+                {section.title}
+              </span>
             </Link>
           ))}
         </div>

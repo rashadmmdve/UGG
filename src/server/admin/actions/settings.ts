@@ -1,5 +1,6 @@
 "use server";
 
+import { SECTIONS } from "@/lib/constants";
 import { assertAdmin } from "@/server/admin/guard";
 import {
   getContent,
@@ -83,6 +84,9 @@ export async function saveContentAction(
       heroSubtitle: text(formData, "heroSubtitle"),
       heroImage: heroImage || null,
     },
+    sectionImages: Object.fromEntries(
+      SECTIONS.map((section) => [section.slug, text(formData, `sectionImage_${section.slug}`) || null]),
+    ),
     about: {
       title: text(formData, "aboutTitle") || current.about.title,
       body: text(formData, "aboutBody"),

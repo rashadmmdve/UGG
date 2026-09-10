@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 
 import { ImageUploader } from "@/components/admin/ImageUploader";
 import { AField, ATextarea, FormMessage, SubmitButton } from "@/components/admin/ui";
+import { SECTIONS } from "@/lib/constants";
 import { saveContentAction } from "@/server/admin/actions/settings";
 import type { SiteContent } from "@/server/repositories/settings";
 import type { ActionState } from "@/server/validation/errors";
@@ -16,6 +17,11 @@ export function ContentForm({ content }: { content: SiteContent }) {
   const errors = state.fieldErrors ?? {};
 
   const [hero, setHero] = useState<string[]>(content.home.heroImage ? [content.home.heroImage] : []);
+  const [sectionImages, setSectionImages] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      SECTIONS.map((section) => [section.slug, content.sectionImages?.[section.slug] ?? ""]),
+    ),
+  );
   const [faq, setFaq] = useState<FaqRow[]>(
     content.faq.map((item) => ({ key: ++counter, ...item })),
   );
@@ -27,6 +33,14 @@ export function ContentForm({ content }: { content: SiteContent }) {
   return (
     <form action={action} className="space-y-8" noValidate>
       <input type="hidden" name="heroImage" value={hero[0] ?? ""} />
+      {SECTIONS.map((section) => (
+        <input
+          key={section.slug}
+          type="hidden"
+          name={`sectionImage_${section.slug}`}
+          value={sectionImages[section.slug] ?? ""}
+        />
+      ))}
       <input
         type="hidden"
         name="faq"
@@ -46,6 +60,27 @@ export function ContentForm({ content }: { content: SiteContent }) {
             <p className="text-xs font-medium text-muted">Фото в шапке</p>
             <div className="mt-2">
               <ImageUploader value={hero} onChange={(urls) => setHero(urls.slice(-1))} />
+            </div>
+          </div>
+
+          <div>
+            <p className="text-xs font-medium text-muted">Фото разделов</p>
+            <p className="mt-1 text-xs text-muted">
+              Плитки под шапкой. Пропорция вертикальная, 3:4 — снимок обрежется
+              по центру. Без фото плитка остаётся с одним названием.
+            </p>
+            <div className="mt-2 grid gap-4 sm:grid-cols-2">
+              {SECTIONS.map((section) => (
+                <div key={section.slug}>
+                  <p className="mb-1.5 text-xs text-muted">{section.title}</p>
+                  <ImageUploader
+                    value={sectionImages[section.slug] ? [sectionImages[section.slug]] : []}
+                    onChange={(urls) =>
+                      setSectionImages((current) => ({ ...current, [section.slug]: urls.at(-1) ?? "" }))
+                    }
+                  />
+                </div>
+              ))}
             </div>
           </div>
         </div>
