@@ -84,24 +84,33 @@ export function CatalogGrid({
     startTransition(() => setFilters(filtersFromUrl()));
   }, []);
 
+  /**
+   * Применить фильтр и отразить его в адресной строке.
+   *
+   * Новое состояние считается здесь, а не в функции-обновителе setState:
+   * та обязана быть чистой, а запись в history — побочный эффект, из-за
+   * которого React ругался на обновление роутера во время рендера.
+   * Вызывается всё это из обработчиков событий, поэтому `filters` из
+   * замыкания здесь актуальны.
+   */
   function update(patch: Partial<Filters>) {
-    setFilters((current) => {
-      const next = { ...current, ...patch, page: patch.page ?? 1 };
-      const params = new URLSearchParams();
-      next.colors.forEach((c) => params.append("color", c));
-      next.sizes.forEach((s) => params.append("size", String(s)));
-      next.materials.forEach((m) => params.append("material", m));
-      if (next.price) {
-        params.set("price_min", String(next.price[0]));
-        params.set("price_max", String(next.price[1]));
-      }
-      if (next.sort !== "new") params.set("sort", next.sort);
-      if (next.page > 1) params.set("page", String(next.page));
-      const query = params.toString();
-      // Адрес меняется без обращения к серверу и без записи в историю.
-      window.history.replaceState(null, "", query ? `?${query}` : window.location.pathname);
-      return next;
-    });
+    const next = { ...filters, ...patch, page: patch.page ?? 1 };
+    setFilters(next);
+
+    const params = new URLSearchParams();
+    next.colors.forEach((c) => params.append("color", c));
+    next.sizes.forEach((s) => params.append("size", String(s)));
+    next.materials.forEach((m) => params.append("material", m));
+    if (next.price) {
+      params.set("price_min", String(next.price[0]));
+      params.set("price_max", String(next.price[1]));
+    }
+    if (next.sort !== "new") params.set("sort", next.sort);
+    if (next.page > 1) params.set("page", String(next.page));
+
+    const query = params.toString();
+    // Адрес меняется без обращения к серверу и без записи в историю.
+    window.history.replaceState(null, "", query ? `?${query}` : window.location.pathname);
   }
 
   // Доступные значения фильтров — по товарам в наличии.
