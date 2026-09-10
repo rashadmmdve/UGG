@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "create-admin": "node scripts/create-admin.mjs",
     "seed": "node scripts/seed.mjs",
-    "seed:demo": "node scripts/seed-demo.mjs"
+    "seed:demo": "node scripts/seed-demo.mjs",
+    "import-photos": "node scripts/import-photos.mjs"
   },
   "dependencies": {
     "@node-rs/argon2": "^2.2.0",
