@@ -72,6 +72,17 @@ export const registerSchema = z.object({
   password: passwordSchema,
 });
 
+export const resetPasswordSchema = z
+  .object({
+    token: z.string().min(1).max(128),
+    password: passwordSchema,
+    confirm: z.string(),
+  })
+  .refine((data) => data.password === data.confirm, {
+    message: "Пароли не совпадают",
+    path: ["confirm"],
+  });
+
 export const loginSchema = z.object({
   email: emailSchema,
   password: z.string().min(1, "Введите пароль"),

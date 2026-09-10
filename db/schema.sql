@@ -10,7 +10,10 @@ CREATE TABLE IF NOT EXISTS users (
   -- Подтверждение почты: дата подтверждения и хеш живой ссылки.
   email_verified_at        TEXT,
   verify_token_hash        TEXT,
-  verify_token_expires_at  TEXT
+  verify_token_expires_at  TEXT,
+  -- Восстановление пароля: хеш живой ссылки и её срок.
+  reset_token_hash         TEXT,
+  reset_token_expires_at   TEXT
 );
 -- Индекс по verify_token_hash создаётся в миграции (schema.ts), а не здесь:
 -- на старой базе столбец появляется только после ALTER TABLE, и индекс

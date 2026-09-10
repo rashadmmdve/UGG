@@ -70,6 +70,8 @@ export function createUser(input: {
     emailVerifiedAt: input.emailVerified ? now : null,
     verifyTokenHash: null,
     verifyTokenExpiresAt: null,
+    resetTokenHash: null,
+    resetTokenExpiresAt: null,
   };
 
   getDb()
@@ -143,4 +145,35 @@ export function updatePasswordHash(id: string, passwordHash: string): void {
   getDb()
     .prepare("UPDATE users SET password_hash = ? WHERE id = ?")
     .run(passwordHash, id);
+}
+
+// ── Восстановление пароля ──
+
+export function setResetToken(id: string, tokenHash: string, expiresAt: string): void {
+  getDb()
+    .prepare("UPDATE users SET reset_token_hash = ?, reset_token_expires_at = ? WHERE id = ?")
+    .run(tokenHash, expiresAt, id);
+}
+
+export function getUserByResetToken(tokenHash: string): User | null {
+  const row = getDb()
+    .prepare("SELECT * FROM users WHERE reset_token_hash = ?")
+    .get(tokenHash) as UserRow | undefined;
+  return row ? mapUser(row) : null;
+}
+
+/**
+ * Новый пароль по ссылке. Ссылка сгорает, а почта считается
+ * подтверждённой: раз письмо дошло и по нему перешли — адрес рабочий.
+ */
+export function resetPassword(id: string, passwordHash: string): void {
+  getDb()
+    .prepare(
+      `UPDATE users
+       SET password_hash = ?,
+           reset_token_hash = NULL, reset_token_expires_at = NULL,
+           email_verified_at = COALESCE(email_verified_at, ?)
+       WHERE id = ?`,
+    )
+    .run(passwordHash, nowIso(), id);
 }

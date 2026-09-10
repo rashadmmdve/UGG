@@ -10,10 +10,13 @@ import {
 } from "@/server/auth/rateLimit";
 import { hashPassword, verifyPassword } from "@/server/auth/password";
 import { createSession, destroySession } from "@/server/auth/session";
+import { issuePasswordReset, lookupResetToken } from "@/server/auth/passwordReset";
 import { isVerificationRequired, issueVerification } from "@/server/auth/verification";
+import { isMailEnabled } from "@/server/mail/mailer";
 import {
   createUser,
   getUserByEmail,
+  resetPassword,
   updateUser,
 } from "@/server/repositories/users";
 import { fieldErrorsFrom, type ActionState } from "@/server/validation/errors";
@@ -22,6 +25,7 @@ import {
   loginSchema,
   profileSchema,
   registerSchema,
+  resetPasswordSchema,
 } from "@/server/validation/schemas";
 import type { UserRole } from "@/lib/types";
 
@@ -225,6 +229,73 @@ export async function resendVerificationAction(
   }
 
   return { success: "Если такая почта зарегистрирована и ещё не подтверждена, письмо уже в пути." };
+}
+
+/**
+ * «Забыли пароль?» — письмо со ссылкой на смену пароля.
+ *
+ * Ответ один для любой почты, чтобы по нему нельзя было проверить,
+ * есть ли аккаунт. Счётчик попыток — общий с входом.
+ */
+export async function requestPasswordResetAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const parsed = emailSchema.safeParse(formData.get("email"));
+  if (!parsed.success) {
+    return { fieldErrors: { email: "Укажите почту" } };
+  }
+  if (!isMailEnabled()) {
+    return { error: "Восстановление по почте временно недоступно — напишите нам на info@uggrussia.shop." };
+  }
+
+  const key = await rateLimitKey(`reset:${parsed.data}`);
+  const limit = checkRateLimit(key);
+  if (!limit.allowed) {
+    return { error: `Слишком много запросов. Повторите через ${limit.retryAfterMinutes} мин.` };
+  }
+  registerFailedAttempt(key);
+
+  const user = getUserByEmail(parsed.data);
+  if (user && user.role === "customer") {
+    try {
+      await issuePasswordReset(user);
+    } catch (error) {
+      console.error(`Не удалось отправить письмо восстановления на ${user.email}:`, error);
+      return { error: "Не удалось отправить письмо. Попробуйте через минуту." };
+    }
+  }
+
+  return {
+    success: `Если ${parsed.data} зарегистрирована, письмо со ссылкой уже в пути. Ссылка действует час.`,
+  };
+}
+
+/** Новый пароль по ссылке из письма. После смены — сразу вход. */
+export async function resetPasswordAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const parsed = resetPasswordSchema.safeParse({
+    token: formData.get("token"),
+    password: formData.get("password"),
+    confirm: formData.get("confirm"),
+  });
+  if (!parsed.success) {
+    return { fieldErrors: fieldErrorsFrom(parsed.error) };
+  }
+
+  const lookup = lookupResetToken(parsed.data.token);
+  if (!lookup.ok) {
+    return {
+      error: lookup.reason === "expired" ? "Ссылка устарела." : "Ссылка не подошла.",
+      action: { href: "/account/forgot", label: "Запросить новую" },
+    };
+  }
+
+  resetPassword(lookup.user.id, await hashPassword(parsed.data.password));
+  await createSession(lookup.user.id, "customer", true);
+  redirect("/account");
 }
 
 export async function updateProfileAction(

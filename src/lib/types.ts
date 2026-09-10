@@ -302,10 +302,16 @@ export type User = {
   /** Хеш живой ссылки подтверждения и её срок. */
   verifyTokenHash: string | null;
   verifyTokenExpiresAt: string | null;
+  /** Хеш живой ссылки восстановления пароля и её срок. */
+  resetTokenHash: string | null;
+  resetTokenExpiresAt: string | null;
 };
 
 /** Пользователь без секретов — то, что безопасно отдать в браузер. */
-export type PublicUser = Omit<User, "passwordHash" | "verifyTokenHash" | "verifyTokenExpiresAt">;
+export type PublicUser = Omit<
+  User,
+  "passwordHash" | "verifyTokenHash" | "verifyTokenExpiresAt" | "resetTokenHash" | "resetTokenExpiresAt"
+>;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Заказы

@@ -370,6 +370,8 @@ export type UserRow = {
   email_verified_at: string | null;
   verify_token_hash: string | null;
   verify_token_expires_at: string | null;
+  reset_token_hash: string | null;
+  reset_token_expires_at: string | null;
 };
 
 export function mapUser(row: UserRow): User {
@@ -384,6 +386,8 @@ export function mapUser(row: UserRow): User {
     emailVerifiedAt: row.email_verified_at ?? null,
     verifyTokenHash: row.verify_token_hash ?? null,
     verifyTokenExpiresAt: row.verify_token_expires_at ?? null,
+    resetTokenHash: row.reset_token_hash ?? null,
+    resetTokenExpiresAt: row.reset_token_expires_at ?? null,
   };
 }
 

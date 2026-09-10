@@ -20,7 +20,12 @@ export function LoginForm() {
         </Link>
       )}
       <AField id="login-email" name="email" type="email" label="Почта" autoComplete="email" error={state.fieldErrors?.email} />
-      <AField id="login-password" name="password" type="password" label="Пароль" autoComplete="current-password" error={state.fieldErrors?.password} />
+      <div>
+        <AField id="login-password" name="password" type="password" label="Пароль" autoComplete="current-password" error={state.fieldErrors?.password} />
+        <Link href="/account/forgot" className="mt-1.5 inline-block text-sm text-muted underline underline-offset-4 hover:text-accent">
+          Забыли пароль?
+        </Link>
+      </div>
       <ACheckbox id="login-remember" name="remember" label="Запомнить меня" />
       <SubmitButton className="h-11">Войти</SubmitButton>
       <p className="text-sm text-muted">

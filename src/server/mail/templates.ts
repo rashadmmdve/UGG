@@ -56,6 +56,29 @@ ${input.url}
   };
 }
 
+/** Ссылка на смену пароля. */
+export function passwordResetMail(input: { to: string; name: string; url: string }): Mail {
+  const greeting = input.name ? `Здравствуйте, ${escape(input.name)}!` : "Здравствуйте!";
+  return {
+    to: input.to,
+    subject: "Восстановление пароля — UGG",
+    html: layout(
+      "Восстановление пароля",
+      `<p style="margin:0 0 12px">${greeting}</p>
+<p style="margin:0">Кто-то запросил новый пароль для вашего аккаунта в магазине UGG. Если это вы — нажмите кнопку и задайте новый:</p>
+${button(input.url, "Задать новый пароль")}
+<p style="margin:0 0 12px;color:#555">Ссылка действует один час. Если кнопка не открывается, скопируйте адрес в браузер:<br><a href="${input.url}" style="color:#555;word-break:break-all">${input.url}</a></p>
+<p style="margin:0;color:#555">Если вы ничего не запрашивали — просто не отвечайте на письмо, пароль останется прежним.</p>`,
+    ),
+    text: `${input.name ? `Здравствуйте, ${input.name}!` : "Здравствуйте!"}
+
+Кто-то запросил новый пароль для вашего аккаунта в магазине UGG. Если это вы, откройте ссылку (действует час):
+${input.url}
+
+Если вы ничего не запрашивали — не отвечайте на письмо, пароль останется прежним.`,
+  };
+}
+
 /** Подтверждение заказа покупателю. */
 export function orderMail(order: Order, payUrl: string | null): Mail {
   const rows = order.items
