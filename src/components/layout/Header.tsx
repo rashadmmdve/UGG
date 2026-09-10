@@ -147,14 +147,15 @@ export function Header({ menu }: { menu: MenuSection[] }) {
         )}
       >
         {active && (
-          <div className="container-page py-6">
-            <div className="flex items-baseline justify-between">
-              <p className="text-sm font-semibold">{active.title}</p>
-              <Link href={active.href} className="text-xs text-accent hover:underline">
-                Все {active.title.toLowerCase()} →
-              </Link>
-            </div>
-            <ul className="mt-4 grid grid-cols-4 gap-x-8 gap-y-1.5">
+          <div className="container-page py-8">
+            {/*
+              Ни заголовка раздела, ни ссылки «Все …»: название дублировало
+              пункт шапки, под которым меню и раскрылось, а перейти в раздел
+              можно нажатием на сам пункт. Остаются только категории —
+              сетка ограничена по ширине и отцентрована, чтобы столбцы
+              стояли ровно, а не расползались по всему экрану.
+            */}
+            <ul className="mx-auto grid max-w-5xl grid-cols-4 gap-x-8 gap-y-2 text-center">
               {active.categories.map((category) => (
                 <li key={category.slug}>
                   <Link

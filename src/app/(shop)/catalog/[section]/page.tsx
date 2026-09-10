@@ -9,7 +9,6 @@ import { SECTIONS } from "@/lib/constants";
 import {
   getCategoriesBySection,
   getColors,
-  getProductsByCategory,
   getProductsBySection,
 } from "@/server/repositories/catalog";
 import { sectionCrumbs } from "@/server/seo/breadcrumbs";
@@ -54,7 +53,6 @@ export default async function SectionPage(props: PageProps<"/catalog/[section]">
   const categoryLinks = getCategoriesBySection(sectionSlug).map((category) => ({
     title: category.shortTitle ?? category.title,
     href: `/catalog/${sectionSlug}/${category.slug}`,
-    count: getProductsByCategory(category.id).length,
     active: false,
   }));
 

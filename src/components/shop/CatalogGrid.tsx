@@ -59,7 +59,6 @@ function filtersFromUrl(): Filters {
 export type CategoryLink = {
   title: string;
   href: string;
-  count: number;
   active: boolean;
 };
 
@@ -229,10 +228,7 @@ export function CatalogGrid({
               )}
               aria-current={category.active ? "page" : undefined}
             >
-              <span className="flex-1">{category.title}</span>
-              {category.count > 0 && (
-                <span className="text-xs text-muted tabular-nums">{category.count}</span>
-              )}
+              {category.title}
             </Link>
           ))}
         </FilterBlock>
@@ -240,11 +236,10 @@ export function CatalogGrid({
 
       {facets.colors.length > 1 && (
         <FilterBlock title="Цвет" defaultOpen={facets.colors.length < COLLAPSE_FROM}>
-          {facets.colors.map(([slug, { title, count }]) => (
+          {facets.colors.map(([slug, { title }]) => (
             <CheckRow
               key={slug}
               label={title}
-              count={count}
               checked={filters.colors.includes(slug)}
               onChange={() => update({ colors: toggle(filters.colors, slug) })}
             />
@@ -254,11 +249,10 @@ export function CatalogGrid({
 
       {facets.sizes.length > 1 && (
         <FilterBlock title="Размер" defaultOpen={facets.sizes.length < COLLAPSE_FROM}>
-          {facets.sizes.map(([size, count]) => (
+          {facets.sizes.map(([size]) => (
             <CheckRow
               key={size}
               label={String(size)}
-              count={count}
               checked={filters.sizes.includes(size)}
               onChange={() => update({ sizes: toggle(filters.sizes, size) })}
             />
@@ -268,11 +262,10 @@ export function CatalogGrid({
 
       {facets.materials.length > 1 && (
         <FilterBlock title="Материал" defaultOpen={facets.materials.length < COLLAPSE_FROM}>
-          {facets.materials.map(([material, count]) => (
+          {facets.materials.map(([material]) => (
             <CheckRow
               key={material}
               label={MATERIAL_LABELS[material as Material] ?? material}
-              count={count}
               checked={filters.materials.includes(material)}
               onChange={() => update({ materials: toggle(filters.materials, material) })}
             />
@@ -481,12 +474,10 @@ function FilterBlock({
 
 function CheckRow({
   label,
-  count,
   checked,
   onChange,
 }: {
   label: string;
-  count: number;
   checked: boolean;
   onChange: () => void;
 }) {
@@ -498,8 +489,7 @@ function CheckRow({
         onChange={onChange}
         className="h-4 w-4 shrink-0 accent-[var(--accent)]"
       />
-      <span className="flex-1">{label}</span>
-      <span className="text-xs text-muted tabular-nums">{count}</span>
+      {label}
     </label>
   );
 }

@@ -81,7 +81,10 @@ export default function HomePage() {
 
       {/* Преимущества */}
       <section className="container-page mt-10">
-        <ul className="grid gap-3 rounded-xl border border-line bg-sand p-4 text-sm sm:grid-cols-3">
+        {/* Пункты отцентрованы внутри своих колонок: при выравнивании по
+            левому краю третий заканчивался на середине полосы, и справа
+            оставалась пустота во весь экран. */}
+        <ul className="grid gap-4 rounded-xl border border-line bg-sand px-4 py-5 text-center text-sm sm:grid-cols-3">
           <li><span className="font-semibold">Доставка по России</span><span className="block text-xs text-muted">СДЭК: пункт выдачи или курьер до двери</span></li>
           <li><span className="font-semibold">Обмен и возврат 14 дней</span><span className="block text-xs text-muted">Если не подошёл размер — поменяем</span></li>
           <li><span className="font-semibold">Натуральная овчина</span><span className="block text-xs text-muted">Тепло в мороз, не потеет в оттепель</span></li>

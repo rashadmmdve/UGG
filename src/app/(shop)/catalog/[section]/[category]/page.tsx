@@ -76,7 +76,6 @@ export default async function CategoryPage(props: PageProps<"/catalog/[section]/
   const categoryLinks = getCategoriesBySection(section).map((item) => ({
     title: item.shortTitle ?? item.title,
     href: `/catalog/${section}/${item.slug}`,
-    count: getProductsByCategory(item.id).length,
     active: item.id === category.id,
   }));
 
