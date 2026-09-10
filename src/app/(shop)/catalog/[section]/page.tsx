@@ -11,6 +11,7 @@ import {
   getColors,
   getProductsBySection,
 } from "@/server/repositories/catalog";
+import { sectionTitle } from "@/server/catalog/sections";
 import { sectionCrumbs } from "@/server/seo/breadcrumbs";
 import { breadcrumbLd, itemListLd } from "@/server/seo/jsonld";
 import { buildMetadata, minPrice } from "@/server/seo/meta";
@@ -37,7 +38,11 @@ export async function generateMetadata(
   return buildMetadata({
     path: `/catalog/${sectionSlug}`,
     template: "category",
-    tokens: { category: `${section.title} UGG`, count: products.length, minPrice: minPrice(products) },
+    tokens: {
+      category: `${sectionTitle(sectionSlug)} UGG`,
+      count: products.length,
+      minPrice: minPrice(products),
+    },
   });
 }
 
@@ -56,7 +61,7 @@ export default async function SectionPage(props: PageProps<"/catalog/[section]">
     active: false,
   }));
 
-  const header = <h1 className="heading-section">{section.title} UGG</h1>;
+  const header = <h1 className="heading-section">{sectionTitle(sectionSlug)} UGG</h1>;
 
   return (
     <div className="container-page py-8">

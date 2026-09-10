@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { SECTIONS } from "@/lib/constants";
+import { genderSections } from "@/server/catalog/sections";
 import {
   getCategories,
   getProductsByCategory,
@@ -28,7 +28,7 @@ export default function AdminCategoriesPage() {
       </p>
 
       <div className="mt-6 space-y-8">
-        {SECTIONS.map((section) => {
+        {genderSections().map((section) => {
           const items = categories.filter((c) => c.sectionSlug === section.slug);
           if (items.length === 0) return null;
 

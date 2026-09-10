@@ -12,6 +12,29 @@ import type { LogisticsSettings } from "@/lib/types";
  * целиком, отдельные таблицы под каждый набор полей были бы лишними.
  */
 
+const isPlainObject = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+/**
+ * Слияние сохранённого поверх запасного — вглубь, а не только по верхним
+ * ключам. Иначе добавленное поле у старой записи оказывалось бы
+ * `undefined`: объект из базы заменял бы запасной целиком.
+ *
+ * Массивы не сливаются, а заменяются: список вопросов или баннеров —
+ * это то, что задал администратор, а не дополнение к умолчанию.
+ */
+function merge<T>(fallback: T, stored: unknown): T {
+  if (!isPlainObject(fallback) || !isPlainObject(stored)) {
+    return (stored === undefined ? fallback : (stored as T));
+  }
+
+  const result: Record<string, unknown> = { ...fallback };
+  for (const [key, value] of Object.entries(stored)) {
+    result[key] = merge((fallback as Record<string, unknown>)[key], value);
+  }
+  return result as T;
+}
+
 function readSetting<T>(key: string, fallback: T): T {
   const row = getDb()
     .prepare("SELECT value FROM settings WHERE key = ?")
@@ -20,7 +43,7 @@ function readSetting<T>(key: string, fallback: T): T {
   if (!row) return fallback;
 
   try {
-    return { ...fallback, ...(JSON.parse(row.value) as T) };
+    return merge(fallback, JSON.parse(row.value));
   } catch {
     return fallback;
   }
@@ -60,7 +83,10 @@ export type SiteContent = {
   home: {
     heroTitle: string;
     heroSubtitle: string;
-    heroImage: string | null;
+    /** Баннеры в шапке главной. Пусто — под текстом лежит бледный логотип. */
+    heroImages: string[];
+    /** Листать баннеры автоматически. При одном баннере ни на что не влияет. */
+    heroRotate: boolean;
   };
   /**
    * Фото разделов на главной: слаг раздела → адрес картинки.
@@ -70,6 +96,11 @@ export type SiteContent = {
    * запасной целиком — новое поле у старой записи оказалось бы undefined.
    */
   sectionImages: Record<string, string | null>;
+  /**
+   * Названия разделов каталога: слаг → название. Пусто — берётся то,
+   * что задано в коде. Слаг не меняется никогда: он в адресе страницы.
+   */
+  sectionTitles: Record<string, string>;
   about: { title: string; body: string };
   contacts: {
     phone: string;
@@ -96,9 +127,11 @@ const DEFAULT_CONTENT: SiteContent = {
   home: {
     heroTitle: "Новая зимняя коллекция",
     heroSubtitle: "Женские, мужские и детские модели с доставкой по России",
-    heroImage: null,
+    heroImages: [],
+    heroRotate: true,
   },
   sectionImages: {},
+  sectionTitles: {},
   about: { title: "О магазине", body: "" },
   contacts: {
     phone: "",
@@ -112,9 +145,18 @@ const DEFAULT_CONTENT: SiteContent = {
   legal: { oferta: "", privacy: "" },
 };
 
-export const getContent = cache((): SiteContent =>
-  readSetting<SiteContent>("content", DEFAULT_CONTENT),
-);
+export const getContent = cache((): SiteContent => {
+  const content = readSetting<SiteContent>("content", DEFAULT_CONTENT);
+
+  // Раньше баннер был один и лежал в heroImage. Переносим на лету, чтобы
+  // настройка не потерялась у тех, кто уже её задал.
+  const legacy = (content.home as { heroImage?: string | null }).heroImage;
+  if (legacy && content.home.heroImages.length === 0) {
+    content.home.heroImages = [legacy];
+  }
+
+  return content;
+});
 
 export function saveContent(content: SiteContent): void {
   writeSetting("content", content);

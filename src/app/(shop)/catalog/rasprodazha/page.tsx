@@ -5,6 +5,7 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { JsonLd } from "@/components/JsonLd";
 import { CatalogGrid } from "@/components/shop/CatalogGrid";
 import { SALE_SECTION } from "@/lib/constants";
+import { sectionTitle } from "@/server/catalog/sections";
 import { getColors, getSaleProducts } from "@/server/repositories/catalog";
 import { sectionCrumbs } from "@/server/seo/breadcrumbs";
 import { breadcrumbLd, itemListLd } from "@/server/seo/jsonld";
@@ -30,7 +31,7 @@ export async function generateMetadata(): Promise<Metadata> {
   // в выдаче хуже, чем её отсутствие.
   if (products.length === 0) {
     return {
-      title: SALE_SECTION.title,
+      title: sectionTitle(SALE_SECTION.slug),
       alternates: { canonical: `/catalog/${SALE_SECTION.slug}` },
       robots: { index: false, follow: true },
     };
@@ -40,7 +41,7 @@ export async function generateMetadata(): Promise<Metadata> {
     path: `/catalog/${SALE_SECTION.slug}`,
     template: "category",
     tokens: {
-      category: "Распродажа UGG",
+      category: `${sectionTitle(SALE_SECTION.slug)} UGG`,
       count: products.length,
       minPrice: minPrice(products),
     },
@@ -53,7 +54,7 @@ export default function SalePage() {
 
   const header = (
     <>
-      <h1 className="heading-section">{SALE_SECTION.title}</h1>
+      <h1 className="heading-section">{sectionTitle(SALE_SECTION.slug)}</h1>
       {products.length > 0 && (
         <p className="mt-2 text-sm text-muted">
           Женские и мужские модели по сниженным ценам. Размеры разбирают быстро.

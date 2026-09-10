@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 
 import { ImageUploader } from "@/components/admin/ImageUploader";
-import { AField, ATextarea, FormMessage, SubmitButton } from "@/components/admin/ui";
+import { ACheckbox, AField, ATextarea, FormMessage, SubmitButton } from "@/components/admin/ui";
 import { CATALOG_TILES } from "@/lib/constants";
 import { saveContentAction } from "@/server/admin/actions/settings";
 import type { SiteContent } from "@/server/repositories/settings";
@@ -16,7 +16,7 @@ export function ContentForm({ content }: { content: SiteContent }) {
   const [state, action] = useActionState<ActionState, FormData>(saveContentAction, {});
   const errors = state.fieldErrors ?? {};
 
-  const [hero, setHero] = useState<string[]>(content.home.heroImage ? [content.home.heroImage] : []);
+  const [hero, setHero] = useState<string[]>(content.home.heroImages);
   const [sectionImages, setSectionImages] = useState<Record<string, string>>(() =>
     Object.fromEntries(
       CATALOG_TILES.map((section) => [section.slug, content.sectionImages?.[section.slug] ?? ""]),
@@ -32,7 +32,7 @@ export function ContentForm({ content }: { content: SiteContent }) {
 
   return (
     <form action={action} className="space-y-8" noValidate>
-      <input type="hidden" name="heroImage" value={hero[0] ?? ""} />
+      <input type="hidden" name="heroImages" value={JSON.stringify(hero)} />
       {CATALOG_TILES.map((section) => (
         <input
           key={section.slug}
@@ -57,28 +57,51 @@ export function ContentForm({ content }: { content: SiteContent }) {
           <AField id="heroSubtitle" name="heroSubtitle" label="Подзаголовок"
             defaultValue={content.home.heroSubtitle} error={errors.heroSubtitle} />
           <div>
-            <p className="text-xs font-medium text-muted">Фото в шапке</p>
+            <p className="text-xs font-medium text-muted">Баннеры в шапке</p>
+            <p className="mt-1 text-xs text-muted">
+              Горизонтальные, примерно 2:1 — например 2400×1200. JPG, PNG или
+              WebP, до 12 МБ; сожмутся сами. Снимок вписывается целиком и
+              встаёт по центру, поэтому важное не обрежется. Порядок — стрелками
+              на карточке, первый показывается сразу. Без баннера в шапке
+              остаётся бледный логотип.
+            </p>
             <div className="mt-2">
-              <ImageUploader value={hero} onChange={(urls) => setHero(urls.slice(-1))} />
+              <ImageUploader value={hero} onChange={setHero} />
             </div>
+            {hero.length > 1 && (
+              <div className="mt-3">
+                <ACheckbox id="heroRotate" name="heroRotate" label="Листать баннеры автоматически"
+                  defaultChecked={content.home.heroRotate} />
+              </div>
+            )}
           </div>
 
           <div>
-            <p className="text-xs font-medium text-muted">Фото разделов</p>
+            <p className="text-xs font-medium text-muted">Разделы каталога</p>
             <p className="mt-1 text-xs text-muted">
-              Плитки под шапкой. Пропорция вертикальная, 3:4 — снимок обрежется
-              по центру. Без фото плитка остаётся с одним названием.
+              Плитки под шапкой и пункты меню. Название меняется свободно,
+              адрес страницы остаётся прежним. Пустое поле — название по
+              умолчанию. Фото вертикальное, 3:4 — снимок вписывается по центру.
             </p>
-            <div className="mt-2 grid gap-4 sm:grid-cols-2">
+            <div className="mt-3 grid gap-5 sm:grid-cols-2">
               {CATALOG_TILES.map((section) => (
-                <div key={section.slug}>
-                  <p className="mb-1.5 text-xs text-muted">{section.title}</p>
-                  <ImageUploader
-                    value={sectionImages[section.slug] ? [sectionImages[section.slug]] : []}
-                    onChange={(urls) =>
-                      setSectionImages((current) => ({ ...current, [section.slug]: urls.at(-1) ?? "" }))
-                    }
+                <div key={section.slug} className="rounded border border-line p-3">
+                  <AField
+                    id={`sectionTitle-${section.slug}`}
+                    name={`sectionTitle_${section.slug}`}
+                    label="Название"
+                    defaultValue={content.sectionTitles?.[section.slug] ?? ""}
+                    placeholder={section.title}
+                    hint={`Адрес: /catalog/${section.slug}`}
                   />
+                  <div className="mt-3">
+                    <ImageUploader
+                      value={sectionImages[section.slug] ? [sectionImages[section.slug]] : []}
+                      onChange={(urls) =>
+                        setSectionImages((current) => ({ ...current, [section.slug]: urls.at(-1) ?? "" }))
+                      }
+                    />
+                  </div>
                 </div>
               ))}
             </div>

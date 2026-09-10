@@ -1,6 +1,7 @@
 import "server-only";
 
-import { SALE_SECTION, SECTIONS, SITE_URL } from "@/lib/constants";
+import { SITE_URL } from "@/lib/constants";
+import { sectionTitle } from "@/server/catalog/sections";
 import { getCategoryById, getCategoryBySlug } from "@/server/repositories/catalog";
 import type { Product, SeoLanding } from "@/lib/types";
 
@@ -18,11 +19,6 @@ export type Crumb = {
   /** Абсолютный адрес. У последнего элемента ссылки нет. */
   url: string | null;
 };
-
-const sectionTitle = (slug: string): string =>
-  slug === SALE_SECTION.slug
-    ? SALE_SECTION.title
-    : (SECTIONS.find((section) => section.slug === slug)?.title ?? slug);
 
 const HOME: Crumb = { title: "Главная", url: SITE_URL };
 const CATALOG: Crumb = { title: "Каталог", url: `${SITE_URL}/catalog` };

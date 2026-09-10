@@ -4,8 +4,10 @@ import Link from "next/link";
 
 import { JsonLd } from "@/components/JsonLd";
 import { Logo } from "@/components/Logo";
+import { HeroCarousel } from "@/components/shop/HeroCarousel";
 import { ProductCard } from "@/components/shop/ProductCard";
-import { CATALOG_TILES, SECTIONS, SITE_DESCRIPTION, SITE_NAME } from "@/lib/constants";
+import { SECTIONS, SITE_DESCRIPTION, SITE_NAME } from "@/lib/constants";
+import { catalogTiles } from "@/server/catalog/sections";
 import { cn } from "@/lib/utils";
 import {
   getBestsellers,
@@ -45,9 +47,8 @@ export default function HomePage() {
       <section className="container-page pt-6">
         <div className="relative flex min-h-[440px] flex-col justify-end overflow-hidden rounded-xl bg-sand p-8 md:min-h-[620px] md:p-12">
           {/* Фото вписывается целиком и центрируется — см. пояснение в ProductCard. */}
-          {content.home.heroImage ? (
-            <Image src={content.home.heroImage} alt="" fill sizes="100vw"
-              className="object-contain" loading="eager" fetchPriority="high" />
+          {content.home.heroImages.length > 0 ? (
+            <HeroCarousel images={content.home.heroImages} rotate={content.home.heroRotate} />
           ) : (
             // Подложка занимает весь герой и оказывается самым крупным
             // элементом первого экрана — грузим её сразу, иначе она
@@ -69,7 +70,7 @@ export default function HomePage() {
 
         {/* Разделы — рядом под героем */}
         <div className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {CATALOG_TILES.map((section) => (
+          {catalogTiles().map((section) => (
             // Пропорция 3:4, а не фиксированная высота: плитки останутся
             // вертикальными на любой ширине экрана, и в них без переделки
             // встанут фотографии разделов, когда их загрузят.

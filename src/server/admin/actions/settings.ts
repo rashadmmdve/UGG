@@ -75,17 +75,24 @@ export async function saveContentAction(
 
   if (Object.keys(fieldErrors).length > 0) return { fieldErrors };
 
-  const heroImage = text(formData, "heroImage");
+  const heroImages = jsonField<string[]>(formData, "heroImages", []).filter(Boolean);
   const current = getContent();
 
   const content: SiteContent = {
     home: {
       heroTitle: text(formData, "heroTitle") || current.home.heroTitle,
       heroSubtitle: text(formData, "heroSubtitle"),
-      heroImage: heroImage || null,
+      heroImages,
+      heroRotate: formData.get("heroRotate") === "on",
     },
     sectionImages: Object.fromEntries(
       CATALOG_TILES.map((section) => [section.slug, text(formData, `sectionImage_${section.slug}`) || null]),
+    ),
+    // Пустое поле означает «как в коде», поэтому пустые значения не храним.
+    sectionTitles: Object.fromEntries(
+      CATALOG_TILES.map((section) => [section.slug, text(formData, `sectionTitle_${section.slug}`)]).filter(
+        ([, title]) => title,
+      ),
     ),
     about: {
       title: text(formData, "aboutTitle") || current.about.title,

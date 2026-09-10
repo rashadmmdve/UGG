@@ -5,13 +5,14 @@ import { Suspense } from "react";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { JsonLd } from "@/components/JsonLd";
 import { CatalogGrid } from "@/components/shop/CatalogGrid";
-import { SALE_SECTION, SECTIONS, SITE_NAME } from "@/lib/constants";
+import { SALE_SECTION, SITE_NAME } from "@/lib/constants";
 import {
   getCategoriesBySection,
   getColors,
   getSaleProducts,
   getPublishedProducts,
 } from "@/server/repositories/catalog";
+import { catalogTiles } from "@/server/catalog/sections";
 import { catalogCrumbs } from "@/server/seo/breadcrumbs";
 import { breadcrumbLd, itemListLd } from "@/server/seo/jsonld";
 
@@ -28,6 +29,10 @@ export const metadata: Metadata = {
 export default function CatalogPage() {
   const products = getPublishedProducts();
   const saleCount = getSaleProducts().length;
+  // Распродажа идёт отдельным чипом ниже: у неё нет категорий, и счёт
+  // ведётся по товарам.
+  const tiles = catalogTiles().filter((tile) => tile.slug !== SALE_SECTION.slug);
+  const saleTitle = catalogTiles().find((tile) => tile.slug === SALE_SECTION.slug)!.title;
   const crumbs = catalogCrumbs();
 
   return (
@@ -43,7 +48,7 @@ export default function CatalogPage() {
             <>
               <h1 className="heading-section">Каталог</h1>
               <nav aria-label="Разделы" className="mt-5 flex flex-wrap gap-2">
-                {SECTIONS.map((section) => {
+                {tiles.map((section) => {
                   const count = getCategoriesBySection(section.slug).length;
                   return (
                     <Link
@@ -61,7 +66,7 @@ export default function CatalogPage() {
                     href={`/catalog/${SALE_SECTION.slug}`}
                     className="rounded-full border border-line px-3 py-1 text-sm hover:border-accent"
                   >
-                    {SALE_SECTION.title} <span className="text-muted">· {saleCount}</span>
+                    {saleTitle} <span className="text-muted">· {saleCount}</span>
                   </Link>
                 )}
               </nav>
