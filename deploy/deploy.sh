@@ -42,6 +42,13 @@ echo "── $(date '+%F %T') · выкладка ${remote_sha:0:8} (сейча�
 release="$ROOT/releases/$remote_sha"
 mkdir -p "$ROOT/releases"
 
+# Пересборка того же коммита не должна идти в папке, которую сейчас
+# обслуживает служба: Next переписывает .next под работающим сервером,
+# и сборка падает с внутренней ошибкой Turbopack. Берём свежую папку.
+if [[ $(readlink -f "$ROOT/current" 2>/dev/null) == "$release" ]]; then
+  release="$ROOT/releases/${remote_sha}-$(date +%s)"
+fi
+
 if [[ ! -d $release ]]; then
   echo "── Код ──"
   git clone --quiet --depth 1 --branch "$BRANCH" "$REPO" "$release"
@@ -58,7 +65,15 @@ echo "── Зависимости ──"
 (cd "$release" && npm ci --no-audit --no-fund --loglevel=error)
 
 echo "── Сборка ──"
-(cd "$release" && NODE_OPTIONS=--max-old-space-size=3072 npm run build 2>&1 | tail -3)
+# Полный вывод — в файл рядом с версией; на экран только итог, а при
+# ошибке — её хвост, иначе причину не найти.
+if (cd "$release" && NODE_OPTIONS=--max-old-space-size=3072 npm run build >"$release/build.log" 2>&1); then
+  tail -3 "$release/build.log"
+else
+  echo "!! Сборка не удалась, сайт не тронут. Последние строки:"
+  tail -30 "$release/build.log"
+  exit 1
+fi
 
 previous=$(readlink -f "$ROOT/current" 2>/dev/null || true)
 
