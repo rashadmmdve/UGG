@@ -1,7 +1,7 @@
 import "server-only";
 
 import { PAYMENT_METHOD_LABELS, SITE_URL } from "@/lib/constants";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, sizeLabel } from "@/lib/utils";
 import type { Mail } from "@/server/mail/mailer";
 import type { Order } from "@/lib/types";
 
@@ -84,7 +84,7 @@ export function orderMail(order: Order, payUrl: string | null): Mail {
   const rows = order.items
     .map(
       (item) =>
-        `<tr><td style="padding:6px 0;border-bottom:1px solid #eee">${escape(item.title)}<span style="color:#777"> · ${item.sizeEu}${item.quantity > 1 ? ` × ${item.quantity}` : ""}</span></td><td align="right" style="padding:6px 0;border-bottom:1px solid #eee;white-space:nowrap">${formatPrice(item.price * item.quantity)}</td></tr>`,
+        `<tr><td style="padding:6px 0;border-bottom:1px solid #eee">${escape(item.title)}<span style="color:#777">${sizeLabel(item.sizeEu) ? ` · ${item.sizeEu}` : ""}${item.quantity > 1 ? ` × ${item.quantity}` : ""}</span></td><td align="right" style="padding:6px 0;border-bottom:1px solid #eee;white-space:nowrap">${formatPrice(item.price * item.quantity)}</td></tr>`,
     )
     .join("");
   const totals = [
@@ -121,7 +121,10 @@ ${payUrl ? button(payUrl, "Оплатить заказ") : ""}
   const text = [
     `Спасибо за заказ ${order.number}!`,
     "",
-    ...order.items.map((i) => `${i.title} · ${i.sizeEu}${i.quantity > 1 ? ` × ${i.quantity}` : ""} — ${formatPrice(i.price * i.quantity)}`),
+    ...order.items.map(
+      (i) =>
+        `${i.title}${sizeLabel(i.sizeEu) ? ` · ${i.sizeEu}` : ""}${i.quantity > 1 ? ` × ${i.quantity}` : ""} — ${formatPrice(i.price * i.quantity)}`,
+    ),
     "",
     `Товары: ${formatPrice(order.subtotal)}`,
     ...(order.discount > 0 ? [`Скидка: −${formatPrice(order.discount)}`] : []),

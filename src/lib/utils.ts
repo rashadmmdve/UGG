@@ -33,6 +33,14 @@ export function slugify(input: string): string {
 }
 
 /** Цена в рублях: «12 990 ₽». */
+/**
+ * Размер для показа. У аксессуаров — перчаток, шапок, средств ухода —
+ * размера нет, и в данных он записан нулём: выводить «размер 0» нельзя.
+ */
+export function sizeLabel(sizeEu: number): string | null {
+  return sizeEu > 0 ? String(sizeEu) : null;
+}
+
 export function formatPrice(value: number): string {
   return `${value.toLocaleString("ru-RU")} ₽`;
 }

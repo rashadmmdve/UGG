@@ -8,7 +8,7 @@ import { Minus, Plus, ShoppingBag, X } from "lucide-react";
 
 import { useHydrated } from "@/lib/hooks/useHydrated";
 import { cartSubtotal, useCartStore } from "@/lib/store/cart";
-import { cn, formatPrice, plural } from "@/lib/utils";
+import { cn, formatPrice, plural, sizeLabel } from "@/lib/utils";
 
 export function CartDrawer() {
   const hydrated = useHydrated();
@@ -105,7 +105,9 @@ export function CartDrawer() {
                       <Link href={`/product/${item.slug}`} onClick={close} className="text-sm hover:text-accent">
                         {item.title}
                       </Link>
-                      <p className="mt-0.5 text-xs text-muted">Размер {item.sizeEu}</p>
+                      {sizeLabel(item.sizeEu) && (
+                        <p className="mt-0.5 text-xs text-muted">Размер {sizeLabel(item.sizeEu)}</p>
+                      )}
                     </div>
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center rounded border border-line">

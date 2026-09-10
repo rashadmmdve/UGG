@@ -173,6 +173,7 @@ const CATEGORIES = [
   { section: "aksessuary", slug: "sharfy-i-shapki", title: "Шарфы и шапки", aliases: ["shapki", "sharfy", "snudy"] },
   { section: "aksessuary", slug: "naushniki", title: "Наушники", aliases: ["earmuffs"] },
   { section: "aksessuary", slug: "galoshi", title: "Галоши", aliases: [] },
+  { section: "aksessuary", slug: "sumki", title: "Сумки", aliases: ["bags", "crossbody"] },
   { section: "aksessuary", slug: "sredstva-dlya-uhoda", title: "Средства для ухода", aliases: ["uhod", "care-kit"] },
 ];
 

@@ -5,7 +5,7 @@ import { Package, ShoppingBag, User } from "lucide-react";
 
 import { OrderCard } from "@/components/shop/OrderCard";
 import { ProfileForm } from "@/components/shop/ProfileForm";
-import { cn, formatDate, formatPrice } from "@/lib/utils";
+import { cn, formatDate, formatPrice, sizeLabel } from "@/lib/utils";
 import type { Order, PublicUser } from "@/lib/types";
 
 type Tab = "orders" | "purchases" | "profile";
@@ -98,7 +98,11 @@ function PurchaseCard({ order }: { order: Order }) {
       <ul className="mt-3 divide-y divide-line border-y border-line">
         {order.items.map((item) => (
           <li key={`${item.productId}-${item.variantId}`} className="flex justify-between gap-4 py-2 text-sm">
-            <span>{item.title}<span className="text-muted"> · {item.sizeEu}</span>{item.quantity > 1 && <span className="text-muted"> × {item.quantity}</span>}</span>
+            <span>
+              {item.title}
+              {sizeLabel(item.sizeEu) && <span className="text-muted"> · {sizeLabel(item.sizeEu)}</span>}
+              {item.quantity > 1 && <span className="text-muted"> × {item.quantity}</span>}
+            </span>
             <span className="shrink-0 tabular-nums">{formatPrice(item.price * item.quantity)}</span>
           </li>
         ))}

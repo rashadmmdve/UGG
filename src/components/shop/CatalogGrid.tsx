@@ -162,7 +162,8 @@ export function CatalogGrid({
         entry.count += 1;
         colorGroups.set(color.slug, entry);
       }
-      for (const size of new Set(available.map((v) => v.sizeEu))) {
+      // Ноль — признак безразмерного товара, в фильтр он не попадает.
+      for (const size of new Set(available.map((v) => v.sizeEu).filter((s) => s > 0))) {
         sizes.set(size, (sizes.get(size) ?? 0) + 1);
       }
       for (const material of product.materials) {

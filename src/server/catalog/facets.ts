@@ -124,7 +124,8 @@ export function collectFacets(products: Product[]): {
     const sizes = new Set(
       product.variants
         .filter((variant) => variant.stock > 0)
-        .map((variant) => variant.sizeEu),
+        .map((variant) => variant.sizeEu)
+        .filter((size) => size > 0),
     );
     for (const size of sizes) {
       sizeCounts.set(size, (sizeCounts.get(size) ?? 0) + 1);

@@ -31,6 +31,9 @@ export function ProductPurchase({ product }: { product: Product }) {
 
   const variant = product.variants.find((item) => item.id === variantId);
   const inStock = available.length > 0;
+  // Безразмерный товар: единственный вариант с нулевым размером. Выбор
+  // размера у него не показываем — выбирать не из чего.
+  const sizeless = product.variants.length === 1 && product.variants[0].sizeEu === 0;
 
   function handleAdd() {
     if (!variant) {
@@ -72,7 +75,7 @@ export function ProductPurchase({ product }: { product: Product }) {
 
   return (
     <div className="flex flex-col gap-5">
-      <div>
+      <div className={cn(sizeless && "hidden")}>
         <p className="label-caps mb-2">Размер EU</p>
         <div className="flex flex-wrap gap-2">
           {product.variants.map((item) => {

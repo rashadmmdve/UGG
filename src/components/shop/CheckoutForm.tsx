@@ -8,7 +8,7 @@ import { AField, ATextarea } from "@/components/admin/ui";
 import { DeliveryPicker } from "@/components/shop/DeliveryPicker";
 import { useHydrated } from "@/lib/hooks/useHydrated";
 import { cartSubtotal, useCartStore } from "@/lib/store/cart";
-import { cn, formatPrice, plural } from "@/lib/utils";
+import { cn, formatPrice, plural, sizeLabel } from "@/lib/utils";
 import { quoteDeliveryAction } from "@/server/cdek/actions";
 import { previewPromocode, submitOrder } from "@/server/orders/createOrder";
 import type {
@@ -250,7 +250,10 @@ export function CheckoutForm({
           <ul className="mt-4 flex flex-col gap-2 border-b border-line pb-4">
             {items.map((item) => (
               <li key={`${item.productId}-${item.variantId}`} className="flex justify-between gap-4 text-sm">
-                <span className="text-muted">{item.title} · {item.sizeEu} × {item.quantity}</span>
+                <span className="text-muted">
+                  {item.title}
+                  {sizeLabel(item.sizeEu) && ` · ${sizeLabel(item.sizeEu)}`} × {item.quantity}
+                </span>
                 <span className="shrink-0 tabular-nums">{formatPrice(item.price * item.quantity)}</span>
               </li>
             ))}

@@ -5,7 +5,7 @@ import { CreditCard, Download, Eye, X } from "lucide-react";
 
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ORDER_STATUS_LABELS, PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS } from "@/lib/constants";
-import { cn, formatDate, formatPrice } from "@/lib/utils";
+import { cn, formatDate, formatPrice, sizeLabel } from "@/lib/utils";
 import { cancelOrderAction, payOrderAction, refreshOrderStatusAction } from "@/server/orders/actions";
 import type { Order } from "@/lib/types";
 
@@ -126,7 +126,10 @@ export function OrderCard({ order }: { order: Order }) {
 
       <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
         {order.items.map((item) => (
-          <li key={`${item.productId}-${item.variantId}`}>{item.title} · {item.sizeEu} × {item.quantity}</li>
+          <li key={`${item.productId}-${item.variantId}`}>
+            {item.title}
+            {sizeLabel(item.sizeEu) && ` · ${sizeLabel(item.sizeEu)}`} × {item.quantity}
+          </li>
         ))}
       </ul>
 

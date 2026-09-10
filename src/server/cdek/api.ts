@@ -1,6 +1,7 @@
 import "server-only";
 
 import { cdekRequest } from "@/server/cdek/client";
+import { sizeLabel } from "@/lib/utils";
 import { settledLines } from "@/server/orders/pricing";
 import { getLogistics } from "@/server/repositories/settings";
 import type {
@@ -279,7 +280,9 @@ export async function createCdekOrder(
           number: order.number,
           weight: Math.max(order.packageWeight ?? 1, 1),
           items: settledLines(order).map((line) => ({
-            name: `${line.item.title}, размер ${line.item.sizeEu}`,
+            name: sizeLabel(line.item.sizeEu)
+              ? `${line.item.title}, размер ${line.item.sizeEu}`
+              : line.item.title,
             // Разбитая скидкой позиция даёт две строки на один артикул —
             // ключи должны отличаться.
             ware_key: line.part > 1 ? `${line.item.variantId}-${line.part}` : line.item.variantId,

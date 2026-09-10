@@ -1,5 +1,6 @@
 import "server-only";
 
+import { sizeLabel } from "@/lib/utils";
 import { settledLines } from "@/server/orders/pricing";
 import type { Order, PaymentStatus } from "@/lib/types";
 
@@ -95,7 +96,10 @@ async function request<T>(
 function receipt(order: Order) {
   const vatCode = Number(process.env.YOOKASSA_VAT_CODE ?? 1);
   const items = settledLines(order).map((line) => ({
-    description: `${line.item.title}, размер ${line.item.sizeEu}`.slice(0, 128),
+    description: (sizeLabel(line.item.sizeEu)
+      ? `${line.item.title}, размер ${line.item.sizeEu}`
+      : line.item.title
+    ).slice(0, 128),
     quantity: line.quantity.toFixed(2),
     amount: money(line.unitPrice),
     vat_code: vatCode,
