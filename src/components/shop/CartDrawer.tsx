@@ -8,7 +8,7 @@ import { Minus, Plus, ShoppingBag, X } from "lucide-react";
 
 import { useHydrated } from "@/lib/hooks/useHydrated";
 import { cartSubtotal, useCartStore } from "@/lib/store/cart";
-import { formatPrice, plural } from "@/lib/utils";
+import { cn, formatPrice, plural } from "@/lib/utils";
 
 export function CartDrawer() {
   const hydrated = useHydrated();
@@ -37,20 +37,42 @@ export function CartDrawer() {
     };
   }, [isOpen, close]);
 
-  if (!hydrated || !isOpen) return null;
+  // До гидрации содержимое корзины неизвестно — она живёт в браузере.
+  if (!hydrated) return null;
 
   const subtotal = cartSubtotal(items);
   const button =
     "inline-flex h-11 w-full items-center justify-center rounded-md text-sm font-semibold transition-colors";
 
   return (
-    <div className="fixed inset-0 z-50">
-      <button type="button" aria-label="Закрыть корзину" onClick={close} className="absolute inset-0 bg-fg/30" />
+    /*
+      Разметка не размонтируется при закрытии: иначе шторка появлялась бы
+      рывком, без выезда сбоку. Видимость выключается через aria-hidden,
+      inert и pointer-events.
+    */
+    <div
+      aria-hidden={!isOpen}
+      className={cn("fixed inset-0 z-50", !isOpen && "pointer-events-none")}
+    >
+      <button
+        type="button"
+        aria-label="Закрыть корзину"
+        tabIndex={isOpen ? undefined : -1}
+        onClick={close}
+        className={cn(
+          "absolute inset-0 bg-fg/30 transition-opacity duration-300",
+          isOpen ? "opacity-100" : "opacity-0",
+        )}
+      />
 
       <aside
         role="dialog"
         aria-label="Корзина"
-        className="absolute inset-y-0 right-0 flex w-full max-w-md flex-col bg-bg shadow-xl"
+        inert={!isOpen}
+        className={cn(
+          "absolute inset-y-0 right-0 flex w-full max-w-md flex-col bg-bg shadow-xl transition-transform duration-300 ease-out",
+          isOpen ? "translate-x-0" : "translate-x-full",
+        )}
       >
         <div className="flex h-16 items-center justify-between border-b border-line px-5">
           <p className="flex items-center gap-2 text-base font-semibold">
