@@ -60,6 +60,8 @@ export function Header({ menu }: { menu: MenuSection[] }) {
   }, [openSection]);
 
   const active = menu.find((section) => section.slug === openSection) ?? null;
+  // В меню попадают только непустые категории — см. пояснение у разметки.
+  const activeCategories = active?.categories.filter((c) => c.hasProducts) ?? [];
 
   return (
     <header
@@ -151,25 +153,30 @@ export function Header({ menu }: { menu: MenuSection[] }) {
             {/*
               Ни заголовка раздела, ни ссылки «Все …»: название дублировало
               пункт шапки, под которым меню и раскрылось, а перейти в раздел
-              можно нажатием на сам пункт. Остаются только категории —
-              сетка ограничена по ширине и отцентрована, чтобы столбцы
-              стояли ровно, а не расползались по всему экрану.
+              можно нажатием на сам пункт.
+
+              Показываются только категории, в которых есть товары: пустая
+              ссылка в меню ведёт покупателя на страницу «здесь ничего нет»,
+              и это худшее, чем может закончиться клик по каталогу.
             */}
-            <ul className="mx-auto grid max-w-5xl grid-cols-4 gap-x-8 gap-y-2 text-center">
-              {active.categories.map((category) => (
-                <li key={category.slug}>
-                  <Link
-                    href={category.href}
-                    className={cn(
-                      "block py-0.5 text-sm transition-colors hover:text-accent",
-                      category.hasProducts ? "text-fg" : "text-muted",
-                    )}
-                  >
-                    {category.title}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            {activeCategories.length > 0 ? (
+              <ul className="mx-auto grid max-w-5xl grid-cols-4 gap-x-8 gap-y-2">
+                {activeCategories.map((category) => (
+                  <li key={category.slug}>
+                    <Link
+                      href={category.href}
+                      className="block py-0.5 text-sm transition-colors hover:text-accent"
+                    >
+                      {category.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mx-auto max-w-5xl text-sm text-muted">
+                В этом разделе пока нет товаров.
+              </p>
+            )}
           </div>
         )}
       </div>
@@ -277,18 +284,27 @@ function MobileDrawer({
                 </div>
                 <div className={cn("grid transition-[grid-template-rows] duration-300", isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
                   <ul className="overflow-hidden">
-                    {section.categories.map((category) => (
-                      <li key={category.slug}>
-                        <Link
-                          href={category.href}
-                          tabIndex={open && isOpen ? undefined : -1}
-                          onClick={onClose}
-                          className={cn("block py-2 pl-3 text-sm", category.hasProducts ? "text-fg" : "text-muted")}
-                        >
-                          {category.title}
-                        </Link>
+                    {/* Только непустые категории — как и в меню на широком экране. */}
+                    {section.categories.filter((c) => c.hasProducts).length > 0 ? (
+                      section.categories
+                        .filter((category) => category.hasProducts)
+                        .map((category) => (
+                          <li key={category.slug}>
+                            <Link
+                              href={category.href}
+                              tabIndex={open && isOpen ? undefined : -1}
+                              onClick={onClose}
+                              className="block py-2 pl-3 text-sm"
+                            >
+                              {category.title}
+                            </Link>
+                          </li>
+                        ))
+                    ) : (
+                      <li className="py-2 pl-3 text-sm text-muted">
+                        В этом разделе пока нет товаров.
                       </li>
-                    ))}
+                    )}
                     <li className="pb-3" />
                   </ul>
                 </div>
