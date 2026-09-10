@@ -8,9 +8,16 @@ import type { Gender } from "@/lib/types";
  * Цены отдельно от карточки товара.
  *
  * Блок «Цены» в админке работает со всем каталогом сразу — восемьсот
- * строк. Тянуть ради четырёх чисел на строку полный товар с размерами,
+ * строк. Тянуть ради нескольких чисел на строку полный товар с размерами,
  * категориями и фото было бы дорого, поэтому здесь своя узкая выборка
- * и своя запись, которая трогает только ценовые столбцы.
+ * и своя запись, которая трогает только ценовые столбцы и две отметки.
+ *
+ * Как хранится цена. В базе `price` — то, по чему продаём сейчас, а
+ * `old_price` — цена до скидки, если скидка есть. Владелец же думает
+ * наоборот: есть «цена» и, возможно, «цена со скидкой»; нет скидочной —
+ * действует обычная. Пересчёт между этими взглядами — см. basePrice /
+ * salePrice здесь и toStored() в действиях: витрине и заказам ничего
+ * менять не пришлось, они и так берут `price` как продажную.
  */
 
 export type PricingRow = {
@@ -19,10 +26,13 @@ export type PricingRow = {
   title: string;
   slug: string;
   gender: Gender;
+  /** Продажная цена — то, что видит покупатель. */
   price: number;
+  /** Цена до скидки; null — скидки нет. */
   oldPrice: number | null;
   costPrice: number | null;
   isSale: boolean;
+  isBestseller: boolean;
   isPublished: boolean;
 };
 
@@ -36,13 +46,15 @@ type Row = {
   old_price: number | null;
   cost_price: number | null;
   is_sale: number;
+  is_bestseller: number;
   is_published: number;
 };
 
 export function getPricingRows(): PricingRow[] {
   const rows = getDb()
     .prepare(
-      `SELECT id, sku, title, slug, gender, price, old_price, cost_price, is_sale, is_published
+      `SELECT id, sku, title, slug, gender, price, old_price, cost_price,
+              is_sale, is_bestseller, is_published
        FROM products
        ORDER BY gender, title`,
     )
@@ -58,6 +70,7 @@ export function getPricingRows(): PricingRow[] {
     oldPrice: row.old_price,
     costPrice: row.cost_price,
     isSale: row.is_sale === 1,
+    isBestseller: row.is_bestseller === 1,
     isPublished: row.is_published === 1,
   }));
 }
@@ -68,6 +81,7 @@ export type PricingPatch = {
   oldPrice: number | null;
   costPrice: number | null;
   isSale: boolean;
+  isBestseller: boolean;
 };
 
 /**
@@ -79,11 +93,11 @@ export function applyPricing(patches: PricingPatch[]): number {
   return transaction(() => {
     const db = getDb();
     const read = db.prepare(
-      "SELECT price, old_price, cost_price, is_sale FROM products WHERE id = ?",
+      "SELECT price, old_price, cost_price, is_sale, is_bestseller FROM products WHERE id = ?",
     );
     const write = db.prepare(
       `UPDATE products
-       SET price = ?, old_price = ?, cost_price = ?, is_sale = ?, updated_at = ?
+       SET price = ?, old_price = ?, cost_price = ?, is_sale = ?, is_bestseller = ?, updated_at = ?
        WHERE id = ?`,
     );
     const now = nowIso();
@@ -91,7 +105,13 @@ export function applyPricing(patches: PricingPatch[]): number {
 
     for (const patch of patches) {
       const current = read.get(patch.id) as
-        | { price: number; old_price: number | null; cost_price: number | null; is_sale: number }
+        | {
+            price: number;
+            old_price: number | null;
+            cost_price: number | null;
+            is_sale: number;
+            is_bestseller: number;
+          }
         | undefined;
       if (!current) continue;
 
@@ -99,10 +119,19 @@ export function applyPricing(patches: PricingPatch[]): number {
         current.price === patch.price &&
         current.old_price === patch.oldPrice &&
         current.cost_price === patch.costPrice &&
-        current.is_sale === (patch.isSale ? 1 : 0);
+        current.is_sale === (patch.isSale ? 1 : 0) &&
+        current.is_bestseller === (patch.isBestseller ? 1 : 0);
       if (same) continue;
 
-      write.run(patch.price, patch.oldPrice, patch.costPrice, patch.isSale ? 1 : 0, now, patch.id);
+      write.run(
+        patch.price,
+        patch.oldPrice,
+        patch.costPrice,
+        patch.isSale ? 1 : 0,
+        patch.isBestseller ? 1 : 0,
+        now,
+        patch.id,
+      );
       changed++;
     }
 

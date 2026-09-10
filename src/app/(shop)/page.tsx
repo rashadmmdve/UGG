@@ -6,15 +6,10 @@ import { JsonLd } from "@/components/JsonLd";
 import { Logo } from "@/components/Logo";
 import { HeroCarousel } from "@/components/shop/HeroCarousel";
 import { ProductCard } from "@/components/shop/ProductCard";
-import { SECTIONS, SITE_DESCRIPTION, SITE_NAME } from "@/lib/constants";
+import { SITE_DESCRIPTION, SITE_NAME } from "@/lib/constants";
 import { homeTiles } from "@/server/catalog/sections";
 import { cn } from "@/lib/utils";
-import {
-  getBestsellers,
-  getCategoriesBySection,
-  getNewArrivals,
-  getProductsByCategory,
-} from "@/server/repositories/catalog";
+import { getBestsellers, getNewArrivals } from "@/server/repositories/catalog";
 import { getContent } from "@/server/repositories/settings";
 import { faqLd } from "@/server/seo/jsonld";
 
@@ -30,14 +25,6 @@ export default function HomePage() {
   const content = getContent();
   const bestsellers = getBestsellers(8);
   const arrivals = getNewArrivals(8);
-
-  // Популярные категории — те, где есть товары; по три из каждого раздела.
-  const popular = SECTIONS.flatMap((section) =>
-    getCategoriesBySection(section.slug)
-      .filter((category) => getProductsByCategory(category.id).length > 0)
-      .slice(0, 3)
-      .map((category) => ({ ...category, sectionTitle: section.title })),
-  ).slice(0, 8);
 
   const tiles = homeTiles();
 
@@ -119,28 +106,6 @@ export default function HomePage() {
 
       {bestsellers.length > 0 && (
         <ProductRow title="Хиты" href="/catalog" products={bestsellers} eager />
-      )}
-
-      {popular.length > 0 && (
-        <section className="container-page mt-14">
-          <h2 className="heading-section">Категории</h2>
-          <ul className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-            {popular.map((category) => (
-              <li key={category.id}>
-                <Link href={`/catalog/${category.sectionSlug}/${category.slug}`}
-                  className="group block overflow-hidden rounded-lg border border-line transition hover:border-accent">
-                  <div className="relative aspect-[4/3] bg-elevated">
-                    {category.image && <Image src={category.image} alt="" fill sizes="25vw" className="object-contain" />}
-                  </div>
-                  <div className="p-3">
-                    <span className="block text-sm font-medium group-hover:text-accent">{category.shortTitle ?? category.title}</span>
-                    <span className="block text-xs text-muted">{category.sectionTitle}</span>
-                  </div>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
       )}
 
       {arrivals.length > 0 && (

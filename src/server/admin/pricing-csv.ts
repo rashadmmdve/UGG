@@ -1,5 +1,6 @@
 import "server-only";
 
+import { basePrice, salePrice } from "@/lib/pricing";
 import type { PricingRow } from "@/server/repositories/pricing";
 
 /**
@@ -9,6 +10,9 @@ import type { PricingRow } from "@/server/repositories/pricing";
  * такой файл сразу в колонки и с кириллицей, а без BOM показывает
  * кракозябры. При загрузке разделитель определяется по заголовку, так
  * что файл, пересохранённый через запятую или табуляцию, тоже примется.
+ *
+ * Столбцы цен — как их видит владелец: «Цена» и «Цена со скидкой».
+ * Пустая скидочная — скидки нет, действует обычная.
  */
 
 export const CSV_COLUMNS = [
@@ -16,15 +20,18 @@ export const CSV_COLUMNS = [
   "Артикул",
   "Название",
   "Цена",
-  "Старая цена",
+  "Цена со скидкой",
   "Себестоимость",
   "Распродажа",
+  "Хиты",
 ] as const;
 
 const quote = (value: string | number | null) => {
   const text = value === null || value === undefined ? "" : String(value);
   return /[";\n\r,\t]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 };
+
+const yesNo = (v: boolean) => (v ? "да" : "нет");
 
 export function pricingToCsv(rows: PricingRow[]): string {
   const lines = [
@@ -34,10 +41,11 @@ export function pricingToCsv(rows: PricingRow[]): string {
         row.id,
         row.sku ?? "",
         row.title,
-        row.price,
-        row.oldPrice ?? "",
+        basePrice(row),
+        salePrice(row) ?? "",
         row.costPrice ?? "",
-        row.isSale ? "да" : "нет",
+        yesNo(row.isSale),
+        yesNo(row.isBestseller),
       ]
         .map(quote)
         .join(";"),
@@ -46,19 +54,24 @@ export function pricingToCsv(rows: PricingRow[]): string {
   return "﻿" + lines.join("\r\n") + "\r\n";
 }
 
+/**
+ * Разобранная строка. `undefined` — столбца в файле не было, значение
+ * остаётся прежним; `null` — ячейка пустая, значение очищается.
+ */
 export type ParsedPricing = {
   id: string | null;
   sku: string | null;
-  price: number | null;
-  oldPrice: number | null | undefined;
+  price: number | undefined;
+  salePrice: number | null | undefined;
   costPrice: number | null | undefined;
   isSale: boolean | undefined;
+  isBestseller: boolean | undefined;
   line: number;
 };
 
 /** Число из ячейки: «13 990 ₽», «13990,00», «13990». Пусто — null. */
 function parseMoney(raw: string): number | null | "bad" {
-  const text = raw.replace(/[\s ₽руб.]/gi, "").replace(",", ".");
+  const text = raw.replace(/[\s  ₽руб.]/gi, "").replace(",", ".");
   if (text === "") return null;
   const value = Number(text);
   if (!Number.isFinite(value) || value < 0) return "bad";
@@ -126,16 +139,23 @@ export function parsePricingCsv(text: string): { rows: ParsedPricing[]; errors: 
     id: index("ID"),
     sku: index("Артикул"),
     price: index("Цена"),
+    // Старое имя столбца принимается тоже — файлы, скачанные раньше,
+    // не должны ломаться.
+    salePrice: index("Цена со скидкой"),
     oldPrice: index("Старая цена"),
     costPrice: index("Себестоимость"),
     isSale: index("Распродажа"),
+    isBestseller: index("Хиты"),
   };
 
   if (col.id < 0 && col.sku < 0) {
     return { rows: [], errors: ["Нет столбца «ID» или «Артикул» — по ним ищется товар."] };
   }
-  if (col.price < 0 && col.oldPrice < 0 && col.costPrice < 0 && col.isSale < 0) {
-    return { rows: [], errors: ["Нет ни одного столбца с данными: «Цена», «Старая цена», «Себестоимость», «Распродажа»."] };
+  if (col.price < 0 && col.salePrice < 0 && col.oldPrice < 0 && col.costPrice < 0 && col.isSale < 0 && col.isBestseller < 0) {
+    return {
+      rows: [],
+      errors: ["Нет ни одного столбца с данными: «Цена», «Цена со скидкой», «Себестоимость», «Распродажа», «Хиты»."],
+    };
   }
 
   const rows: ParsedPricing[] = [];
@@ -151,17 +171,35 @@ export function parsePricingCsv(text: string): { rows: ParsedPricing[]; errors: 
       return;
     }
 
-    const price = col.price >= 0 ? parseMoney(cell(cells, col.price)) : undefined;
-    const oldPrice = col.oldPrice >= 0 ? parseMoney(cell(cells, col.oldPrice)) : undefined;
-    const costPrice = col.costPrice >= 0 ? parseMoney(cell(cells, col.costPrice)) : undefined;
+    const money = (i: number) => (i >= 0 ? parseMoney(cell(cells, i)) : undefined);
+    let price = money(col.price);
+    let sale = money(col.salePrice);
+    const costPrice = money(col.costPrice);
     const isSale = col.isSale >= 0 ? parseFlag(cell(cells, col.isSale)) : undefined;
+    const isBestseller = col.isBestseller >= 0 ? parseFlag(cell(cells, col.isBestseller)) : undefined;
 
-    if (price === "bad" || oldPrice === "bad" || costPrice === "bad") {
+    // Старый формат «Цена; Старая цена»: там «Цена» была продажной, а
+    // «Старая» — до скидки. Переводим в новые понятия.
+    if (col.oldPrice >= 0 && col.salePrice < 0) {
+      const old = money(col.oldPrice);
+      if (old === "bad") {
+        errors.push(`Строка ${number}: цена должна быть числом.`);
+        return;
+      }
+      if (old !== null && old !== undefined && price !== null && price !== undefined && price !== "bad") {
+        sale = price;
+        price = old;
+      } else {
+        sale = null;
+      }
+    }
+
+    if (price === "bad" || sale === "bad" || costPrice === "bad") {
       errors.push(`Строка ${number}: цена должна быть числом.`);
       return;
     }
-    if (isSale === "bad") {
-      errors.push(`Строка ${number}: в «Распродаже» ожидается «да» или «нет».`);
+    if (isSale === "bad" || isBestseller === "bad") {
+      errors.push(`Строка ${number}: в «Распродаже» и «Хитах» ожидается «да» или «нет».`);
       return;
     }
     // Цена обязательна, если столбец есть: пустая цена — это ошибка,
@@ -174,10 +212,11 @@ export function parsePricingCsv(text: string): { rows: ParsedPricing[]; errors: 
     rows.push({
       id,
       sku,
-      price: price === undefined ? null : price,
-      oldPrice,
+      price: price === null ? undefined : price,
+      salePrice: sale,
       costPrice,
       isSale,
+      isBestseller,
       line: number,
     });
   });

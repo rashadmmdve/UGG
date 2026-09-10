@@ -99,6 +99,12 @@ export async function saveProductAction(
     }),
   );
 
+  const basePriceRaw = numberOrNull(formData.get("price"));
+  const salePrice = numberOrNull(formData.get("salePrice"));
+  if (salePrice !== null && basePriceRaw !== null && Number(salePrice) >= Number(basePriceRaw)) {
+    return { fieldErrors: { salePrice: "Цена со скидкой должна быть ниже цены" } };
+  }
+
   const parsed = productSchema.safeParse({
     id,
     slug: formData.get("slug"),
@@ -115,8 +121,10 @@ export async function saveProductAction(
     seasons: jsonField<string[]>(formData, "seasons", []),
     shaftHeightCm: numberOrNull(formData.get("shaftHeightCm")),
     heelHeightCm: numberOrNull(formData.get("heelHeightCm")),
-    price: formData.get("price"),
-    oldPrice: numberOrNull(formData.get("oldPrice")),
+    // Владелец вводит цену и цену со скидкой; храним продажную и цену
+    // до скидки. Нет скидочной — продаём по обычной.
+    price: salePrice ?? formData.get("price"),
+    oldPrice: salePrice === null ? null : basePriceRaw,
     costPrice: numberOrNull(formData.get("costPrice")),
     images: jsonField<string[]>(formData, "images", []),
     variants,

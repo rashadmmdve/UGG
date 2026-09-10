@@ -12,6 +12,7 @@ import {
   SubmitButton,
 } from "@/components/admin/ui";
 import { SECTIONS } from "@/lib/constants";
+import { basePrice, salePrice } from "@/lib/pricing";
 import { slugify } from "@/lib/utils";
 import { saveProductAction } from "@/server/admin/actions/catalog";
 import type { ActionState } from "@/server/validation/errors";
@@ -417,24 +418,28 @@ export function ProductForm({
       <section className="rounded-lg border border-line bg-bg p-5">
         <h2 className="font-semibold">Цена</h2>
         <div className="mt-4 grid gap-4 md:grid-cols-3">
+          {/*
+            Владелец задаёт цену и, если надо, цену со скидкой. В базе это
+            продажная цена и цена до скидки — пересчёт в действии сохранения.
+          */}
           <AField
             id="price"
             name="price"
             label="Цена, ₽"
             type="number"
             min={0}
-            defaultValue={product?.price ?? ""}
+            defaultValue={product ? basePrice(product) : ""}
             error={errors.price}
           />
           <AField
-            id="oldPrice"
-            name="oldPrice"
-            label="Старая цена, ₽"
+            id="salePrice"
+            name="salePrice"
+            label="Цена со скидкой, ₽"
             type="number"
             min={0}
-            defaultValue={product?.oldPrice ?? ""}
-            hint="Если заполнена — карточка получит бейдж скидки"
-            error={errors.oldPrice}
+            defaultValue={product ? (salePrice(product) ?? "") : ""}
+            hint="Пусто — действует обычная цена. Заполнена — продаём по ней, обычная перечёркнута"
+            error={errors.salePrice}
           />
           <AField
             id="costPrice"

@@ -34,6 +34,7 @@ export default async function AdminPricesPage(props: PageProps<"/admin/prices">)
   });
 
   const inSale = all.filter((row) => row.isSale).length;
+  const inHits = all.filter((row) => row.isBestseller).length;
 
   return (
     <div>
@@ -49,16 +50,17 @@ export default async function AdminPricesPage(props: PageProps<"/admin/prices">)
         </a>
       </div>
       <p className="mt-2 max-w-3xl text-sm text-muted">
-        Старая цена включает значок скидки на карточке; себестоимость на сайте не
-        показывается. Галочка «В распродаже» — та же, что в карточке товара:
-        отмеченных сейчас {inSale}.
+        «Цена» действует, пока не заполнена «Со скидкой»; если заполнена — продаём по
+        ней, а обычная показывается перечёркнутой. Себестоимость на сайте не
+        показывается. Галочки те же, что в карточке товара: в распродаже сейчас {inSale},
+        в хитах на главной — {inHits}.
       </p>
 
       <section className="mt-6 rounded-lg border border-line bg-bg p-5">
         <h2 className="font-semibold">Загрузить из файла</h2>
         <p className="mt-1 text-xs text-muted">
           Скачайте CSV, поправьте цены в Excel и загрузите обратно. Товар ищется по
-          столбцу ID, затем по артикулу. Пустая ячейка в «Старой цене» или
+          столбцу ID, затем по артикулу. Пустая ячейка в «Цене со скидкой» или
           «Себестоимости» очищает значение; столбец, которого нет в файле, не трогается.
           Файл с ошибками не применяется целиком — сначала исправьте, что покажет.
         </p>
