@@ -42,7 +42,7 @@ export default function HomePage() {
 
       {/* Герой во всю ширину */}
       <section className="container-page pt-6">
-        <div className="relative flex min-h-[340px] flex-col justify-end overflow-hidden rounded-xl bg-sand p-8 md:min-h-[460px] md:p-12">
+        <div className="relative flex min-h-[440px] flex-col justify-end overflow-hidden rounded-xl bg-sand p-8 md:min-h-[620px] md:p-12">
           {content.home.heroImage ? (
             <Image src={content.home.heroImage} alt="" fill sizes="100vw"
               className="object-cover" loading="eager" fetchPriority="high" />
@@ -51,7 +51,7 @@ export default function HomePage() {
             // элементом первого экрана — грузим её сразу, иначе она
             // портит LCP, а он учитывается в оценке скорости.
             <div className="absolute inset-0 flex items-center justify-center opacity-[0.07]">
-              <Logo width={760} href={null} eager />
+              <Logo width={1000} href={null} eager />
             </div>
           )}
           <div className="relative max-w-xl">
