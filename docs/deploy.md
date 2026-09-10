@@ -66,6 +66,7 @@ nano /srv/ugg/shared/.env.local      # образец — /srv/ugg/current/.env.
 | `CDEK_API_URL` | `https://api.cdek.ru` — боевой, не тестовый |
 | `CDEK_ACCOUNT`, `CDEK_PASSWORD` | из договора со СДЭК |
 | `SMTP_*`, `MAIL_FROM` | как в локальном `.env.local` |
+| `SMTP_IP_FAMILY` | `6` — на этом хостинге исходящий SMTP закрыт по IPv4 и открыт по IPv6. Без переменной письмо уходит на 20 секунд позже (nodemailer сначала стучится в закрытый IPv4), а при длинных таймаутах форма «Забыли пароль?» висит минутами. Проверить: `timeout 8 bash -c 'exec 3<>/dev/tcp/77.88.21.158/465'` — молчание значит, что IPv4 закрыт |
 | `YOOKASSA_SHOP_ID`, `YOOKASSA_SECRET_KEY` | когда будут; пусто — оплата картой выключена |
 
 Потом первая сборка и автовыкладка:
