@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Ubuntu } from "next/font/google";
 
 import { JsonLd } from "@/components/JsonLd";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/constants";
@@ -7,9 +7,18 @@ import { organizationLd, webSiteLd } from "@/server/seo/jsonld";
 
 import "./globals.css";
 
-const inter = Inter({
+/**
+ * Ubuntu — единственный шрифт проекта.
+ *
+ * В отличие от Inter это не вариативный шрифт: начертания перечисляются
+ * явно, и грузится ровно то, что используется в вёрстке — обычное,
+ * среднее и жирное. Кириллица подключена отдельным набором символов,
+ * иначе русский текст откатился бы на системный шрифт.
+ */
+const ubuntu = Ubuntu({
   subsets: ["latin", "cyrillic"],
-  variable: "--font-inter",
+  weight: ["400", "500", "700"],
+  variable: "--font-ubuntu",
   display: "swap",
 });
 
@@ -52,7 +61,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="ru" className={inter.variable}>
+    <html lang="ru" className={ubuntu.variable}>
       <body>
         {/*
           Разметка организации и сайта выводится на всех страницах: по ней
