@@ -156,26 +156,6 @@
     text-underline-offset: 3px;
   }
 
-  /* Тонкая полоса прокрутки для блоков фильтров: без неё не видно, что
-     список продолжается за нижним краем блока. */
-  .thin-scrollbar {
-    scrollbar-width: thin;
-    scrollbar-color: var(--line-strong) transparent;
-  }
-
-  .thin-scrollbar::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  .thin-scrollbar::-webkit-scrollbar-thumb {
-    border-radius: 3px;
-    background-color: var(--line-strong);
-  }
-
-  .thin-scrollbar::-webkit-scrollbar-track {
-    background-color: transparent;
-  }
-
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }

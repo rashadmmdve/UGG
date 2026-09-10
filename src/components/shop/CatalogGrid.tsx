@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { startTransition, useEffect, useMemo, useState } from "react";
-import { SlidersHorizontal, X } from "lucide-react";
+import { Minus, Plus, SlidersHorizontal, X } from "lucide-react";
 
 import { PriceSlider } from "@/components/shop/PriceSlider";
 import { ProductCard } from "@/components/shop/ProductCard";
@@ -29,6 +29,13 @@ type Filters = {
   page: number;
 };
 
+/**
+ * Со скольких значений список приходит свёрнутым. Восемь строк — примерно
+ * та высота, после которой блок начинает вытеснять соседние фильтры за
+ * пределы экрана.
+ */
+const COLLAPSE_FROM = 8;
+
 const DEFAULT_FILTERS: Filters = {
   colors: [],
   sizes: [],
@@ -54,6 +61,14 @@ function filtersFromUrl(): Filters {
   };
 }
 
+/** Пункт списка категорий в боковой панели. */
+export type CategoryLink = {
+  title: string;
+  href: string;
+  count: number;
+  active: boolean;
+};
+
 /**
  * Сетка каталога с фильтрами.
  *
@@ -66,14 +81,6 @@ function filtersFromUrl(): Filters {
  * браузере, и в серверном HTML осталась бы заглушка — робот без
  * JavaScript увидел бы пустую категорию.
  */
-/** Пункт списка категорий в боковой панели. */
-export type CategoryLink = {
-  title: string;
-  href: string;
-  count: number;
-  active: boolean;
-};
-
 export function CatalogGrid({
   products,
   colors,
@@ -220,7 +227,7 @@ export function CatalogGrid({
   const panel = (
     <div className="flex flex-col divide-y divide-line">
       {categories.length > 0 && (
-        <FilterBlock title="Категории">
+        <FilterBlock title="Категории" defaultOpen={categories.length < COLLAPSE_FROM}>
           {categories.map((category) => (
             <Link
               key={category.href}
@@ -241,7 +248,7 @@ export function CatalogGrid({
       )}
 
       {facets.colors.length > 1 && (
-        <FilterBlock title="Цвет">
+        <FilterBlock title="Цвет" defaultOpen={facets.colors.length < COLLAPSE_FROM}>
           {facets.colors.map(([slug, { title, count }]) => (
             <CheckRow
               key={slug}
@@ -255,7 +262,7 @@ export function CatalogGrid({
       )}
 
       {facets.sizes.length > 1 && (
-        <FilterBlock title="Размер">
+        <FilterBlock title="Размер" defaultOpen={facets.sizes.length < COLLAPSE_FROM}>
           {facets.sizes.map(([size, count]) => (
             <CheckRow
               key={size}
@@ -269,7 +276,7 @@ export function CatalogGrid({
       )}
 
       {facets.materials.length > 1 && (
-        <FilterBlock title="Материал">
+        <FilterBlock title="Материал" defaultOpen={facets.materials.length < COLLAPSE_FROM}>
           {facets.materials.map(([material, count]) => (
             <CheckRow
               key={material}
@@ -283,7 +290,7 @@ export function CatalogGrid({
       )}
 
       {facets.priceMax > facets.priceMin && (
-        <FilterBlock title="Цена" scroll={false}>
+        <FilterBlock title="Цена">
           <PriceSlider
             /* Сброс фильтров пересоздаёт ползунок — так его внутреннее
                положение возвращается к границам без синхронизации эффектом. */
@@ -411,28 +418,53 @@ export function CatalogGrid({
 }
 
 /**
- * Блок фильтра.
+ * Блок фильтра — сворачивающийся список.
  *
- * У списка фиксированная высота: значений бывает и пять, и пятьдесят, и без
- * ограничения один цвет отодвигал бы цену на два экрана вниз. Длинный
- * список прокручивается внутри блока.
+ * Значений бывает и пять, и полсотни. Длинные списки закрыты при открытии
+ * страницы, иначе один цвет отодвигал бы цену на два экрана вниз.
+ *
+ * Раскрытие анимируется переходом grid-rows с 0fr на 1fr: это
+ * единственный способ плавно показать блок неизвестной высоты, не измеряя
+ * её в JavaScript.
  */
 function FilterBlock({
   title,
-  scroll = true,
+  defaultOpen = true,
   children,
 }: {
   title: string;
-  scroll?: boolean;
+  /** Длинные списки приходят сюда закрытыми. */
+  defaultOpen?: boolean;
   children: React.ReactNode;
 }) {
+  const [open, setOpen] = useState(defaultOpen);
+
   return (
     <section className="py-4">
-      <h3 className="mb-2 text-sm font-semibold">{title}</h3>
-      <div
-        className={cn(scroll && "thin-scrollbar max-h-52 overflow-y-auto pr-1")}
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-2 text-left text-sm font-semibold"
       >
-        {children}
+        {title}
+        {open ? (
+          <Minus className="h-4 w-4 shrink-0 text-muted" strokeWidth={1.5} />
+        ) : (
+          <Plus className="h-4 w-4 shrink-0 text-muted" strokeWidth={1.5} />
+        )}
+      </button>
+
+      <div
+        className={cn(
+          "grid transition-[grid-template-rows] duration-300 ease-out",
+          open ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+        )}
+      >
+        {/* Свёрнутый список не должен ловить фокус с клавиатуры. */}
+        <div className="overflow-hidden" inert={!open}>
+          <div className="pt-2">{children}</div>
+        </div>
       </div>
     </section>
   );
