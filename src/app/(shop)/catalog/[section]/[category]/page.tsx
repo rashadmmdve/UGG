@@ -9,6 +9,7 @@ import { CatalogGrid } from "@/components/shop/CatalogGrid";
 import { SECTIONS } from "@/lib/constants";
 import {
   findCategoryByAlias,
+  getCategoriesBySection,
   getCategoryBySlug,
   getColors,
   getProductsByCategory,
@@ -70,6 +71,15 @@ export default async function CategoryPage(props: PageProps<"/catalog/[section]/
   const landings = getLandingsForCategory(section, category.slug);
   const crumbs = categoryCrumbs(section, category.slug);
 
+  // Соседние категории раздела — в боковой панели, текущая подсвечена.
+  // Так можно переключаться между категориями, не возвращаясь назад.
+  const categoryLinks = getCategoriesBySection(section).map((item) => ({
+    title: item.shortTitle ?? item.title,
+    href: `/catalog/${section}/${item.slug}`,
+    count: getProductsByCategory(item.id).length,
+    active: item.id === category.id,
+  }));
+
   return (
     <div className="container-page py-8">
       <JsonLd data={[breadcrumbLd(crumbs), itemListLd(products)]} />
@@ -100,7 +110,11 @@ export default async function CategoryPage(props: PageProps<"/catalog/[section]/
         </p>
       ) : (
         <Suspense fallback={<div className="py-24" aria-hidden />}>
-          <CatalogGrid products={products} colors={getColors()} />
+          <CatalogGrid
+            products={products}
+            colors={getColors()}
+            categories={categoryLinks}
+          />
         </Suspense>
       )}
 

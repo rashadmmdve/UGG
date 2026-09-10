@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { startTransition, useEffect, useMemo, useState } from "react";
 import { SlidersHorizontal, X } from "lucide-react";
 
@@ -65,12 +66,27 @@ function filtersFromUrl(): Filters {
  * браузере, и в серверном HTML осталась бы заглушка — робот без
  * JavaScript увидел бы пустую категорию.
  */
+/** Пункт списка категорий в боковой панели. */
+export type CategoryLink = {
+  title: string;
+  href: string;
+  count: number;
+  active: boolean;
+};
+
 export function CatalogGrid({
   products,
   colors,
+  categories = [],
 }: {
   products: Product[];
   colors: Color[];
+  /**
+   * Категории раздела. Стоят первым блоком панели рядом с цветом и
+   * размером, но остаются ссылками: это переход на другую страницу,
+   * а не фильтр внутри текущей выборки.
+   */
+  categories?: CategoryLink[];
 }) {
   const colorById = useMemo(() => new Map(colors.map((color) => [color.id, color])), [colors]);
 
@@ -203,6 +219,27 @@ export function CatalogGrid({
 
   const panel = (
     <div className="flex flex-col divide-y divide-line">
+      {categories.length > 0 && (
+        <FilterBlock title="Категории">
+          {categories.map((category) => (
+            <Link
+              key={category.href}
+              href={category.href}
+              className={cn(
+                "flex items-center gap-2 py-1.5 text-sm transition-colors hover:text-accent",
+                category.active ? "font-semibold text-accent" : "text-fg",
+              )}
+              aria-current={category.active ? "page" : undefined}
+            >
+              <span className="flex-1">{category.title}</span>
+              {category.count > 0 && (
+                <span className="text-xs text-muted tabular-nums">{category.count}</span>
+              )}
+            </Link>
+          ))}
+        </FilterBlock>
+      )}
+
       {facets.colors.length > 1 && (
         <FilterBlock title="Цвет">
           {facets.colors.map(([slug, { title, count }]) => (
@@ -392,7 +429,9 @@ function FilterBlock({
   return (
     <section className="py-4">
       <h3 className="mb-2 text-sm font-semibold">{title}</h3>
-      <div className={cn(scroll && "thin-scrollbar max-h-52 overflow-y-auto pr-1")}>
+      <div
+        className={cn(scroll && "thin-scrollbar max-h-52 overflow-y-auto pr-1")}
+      >
         {children}
       </div>
     </section>

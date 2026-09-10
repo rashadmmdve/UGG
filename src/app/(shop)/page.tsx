@@ -55,8 +55,11 @@ export default function HomePage() {
               <Image src={content.home.heroImage} alt="" fill sizes="(min-width: 1024px) 60vw, 100vw"
                 className="object-cover" loading="eager" fetchPriority="high" />
             ) : (
+              // Подложка занимает весь герой и оказывается самым крупным
+              // элементом первого экрана — грузим её сразу, иначе она
+              // портит LCP, а он учитывается в оценке скорости.
               <div className="absolute inset-0 flex items-center justify-center opacity-[0.07]">
-                <Logo width={520} href={null} />
+                <Logo width={520} href={null} eager />
               </div>
             )}
             <div className="relative max-w-md">

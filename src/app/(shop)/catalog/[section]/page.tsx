@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
@@ -48,9 +47,16 @@ export default async function SectionPage(props: PageProps<"/catalog/[section]">
   const section = findSection(sectionSlug);
   if (!section) notFound();
 
-  const categories = getCategoriesBySection(sectionSlug);
   const products = getProductsBySection(sectionSlug);
   const crumbs = sectionCrumbs(sectionSlug);
+
+  // Категории раздела уходят в боковую панель рядом с цветом и размером.
+  const categoryLinks = getCategoriesBySection(sectionSlug).map((category) => ({
+    title: category.shortTitle ?? category.title,
+    href: `/catalog/${sectionSlug}/${category.slug}`,
+    count: getProductsByCategory(category.id).length,
+    active: false,
+  }));
 
   return (
     <div className="container-page py-8">
@@ -59,31 +65,17 @@ export default async function SectionPage(props: PageProps<"/catalog/[section]">
 
       <h1 className="heading-section mt-4">{section.title} UGG</h1>
 
-      {categories.length > 0 && (
-        <nav aria-label="Категории" className="mt-6 flex flex-wrap gap-2">
-          {categories.map((category) => {
-            const count = getProductsByCategory(category.id).length;
-            return (
-              <Link
-                key={category.id}
-                href={`/catalog/${sectionSlug}/${category.slug}`}
-                className={`rounded-full border px-3 py-1.5 text-sm transition-colors hover:border-accent ${count > 0 ? "border-line" : "border-line/60 text-muted"}`}
-              >
-                {category.shortTitle ?? category.title}
-                {count > 0 && <span className="ml-1 text-muted">{count}</span>}
-              </Link>
-            );
-          })}
-        </nav>
-      )}
-
       {products.length === 0 ? (
         <p className="mt-10 rounded-lg border border-line bg-sand p-6 text-sm text-muted">
           В этом разделе пока нет товаров.
         </p>
       ) : (
         <Suspense fallback={<div className="py-24" aria-hidden />}>
-          <CatalogGrid products={products} colors={getColors()} />
+          <CatalogGrid
+            products={products}
+            colors={getColors()}
+            categories={categoryLinks}
+          />
         </Suspense>
       )}
     </div>
