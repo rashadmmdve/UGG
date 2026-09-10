@@ -4,7 +4,6 @@ import Link from "next/link";
 import { startTransition, useEffect, useMemo, useState } from "react";
 import { Minus, Plus, SlidersHorizontal, X } from "lucide-react";
 
-import { PriceSlider } from "@/components/shop/PriceSlider";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { PRODUCTS_PER_PAGE } from "@/lib/constants";
 import { cn, plural } from "@/lib/utils";
@@ -24,7 +23,6 @@ type Filters = {
   colors: string[];
   sizes: number[];
   materials: string[];
-  price: [number, number] | null;
   sort: Sort;
   page: number;
 };
@@ -40,7 +38,6 @@ const DEFAULT_FILTERS: Filters = {
   colors: [],
   sizes: [],
   materials: [],
-  price: null,
   sort: "new",
   page: 1,
 };
@@ -48,14 +45,11 @@ const DEFAULT_FILTERS: Filters = {
 /** Фильтры из адресной строки — читаются только в браузере, после гидрации. */
 function filtersFromUrl(): Filters {
   const params = new URLSearchParams(window.location.search);
-  const min = Number(params.get("price_min"));
-  const max = Number(params.get("price_max"));
 
   return {
     colors: params.getAll("color"),
     sizes: params.getAll("size").map(Number).filter((n) => !Number.isNaN(n)),
     materials: params.getAll("material"),
-    price: min && max ? [min, max] : null,
     sort: (params.get("sort") as Sort) || "new",
     page: Math.max(1, Number(params.get("page")) || 1),
   };
@@ -142,10 +136,6 @@ export function CatalogGrid({
     next.colors.forEach((c) => params.append("color", c));
     next.sizes.forEach((s) => params.append("size", String(s)));
     next.materials.forEach((m) => params.append("material", m));
-    if (next.price) {
-      params.set("price_min", String(next.price[0]));
-      params.set("price_max", String(next.price[1]));
-    }
     if (next.sort !== "new") params.set("sort", next.sort);
     if (next.page > 1) params.set("page", String(next.page));
 
@@ -159,15 +149,10 @@ export function CatalogGrid({
     const colorGroups = new Map<string, { title: string; count: number }>();
     const sizes = new Map<number, number>();
     const materials = new Map<string, number>();
-    let minPrice = Infinity;
-    let maxPrice = 0;
 
     for (const product of products) {
       const available = product.variants.filter((v) => v.stock > 0);
       if (available.length === 0) continue;
-
-      minPrice = Math.min(minPrice, product.price);
-      maxPrice = Math.max(maxPrice, product.price);
 
       const color = product.colorId ? colorById.get(product.colorId) : null;
       if (color) {
@@ -183,17 +168,10 @@ export function CatalogGrid({
       }
     }
 
-    // Границы округляются до пятисот, чтобы шаг ползунка попадал в края.
-    const floor = Number.isFinite(minPrice) ? Math.floor(minPrice / 500) * 500 : 0;
-    const ceil = maxPrice ? Math.ceil(maxPrice / 500) * 500 : 0;
-
     return {
       colors: [...colorGroups.entries()].sort((a, b) => a[1].title.localeCompare(b[1].title, "ru")),
       sizes: [...sizes.entries()].sort((a, b) => a[0] - b[0]),
       materials: [...materials.entries()].sort((a, b) => b[1] - a[1]),
-      priceMin: floor,
-      // Диапазон в один шаг ползунок не отрисует — расширяем.
-      priceMax: ceil > floor ? ceil : floor + 500,
     };
   }, [products, colorById]);
 
@@ -210,10 +188,6 @@ export function CatalogGrid({
       }
       if (filters.materials.length) {
         if (!product.materials.some((m) => filters.materials.includes(m))) return false;
-      }
-      if (filters.price) {
-        const [from, to] = filters.price;
-        if (product.price < from || product.price > to) return false;
       }
       return true;
     });
@@ -236,8 +210,7 @@ export function CatalogGrid({
   const activeCount =
     filters.colors.length +
     filters.sizes.length +
-    filters.materials.length +
-    (filters.price ? 1 : 0);
+    filters.materials.length;
 
   const toggle = <T,>(list: T[], value: T) =>
     list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
@@ -307,26 +280,13 @@ export function CatalogGrid({
         </FilterBlock>
       )}
 
-      {facets.priceMax > facets.priceMin && (
-        <FilterBlock title="Цена">
-          <PriceSlider
-            /* Сброс фильтров пересоздаёт ползунок — так его внутреннее
-               положение возвращается к границам без синхронизации эффектом. */
-            key={filters.price ? "set" : "reset"}
-            min={facets.priceMin}
-            max={facets.priceMax}
-            value={filters.price ?? [facets.priceMin, facets.priceMax]}
-            onChange={(price) => update({ price })}
-          />
-        </FilterBlock>
-      )}
 
       {activeCount > 0 && (
         <div className="py-4">
           <button
             type="button"
             onClick={() =>
-              update({ colors: [], sizes: [], materials: [], price: null })
+              update({ colors: [], sizes: [], materials: [] })
             }
             className="text-sm underline underline-offset-4 hover:text-muted"
           >
