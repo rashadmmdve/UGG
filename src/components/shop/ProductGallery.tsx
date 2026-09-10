@@ -63,7 +63,7 @@ export function ProductGallery({
             loading="eager"
             fetchPriority="high"
             sizes="(min-width: 1024px) 50vw, 100vw"
-            className="object-cover"
+            className="object-contain"
           />
         ) : (
           <div className="flex h-full items-center justify-center text-sm text-muted">
@@ -108,7 +108,7 @@ export function ProductGallery({
                 alt=""
                 fill
                 sizes="(min-width: 1024px) 8vw, 16vw"
-                className="object-cover"
+                className="object-contain"
               />
             </button>
           ))}

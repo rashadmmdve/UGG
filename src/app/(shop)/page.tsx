@@ -44,9 +44,10 @@ export default function HomePage() {
       {/* Герой во всю ширину */}
       <section className="container-page pt-6">
         <div className="relative flex min-h-[440px] flex-col justify-end overflow-hidden rounded-xl bg-sand p-8 md:min-h-[620px] md:p-12">
+          {/* Фото вписывается целиком и центрируется — см. пояснение в ProductCard. */}
           {content.home.heroImage ? (
             <Image src={content.home.heroImage} alt="" fill sizes="100vw"
-              className="object-cover" loading="eager" fetchPriority="high" />
+              className="object-contain" loading="eager" fetchPriority="high" />
           ) : (
             // Подложка занимает весь герой и оказывается самым крупным
             // элементом первого экрана — грузим её сразу, иначе она
@@ -81,7 +82,7 @@ export default function HomePage() {
                     alt=""
                     fill
                     sizes="(min-width: 1024px) 25vw, 50vw"
-                    className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                    className="object-contain transition-transform duration-300 group-hover:scale-[1.03]"
                   />
                   {/* Затемнение снизу: белое название на светлом снимке иначе не читается. */}
                   <span className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent" />
@@ -125,7 +126,7 @@ export default function HomePage() {
                 <Link href={`/catalog/${category.sectionSlug}/${category.slug}`}
                   className="group block overflow-hidden rounded-lg border border-line transition hover:border-accent">
                   <div className="relative aspect-[4/3] bg-elevated">
-                    {category.image && <Image src={category.image} alt="" fill sizes="25vw" className="object-cover" />}
+                    {category.image && <Image src={category.image} alt="" fill sizes="25vw" className="object-contain" />}
                   </div>
                   <div className="p-3">
                     <span className="block text-sm font-medium group-hover:text-accent">{category.shortTitle ?? category.title}</span>

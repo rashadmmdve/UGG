@@ -140,7 +140,7 @@ export default async function ProductPage(props: PageProps<"/product/[slug]">) {
                             alt={itemColor?.title ?? item.title}
                             fill
                             sizes="64px"
-                            className="object-cover"
+                            className="object-contain"
                           />
                         ) : (
                           // Фото ещё не загрузили — показываем сам оттенок,

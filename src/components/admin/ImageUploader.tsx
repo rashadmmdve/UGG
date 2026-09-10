@@ -85,7 +85,7 @@ export function ImageUploader({
             key={url}
             className="group relative h-28 w-28 overflow-hidden rounded border border-line bg-elevated"
           >
-            <Image src={url} alt="" fill sizes="112px" className="object-cover" />
+            <Image src={url} alt="" fill sizes="112px" className="object-contain" />
             {index === 0 && (
               <figcaption className="absolute top-1 left-1 rounded bg-accent px-1.5 py-0.5 text-[10px] font-medium text-white">
                 Главное

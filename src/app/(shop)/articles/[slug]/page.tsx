@@ -72,7 +72,7 @@ export default async function ArticlePage(props: PageProps<"/articles/[slug]">) 
 
         {article.cover && (
           <div className="relative mt-6 aspect-[16/9] overflow-hidden rounded-lg bg-elevated">
-            <Image src={article.cover} alt="" fill sizes="(min-width: 1024px) 768px, 100vw" className="object-cover" loading="eager" />
+            <Image src={article.cover} alt="" fill sizes="(min-width: 1024px) 768px, 100vw" className="object-contain" loading="eager" />
           </div>
         )}
 

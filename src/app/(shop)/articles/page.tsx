@@ -37,7 +37,7 @@ export default function ArticlesPage() {
               <Link href={`/articles/${article.slug}`} className="group block">
                 <div className="relative aspect-[16/10] overflow-hidden rounded-lg bg-elevated">
                   {article.cover && (
-                    <Image src={article.cover} alt="" fill sizes="(min-width: 1024px) 33vw, 100vw" className="object-cover transition-transform group-hover:scale-[1.02]" />
+                    <Image src={article.cover} alt="" fill sizes="(min-width: 1024px) 33vw, 100vw" className="object-contain transition-transform group-hover:scale-[1.02]" />
                   )}
                 </div>
                 <p className="mt-3 text-xs text-muted">{formatDate(article.publishedAt)}</p>

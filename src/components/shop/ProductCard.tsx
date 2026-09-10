@@ -29,6 +29,12 @@ export function ProductCard({
   return (
     <article className="group relative">
       <Link href={`/product/${product.slug}`} className="block">
+        {/*
+          object-contain, а не cover: снимок вписывается в плитку целиком и
+          встаёт по центру. Обрезка выглядела бы аккуратнее, но у обуви она
+          режет то носок, то голенище — а фотографии приходят от разных
+          поставщиков и в разных пропорциях.
+        */}
         <div className="relative aspect-square overflow-hidden rounded-lg bg-elevated">
           {image ? (
             <Image
@@ -36,7 +42,7 @@ export function ProductCard({
               alt={product.title}
               fill
               sizes="(min-width: 1280px) 22vw, (min-width: 768px) 30vw, 46vw"
-              className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+              className="object-contain transition-transform duration-300 group-hover:scale-[1.03]"
               loading={eager ? "eager" : "lazy"}
             />
           ) : (

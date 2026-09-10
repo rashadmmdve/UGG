@@ -98,7 +98,7 @@ export function CartDrawer() {
               {items.map((item) => (
                 <li key={`${item.productId}-${item.variantId}`} className="flex gap-4 py-4">
                   <Link href={`/product/${item.slug}`} onClick={close} className="relative block h-24 w-24 shrink-0 overflow-hidden rounded bg-elevated">
-                    {item.image && <Image src={item.image} alt={item.title} fill sizes="96px" className="object-cover" />}
+                    {item.image && <Image src={item.image} alt={item.title} fill sizes="96px" className="object-contain" />}
                   </Link>
                   <div className="flex flex-1 flex-col justify-between">
                     <div>
