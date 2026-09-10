@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -6,7 +8,7 @@ import { JsonLd } from "@/components/JsonLd";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { ProductGallery } from "@/components/shop/ProductGallery";
 import { ProductPurchase } from "@/components/shop/ProductPurchase";
-import { formatPrice } from "@/lib/utils";
+import { cn, formatPrice } from "@/lib/utils";
 import { MATERIAL_TITLES } from "@/server/catalog/facets";
 import {
   getColorById,
@@ -57,7 +59,10 @@ export default async function ProductPage(props: PageProps<"/product/[slug]">) {
   const sizeChart =
     getSizeCharts().find((chart) => chart.gender === product.gender) ??
     (modelLine?.sizeChartId ? getSizeChartById(modelLine.sizeChartId) : null);
-  const otherColors = product.groupId ? getProductsByGroup(product.groupId, product.id) : [];
+  // Весь цветовой ряд модели, включая текущий товар: в блоке «Другие цвета»
+  // показываются все варианты, текущий — подсвеченным.
+  const colorways = product.groupId ? getProductsByGroup(product.groupId) : [];
+  const otherColors = colorways.filter((item) => item.id !== product.id);
   const similar = product.primaryCategoryId
     ? getProductsByCategory(product.primaryCategoryId)
         .filter((item) => item.id !== product.id && !otherColors.some((o) => o.id === item.id))
@@ -100,18 +105,50 @@ export default async function ProductPage(props: PageProps<"/product/[slug]">) {
             </p>
           )}
 
-          {otherColors.length > 0 && (
-            <div className="mt-3">
+          {/*
+            Другие цвета этой модели — миниатюрами, а не кружками краски.
+            Цветовое пятно не передаёт, как оттенок выглядит на самой обуви:
+            «Chestnut» и «Hickory» рядом почти неразличимы, а на фото
+            разница очевидна. Текущий цвет показан здесь же и подсвечен,
+            чтобы был виден весь ряд, а не только альтернативы.
+          */}
+          {colorways.length > 1 && (
+            <div className="mt-4">
               <p className="text-xs text-muted">Другие цвета</p>
-              <ul className="mt-1.5 flex flex-wrap gap-2">
-                {otherColors.map((item) => {
+              <ul className="mt-2 flex flex-wrap gap-2">
+                {colorways.map((item) => {
                   const itemColor = item.colorId ? getColorById(item.colorId) : null;
+                  const current = item.id === product.id;
+                  const image = item.images[0];
+
                   return (
                     <li key={item.id}>
-                      <a href={`/product/${item.slug}`} title={item.title}
-                        className="flex h-8 w-8 items-center justify-center rounded-full border border-line hover:border-accent">
-                        <span className="h-5 w-5 rounded-full" style={{ backgroundColor: itemColor?.hex ?? "#ddd" }} />
-                      </a>
+                      <Link
+                        href={`/product/${item.slug}`}
+                        title={itemColor ? `${item.title} — ${itemColor.title}` : item.title}
+                        aria-current={current ? "page" : undefined}
+                        className={cn(
+                          "relative block h-16 w-16 overflow-hidden rounded-md border bg-elevated transition-colors",
+                          current ? "border-fg" : "border-line hover:border-fg",
+                        )}
+                      >
+                        {image ? (
+                          <Image
+                            src={image}
+                            alt={itemColor?.title ?? item.title}
+                            fill
+                            sizes="64px"
+                            className="object-cover"
+                          />
+                        ) : (
+                          // Фото ещё не загрузили — показываем сам оттенок,
+                          // иначе ряд выглядел бы набором пустых рамок.
+                          <span
+                            className="block h-full w-full"
+                            style={{ backgroundColor: itemColor?.hex ?? "#ddd" }}
+                          />
+                        )}
+                      </Link>
                     </li>
                   );
                 })}
