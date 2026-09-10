@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { InfoPage } from "@/components/shop/InfoPage";
-import { SITE_NAME, TRADEMARK_DISCLAIMER } from "@/lib/constants";
+import { SITE_NAME } from "@/lib/constants";
 import { getContent } from "@/server/repositories/settings";
 import { pageCrumbs } from "@/server/seo/breadcrumbs";
 
@@ -36,7 +36,6 @@ export default function AboutPage() {
           </p>
         </>
       )}
-      <p className="mt-10 text-xs text-muted">{TRADEMARK_DISCLAIMER}</p>
     </InfoPage>
   );
 }

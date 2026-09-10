@@ -1,7 +1,6 @@
 import Link from "next/link";
 
 import { Logo } from "@/components/Logo";
-import { TRADEMARK_DISCLAIMER } from "@/lib/constants";
 import type { MenuSection } from "@/lib/types";
 import type { SiteContent } from "@/server/repositories/settings";
 
@@ -40,8 +39,8 @@ export function Footer({
           <div className="lg:col-span-2">
             <Logo width={110} />
             <p className="mt-4 max-w-sm text-sm text-muted">
-              Угги, тапочки и аксессуары UGG®. Женские, мужские и детские
-              модели с доставкой по всей России.
+              Угги и тапочки UGG®. Женские, мужские и детские модели
+              с доставкой по всей России.
             </p>
             {(contacts.phone || contacts.email) && (
               <ul className="mt-5 space-y-1 text-sm">
@@ -109,7 +108,6 @@ export function Footer({
               {contacts.address && ` · ${contacts.address}`}
             </p>
           )}
-          <p className="mt-2">{TRADEMARK_DISCLAIMER}</p>
           <p className="mt-2">© {new Date().getFullYear()}</p>
         </div>
       </div>
