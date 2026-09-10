@@ -75,11 +75,10 @@ export default function HomePage() {
             пустует, зато плитки не растягиваются и фото не теряют резкость. */}
         <div className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
           {tiles.map((section) => (
-            // Высота фиксированная и небольшая: снимок вписывается по центру
-            // без увеличения — растянутая вверх плитка заставляла бы
-            // масштабировать фото и терять резкость.
+            // Пропорция 3:4: плитки остаются вертикальными на любой ширине
+            // экрана, и высота меняется вместе с шириной колонки.
             <Link key={section.slug} href={`/catalog/${section.slug}`}
-              className="group relative flex h-56 flex-col justify-end overflow-hidden rounded-xl border border-line bg-bg p-5 transition hover:border-accent sm:h-64 lg:h-80">
+              className="group relative flex aspect-[3/4] flex-col justify-end overflow-hidden rounded-xl border border-line bg-bg p-5 transition hover:border-accent">
               {content.sectionImages?.[section.slug] && (
                 <>
                   <Image
