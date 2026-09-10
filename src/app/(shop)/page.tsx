@@ -75,8 +75,11 @@ export default function HomePage() {
         {/* Разделы — рядом под героем */}
         <div className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
           {SECTIONS.map((section) => (
+            // Пропорция 3:4, а не фиксированная высота: плитки останутся
+            // вертикальными на любой ширине экрана, и в них без переделки
+            // встанут фотографии разделов, когда их загрузят.
             <Link key={section.slug} href={`/catalog/${section.slug}`}
-              className="group flex min-h-[130px] flex-col justify-end rounded-xl border border-line bg-bg p-5 transition hover:border-accent">
+              className="group flex aspect-[3/4] flex-col justify-end rounded-xl border border-line bg-bg p-5 transition hover:border-accent">
               <span className="text-lg font-semibold group-hover:text-accent">{section.title}</span>
               <span className="mt-1 text-xs text-muted">{SECTION_TAGLINES[section.slug]}</span>
             </Link>
