@@ -49,10 +49,15 @@ export function CartDrawer() {
       Разметка не размонтируется при закрытии: иначе шторка появлялась бы
       рывком, без выезда сбоку. Видимость выключается через aria-hidden,
       inert и pointer-events.
+
+      overflow-hidden обязателен: закрытая панель сдвинута вправо на свою
+      ширину, и без обрезки мобильный браузер считает её частью страницы —
+      раскладка становится шире экрана, а открытая корзина прижимается к
+      её дальнему краю и обрезается.
     */
     <div
       aria-hidden={!isOpen}
-      className={cn("fixed inset-0 z-50", !isOpen && "pointer-events-none")}
+      className={cn("fixed inset-0 z-50 overflow-hidden", !isOpen && "pointer-events-none")}
     >
       <button
         type="button"

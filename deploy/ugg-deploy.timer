@@ -1,0 +1,17 @@
+# Каждые две минуты спрашиваем GitHub, не появились ли новые коммиты в
+# master. Это дешёвый запрос (git ls-remote), а сборка запускается только
+# когда что-то изменилось.
+#
+# Полторы-две минуты между push и обновлением сайта — цена за то, что на
+# GitHub не лежит ключ от сервера и не нужно ничего настраивать снаружи.
+
+[Unit]
+Description=UGG shop: poll GitHub for new commits
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=2min
+RandomizedDelaySec=20s
+
+[Install]
+WantedBy=timers.target

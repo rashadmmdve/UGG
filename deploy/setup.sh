@@ -5,15 +5,28 @@
 #
 #   ssh root@IP 'bash -s' < deploy/setup.sh
 #
-# Ставит Node, Caddy, файрвол, заводит пользователя и службу. Сборку и
-# запуск не делает: для них нужен .env.local с секретами, а его кладут
-# руками после этого скрипта — см. docs/deploy.md.
+# Ставит Node, Caddy, файрвол, заводит пользователя, службу и автовыкладку.
+# Первую сборку не делает: для неё нужен .env.local с секретами — см.
+# docs/deploy.md.
+#
+# Раскладка на сервере:
+#   /srv/ugg/releases/<sha>   версии кода, каждая в своей папке
+#   /srv/ugg/current          ссылка на рабочую версию (её читает служба)
+#   /srv/ugg/shared           база, фото, .env.local — одно на все версии
+#   /srv/ugg/backups          ночные копии
 set -euo pipefail
 
 REPO="https://github.com/rashadmmdve/UGG.git"
 APP_USER="ugg"
-APP_DIR="/srv/ugg/app"
+ROOT="/srv/ugg"
 DOMAIN="uggrussia.shop"
+
+echo "── Зеркало пакетов ──"
+# В образах Timeweb прописано их зеркало, и оно бывает недоступно —
+# тогда apt падает на первом же шаге. Переводим на официальное.
+if grep -qs "mirror.timeweb.ru" /etc/apt/sources.list.d/ubuntu.sources; then
+  sed -i "s|http://mirror.timeweb.ru/ubuntu/|http://ru.archive.ubuntu.com/ubuntu/|" /etc/apt/sources.list.d/ubuntu.sources
+fi
 
 echo "── Пакеты ──"
 export DEBIAN_FRONTEND=noninteractive
@@ -60,20 +73,29 @@ if ! command -v caddy >/dev/null; then
   apt-get install -yq caddy
 fi
 
-echo "── Пользователь и код ──"
+echo "── Пользователь и раскладка ──"
 # Сайт работает от отдельного пользователя без прав root: если в
 # приложении найдут дыру, до системы через неё не доберутся.
 if ! id "$APP_USER" >/dev/null 2>&1; then
-  useradd --system --create-home --home-dir /srv/ugg --shell /bin/bash "$APP_USER"
+  useradd --system --create-home --home-dir "$ROOT" --shell /bin/bash "$APP_USER"
 fi
-mkdir -p /srv/ugg/backups
-if [[ ! -d "$APP_DIR/.git" ]]; then
-  git clone "$REPO" "$APP_DIR"
-fi
-chown -R "$APP_USER:$APP_USER" /srv/ugg
+mkdir -p "$ROOT/releases" "$ROOT/shared/data" "$ROOT/shared/uploads" "$ROOT/backups"
+touch "$ROOT/shared/.env.local"
+chmod 600 "$ROOT/shared/.env.local"
 
-echo "── Служба ──"
-install -m 644 "$APP_DIR/deploy/ugg.service" /etc/systemd/system/ugg.service
+# Первая версия — просто клон; собирать её будет deploy.sh, когда
+# появится .env.local.
+if [[ ! -L $ROOT/current ]]; then
+  sha=$(git ls-remote "$REPO" refs/heads/master | cut -f1)
+  git clone --quiet --depth 1 "$REPO" "$ROOT/releases/$sha"
+  ln -sfn "$ROOT/releases/$sha" "$ROOT/current"
+fi
+chown -R "$APP_USER:$APP_USER" "$ROOT"
+
+echo "── Службы ──"
+install -m 644 "$ROOT/current/deploy/ugg.service"        /etc/systemd/system/ugg.service
+install -m 644 "$ROOT/current/deploy/ugg-deploy.service" /etc/systemd/system/ugg-deploy.service
+install -m 644 "$ROOT/current/deploy/ugg-deploy.timer"   /etc/systemd/system/ugg-deploy.timer
 systemctl daemon-reload
 systemctl enable ugg
 # Пользователю сайта разрешено только перезапускать свою службу — этого
@@ -83,25 +105,21 @@ echo "$APP_USER ALL=(root) NOPASSWD: /usr/bin/systemctl restart ugg, /usr/bin/sy
 chmod 440 /etc/sudoers.d/ugg
 
 echo "── Caddy: домен ──"
-sed "s/{DOMAIN}/$DOMAIN/g" "$APP_DIR/deploy/Caddyfile" > /etc/caddy/Caddyfile
+sed "s/{DOMAIN}/$DOMAIN/g" "$ROOT/current/deploy/Caddyfile" > /etc/caddy/Caddyfile
 systemctl reload caddy || systemctl restart caddy
 
 echo "── Резервные копии ──"
-install -m 755 "$APP_DIR/deploy/backup.sh" /usr/local/bin/ugg-backup
+install -m 755 "$ROOT/current/deploy/backup.sh" /usr/local/bin/ugg-backup
 # Каждую ночь в 03:30 по времени сервера.
 echo "30 3 * * * $APP_USER /usr/local/bin/ugg-backup" > /etc/cron.d/ugg-backup
 
 cat <<EOF
 
-Сервер готов. Дальше — от пользователя $APP_USER:
+Сервер готов. Дальше:
 
-  sudo -iu $APP_USER
-  cd $APP_DIR
-  cp .env.example .env.local && nano .env.local    # секреты
-  npm ci && npm run build
-  npm run create-admin                              # если база новая
-  exit
-  systemctl start ugg
+  1. Секреты:      nano $ROOT/shared/.env.local     (образец — $ROOT/current/.env.example)
+  2. Первая сборка: sudo -iu $APP_USER $ROOT/current/deploy/deploy.sh
+  3. Автовыкладка:  systemctl enable --now ugg-deploy.timer
 
 Подробности — docs/deploy.md.
 EOF

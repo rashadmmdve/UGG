@@ -13,7 +13,8 @@ Wants=network-online.target
 Type=simple
 User=ugg
 Group=ugg
-WorkingDirectory=/srv/ugg/app
+# current — ссылка на рабочую версию; её переключает deploy.sh.
+WorkingDirectory=/srv/ugg/current
 Environment=NODE_ENV=production
 Environment=PORT=3000
 Environment=HOSTNAME=127.0.0.1
@@ -25,7 +26,7 @@ RestartSec=5
 NoNewPrivileges=true
 ProtectSystem=full
 ProtectHome=read-only
-ReadWritePaths=/srv/ugg/app/data /srv/ugg/app/public/uploads /srv/ugg/app/.next
+ReadWritePaths=/srv/ugg
 PrivateTmp=true
 
 [Install]

@@ -1,0 +1,17 @@
+# Автовыкладка: одна проверка GitHub и, если есть новые коммиты, выкладка.
+# Запускается таймером ugg-deploy.timer, вручную — systemctl start ugg-deploy.
+# Журнал: journalctl -u ugg-deploy
+
+[Unit]
+Description=UGG shop: deploy latest master if changed
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=ugg
+Group=ugg
+Environment=HOME=/srv/ugg
+ExecStart=/srv/ugg/current/deploy/deploy.sh --if-changed
+# Сборка Next тяжёлая; если она зависла, через 20 минут её прибьёт.
+TimeoutStartSec=1200

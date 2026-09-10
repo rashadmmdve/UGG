@@ -377,7 +377,9 @@ export function CatalogGrid({
       <div
         aria-hidden={!panelOpen}
         className={cn(
-          "fixed inset-0 z-50 lg:hidden",
+          // overflow-hidden — как у корзины: сдвинутая за край закрытая
+          // шторка иначе растягивает мобильную раскладку шире экрана.
+          "fixed inset-0 z-50 overflow-hidden lg:hidden",
           !panelOpen && "pointer-events-none",
         )}
       >
