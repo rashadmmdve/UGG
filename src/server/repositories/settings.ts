@@ -110,3 +110,14 @@ export const getContent = cache((): SiteContent =>
 export function saveContent(content: SiteContent): void {
   writeSetting("content", content);
 }
+
+/**
+ * Готов ли юридический текст к публикации.
+ *
+ * Мало того, что он непустой: в заготовках остаются подстановки вида
+ * {ТЕЛЕФОН}, и документ с такой дырой индексировать нельзя — договор с
+ * незаполненным реквизитом выглядит хуже, чем его отсутствие.
+ */
+export function isLegalReady(text: string): boolean {
+  return Boolean(text.trim()) && !/\{[А-ЯЁA-Z_]+\}/.test(text);
+}

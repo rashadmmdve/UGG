@@ -9,7 +9,7 @@ import {
   getPublishedProducts,
 } from "@/server/repositories/catalog";
 import { getPublishedArticles } from "@/server/repositories/articles";
-import { getContent } from "@/server/repositories/settings";
+import { getContent, isLegalReady } from "@/server/repositories/settings";
 import { getPublishedLandings, isLandingIndexable } from "@/server/repositories/seo";
 import { availableCount, filterByFacet } from "@/server/catalog/facets";
 
@@ -43,12 +43,12 @@ function staticSitemap(): MetadataRoute.Sitemap {
     { path: "/o-magazine", changeFrequency: "monthly" as const, priority: 0.5 },
     { path: "/kontakty", changeFrequency: "monthly" as const, priority: 0.5 },
     { path: "/articles", changeFrequency: "weekly" as const, priority: 0.7 },
-    // Юридические страницы попадают в карту, только когда заполнены —
-    // пустые отдаются с noindex.
-    ...(legal.oferta
+    // Юридические страницы попадают в карту, только когда дописаны —
+    // пустые и с незаполненными подстановками отдаются с noindex.
+    ...(isLegalReady(legal.oferta)
       ? [{ path: "/oferta", changeFrequency: "yearly" as const, priority: 0.3 }]
       : []),
-    ...(legal.privacy
+    ...(isLegalReady(legal.privacy)
       ? [{ path: "/politika-konfidentsialnosti", changeFrequency: "yearly" as const, priority: 0.3 }]
       : []),
   ];

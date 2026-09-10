@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 
 import { InfoPage } from "@/components/shop/InfoPage";
-import { getContent } from "@/server/repositories/settings";
+import { getContent, isLegalReady } from "@/server/repositories/settings";
 import { pageCrumbs } from "@/server/seo/breadcrumbs";
 
 export const revalidate = 3600;
 
 export async function generateMetadata(): Promise<Metadata> {
-  const filled = Boolean(getContent().legal.oferta);
+  const filled = isLegalReady(getContent().legal.oferta);
   return {
     title: "Публичная оферта",
     description: "Условия продажи товаров в интернет-магазине.",

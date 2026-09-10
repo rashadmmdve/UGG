@@ -11,7 +11,8 @@
     "create-admin": "node scripts/create-admin.mjs",
     "seed": "node scripts/seed.mjs",
     "seed:demo": "node scripts/seed-demo.mjs",
-    "import-photos": "node scripts/import-photos.mjs"
+    "import-photos": "node scripts/import-photos.mjs",
+    "seed:legal": "node scripts/seed-legal.mjs"
   },
   "dependencies": {
     "@node-rs/argon2": "^2.2.0",
