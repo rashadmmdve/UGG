@@ -29,8 +29,8 @@ const readDoc = (name) =>
 const oferta = readDoc("oferta-черновик.html");
 const privacy = readDoc("politika-черновик.html");
 
-// Телефон в оферте остаётся подстановкой, пока номера нет: публиковать
-// договор с дырой нельзя, поэтому пусть это видно невооружённым глазом.
+// Незаполненные подстановки — сигнал, что документ публиковать рано:
+// страница отдастся с noindex, а здесь это будет видно сразу.
 const unfilled = [...oferta.matchAll(/\{[А-ЯЁ_]+\}/g)].map((m) => m[0]);
 if (unfilled.length) {
   console.log(`Внимание: в оферте остались подстановки — ${[...new Set(unfilled)].join(", ")}`);
@@ -42,7 +42,7 @@ const content = row ? JSON.parse(row.value) : {};
 
 content.contacts = {
   ...(content.contacts ?? {}),
-  phone: content.contacts?.phone ?? "",
+  phone: "+7 909 967-27-17",
   email: "info@uggrussia.shop",
   address: "Республика Мордовия, г. Саранск, ул. Терешковой, д. 16, кв. 49",
   legalName: "ИП Абдуллаев Акиф Юнис Оглы",

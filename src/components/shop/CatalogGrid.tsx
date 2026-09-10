@@ -75,10 +75,13 @@ export type CategoryLink = {
  * JavaScript увидел бы пустую категорию.
  */
 export function CatalogGrid({
+  header,
   products,
   colors,
   categories = [],
 }: {
+  /** Заголовок страницы, описание, подборки — встаёт над фильтрами. */
+  header?: React.ReactNode;
   products: Product[];
   colors: Color[];
   /**
@@ -291,8 +294,16 @@ export function CatalogGrid({
   );
 
   return (
-    <div className="mt-6 grid gap-8 lg:grid-cols-[240px_1fr]">
-      <aside className="hidden lg:block">{panel}</aside>
+    /*
+      Заголовок страницы стоит в левой колонке над фильтрами, а не над
+      всей страницей: так товары начинаются на уровне заголовка, а не
+      уходят под него на высоту h1 и подборок.
+    */
+    <div className="mt-4 grid gap-8 lg:grid-cols-[240px_1fr]">
+      <div>
+        {header}
+        <aside className={cn("hidden lg:block", header && "mt-8")}>{panel}</aside>
+      </div>
 
       <div>
         <div className="flex flex-wrap items-center justify-between gap-3">

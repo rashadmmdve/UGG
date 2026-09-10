@@ -33,27 +33,32 @@ export default function CatalogPage() {
       <JsonLd data={[breadcrumbLd(crumbs), itemListLd(products)]} />
       <Breadcrumbs items={crumbs} />
 
-      <h1 className="heading-section mt-4">Каталог</h1>
-
-      <nav aria-label="Разделы" className="mt-6 flex flex-wrap gap-2">
-        {SECTIONS.map((section) => {
-          const count = getCategoriesBySection(section.slug).length;
-          return (
-            <Link
-              key={section.slug}
-              href={`/catalog/${section.slug}`}
-              className="rounded-full border border-line px-4 py-1.5 text-sm hover:border-accent"
-            >
-              {section.title} <span className="text-muted">· {count}</span>
-            </Link>
-          );
-        })}
-      </nav>
-
       {/* Фильтры читают адресную строку — нужен Suspense, иначе страница
           перестанет быть статической. */}
       <Suspense fallback={<div className="py-24" aria-hidden />}>
-        <CatalogGrid products={products} colors={getColors()} />
+        <CatalogGrid
+          header={
+            <>
+              <h1 className="heading-section">Каталог</h1>
+              <nav aria-label="Разделы" className="mt-5 flex flex-wrap gap-2">
+                {SECTIONS.map((section) => {
+                  const count = getCategoriesBySection(section.slug).length;
+                  return (
+                    <Link
+                      key={section.slug}
+                      href={`/catalog/${section.slug}`}
+                      className="rounded-full border border-line px-3 py-1 text-sm hover:border-accent"
+                    >
+                      {section.title} <span className="text-muted">· {count}</span>
+                    </Link>
+                  );
+                })}
+              </nav>
+            </>
+          }
+          products={products}
+          colors={getColors()}
+        />
       </Suspense>
     </div>
   );

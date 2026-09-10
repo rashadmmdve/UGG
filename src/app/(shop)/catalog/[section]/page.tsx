@@ -56,20 +56,24 @@ export default async function SectionPage(props: PageProps<"/catalog/[section]">
     active: false,
   }));
 
+  const header = <h1 className="heading-section">{section.title} UGG</h1>;
+
   return (
     <div className="container-page py-8">
       <JsonLd data={[breadcrumbLd(crumbs), itemListLd(products)]} />
       <Breadcrumbs items={crumbs} />
 
-      <h1 className="heading-section mt-4">{section.title} UGG</h1>
-
       {products.length === 0 ? (
-        <p className="mt-10 rounded-lg border border-line bg-sand p-6 text-sm text-muted">
-          В этом разделе пока нет товаров.
-        </p>
+        <>
+          {header}
+          <p className="mt-10 rounded-lg border border-line bg-sand p-6 text-sm text-muted">
+            В этом разделе пока нет товаров.
+          </p>
+        </>
       ) : (
         <Suspense fallback={<div className="py-24" aria-hidden />}>
           <CatalogGrid
+            header={header}
             products={products}
             colors={getColors()}
             categories={categoryLinks}

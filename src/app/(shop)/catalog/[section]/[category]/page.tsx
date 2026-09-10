@@ -79,16 +79,12 @@ export default async function CategoryPage(props: PageProps<"/catalog/[section]/
     active: item.id === category.id,
   }));
 
-  return (
-    <div className="container-page py-8">
-      <JsonLd data={[breadcrumbLd(crumbs), itemListLd(products)]} />
-      <Breadcrumbs items={crumbs} />
-
-      <h1 className="heading-section mt-4">{category.seo.h1 || category.title}</h1>
+  const header = (
+    <>
+      <h1 className="heading-section">{category.seo.h1 || category.title}</h1>
       {category.description && (
-        <p className="mt-2 max-w-2xl text-sm text-muted">{category.description}</p>
+        <p className="mt-2 text-sm text-muted">{category.description}</p>
       )}
-
       {landings.length > 0 && (
         <nav aria-label="Подборки" className="mt-5 flex flex-wrap gap-2">
           {landings.map((landing) => (
@@ -102,14 +98,25 @@ export default async function CategoryPage(props: PageProps<"/catalog/[section]/
           ))}
         </nav>
       )}
+    </>
+  );
+
+  return (
+    <div className="container-page py-8">
+      <JsonLd data={[breadcrumbLd(crumbs), itemListLd(products)]} />
+      <Breadcrumbs items={crumbs} />
 
       {products.length === 0 ? (
-        <p className="mt-10 rounded-lg border border-line bg-sand p-6 text-sm text-muted">
-          В этой категории пока нет товаров — загляните в соседние.
-        </p>
+        <>
+          {header}
+          <p className="mt-10 rounded-lg border border-line bg-sand p-6 text-sm text-muted">
+            В этой категории пока нет товаров — загляните в соседние.
+          </p>
+        </>
       ) : (
         <Suspense fallback={<div className="py-24" aria-hidden />}>
           <CatalogGrid
+            header={header}
             products={products}
             colors={getColors()}
             categories={categoryLinks}
