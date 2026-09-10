@@ -189,22 +189,6 @@ export function CheckoutForm({
         </fieldset>
 
         <fieldset>
-          <legend className="mb-4 text-lg font-semibold">Доставка</legend>
-          <DeliveryPicker
-            items={cartLines}
-            mode={mode} onModeChange={setMode}
-            city={city} onCityChange={setCity}
-            point={point} onPointChange={setPoint}
-            address={address} onAddressChange={setAddress}
-            fieldErrors={fieldErrors}
-          />
-          {quoteError && <p role="alert" className="mt-3 text-sm text-danger">{quoteError}</p>}
-          <div className="mt-5">
-            <ATextarea id="co-comment" name="comment" label="Комментарий к заказу" placeholder="Необязательно" rows={3} />
-          </div>
-        </fieldset>
-
-        <fieldset>
           <legend className="mb-4 text-lg font-semibold">Оплата</legend>
           <div className="grid gap-3 sm:grid-cols-2">
             {PAYMENT_OPTIONS.map((option) => {
@@ -241,6 +225,22 @@ export function CheckoutForm({
           {fieldErrors.paymentMethod && (
             <p role="alert" className="mt-2 text-sm text-danger">{fieldErrors.paymentMethod}</p>
           )}
+        </fieldset>
+
+        <fieldset>
+          <legend className="mb-4 text-lg font-semibold">Доставка</legend>
+          <DeliveryPicker
+            items={cartLines}
+            mode={mode} onModeChange={setMode}
+            city={city} onCityChange={setCity}
+            point={point} onPointChange={setPoint}
+            address={address} onAddressChange={setAddress}
+            fieldErrors={fieldErrors}
+          />
+          {quoteError && <p role="alert" className="mt-3 text-sm text-danger">{quoteError}</p>}
+          <div className="mt-5">
+            <ATextarea id="co-comment" name="comment" label="Комментарий к заказу" placeholder="Необязательно" rows={3} />
+          </div>
         </fieldset>
       </div>
 
