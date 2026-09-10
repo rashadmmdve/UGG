@@ -18,7 +18,7 @@ import type { Database } from "better-sqlite3";
  * IF NOT EXISTS. Версия схемы хранится в user_version — по ней будут
  * добавляться миграции, когда структура изменится.
  */
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 
 function readDdl(): string {
   return fs.readFileSync(
@@ -32,8 +32,21 @@ export function applySchema(db: Database): void {
 
   const current = db.pragma("user_version", { simple: true }) as number;
 
+  // Миграции по возрастанию версии. CREATE TABLE IF NOT EXISTS новых
+  // столбцов в существующую таблицу не добавит — для этого и нужны они.
+  if (current < 2) addColumn(db, "orders", "payment_method", "TEXT NOT NULL DEFAULT 'on_delivery'");
+
   if (current < SCHEMA_VERSION) {
-    // Будущие миграции добавляются здесь по возрастанию версии.
     db.pragma(`user_version = ${SCHEMA_VERSION}`);
   }
+}
+
+/**
+ * Добавить столбец, если его ещё нет. Свежая база получает его из
+ * schema.sql, и повторный ALTER упал бы с «duplicate column».
+ */
+function addColumn(db: Database, table: string, column: string, ddl: string): void {
+  const columns = db.pragma(`table_info(${table})`) as { name: string }[];
+  if (columns.some((c) => c.name === column)) return;
+  db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${ddl}`);
 }

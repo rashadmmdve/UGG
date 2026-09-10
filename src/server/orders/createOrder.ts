@@ -8,6 +8,8 @@ import {
   quoteDelivery,
 } from "@/server/cdek/api";
 import { decreaseStock, getProductById } from "@/server/repositories/catalog";
+import { startPayment } from "@/server/payments/flow";
+import { isYookassaEnabled } from "@/server/payments/yookassa";
 import { createOrder, patchOrder } from "@/server/repositories/orders";
 import {
   checkPromocode,
@@ -35,7 +37,13 @@ export async function previewPromocode(
 }
 
 export type CheckoutResult =
-  | { ok: true; orderNumber: string }
+  | {
+      ok: true;
+      orderId: string;
+      orderNumber: string;
+      /** Адрес страницы оплаты ЮKassa — только при оплате картой. */
+      paymentUrl: string | null;
+    }
   | { ok: false; error: string; fieldErrors?: Record<string, string> };
 
 /**
@@ -58,6 +66,16 @@ export async function submitOrder(input: unknown): Promise<CheckoutResult> {
   }
 
   const data = parsed.data;
+
+  // Онлайн-оплату можно выбрать, только когда она подключена: форма
+  // такой вариант не показывает, но прямой запрос — не форма.
+  if (data.paymentMethod === "online" && !isYookassaEnabled()) {
+    return {
+      ok: false,
+      error: "Оплата картой на сайте временно недоступна — выберите оплату при получении.",
+      fieldErrors: { paymentMethod: "Способ недоступен" },
+    };
+  }
 
   // ── Позиции по актуальному каталогу ──
   const items: OrderItem[] = [];
@@ -180,9 +198,9 @@ export async function submitOrder(input: unknown): Promise<CheckoutResult> {
     total,
     promocode: promocodeLabel,
     status: "new",
-    // Онлайн-оплата подключается на шестом этапе. Пока заказ уходит
-    // менеджеру, оплата согласовывается с ним.
-    paymentStatus: "unpaid",
+    paymentMethod: data.paymentMethod,
+    // Картой — заказ ждёт платежа; при получении — деньги соберёт СДЭК.
+    paymentStatus: data.paymentMethod === "online" ? "pending" : "unpaid",
     cdek: null,
   });
 
@@ -223,5 +241,14 @@ export async function submitOrder(input: unknown): Promise<CheckoutResult> {
     if (fresh) revalidateProduct(fresh);
   }
 
-  return { ok: true, orderNumber: order.number };
+  // ── Оплата ──
+  // Сбой ЮKassa не роняет оформление: заказ уже есть, и оплатить его
+  // можно со страницы «спасибо» или из личного кабинета.
+  let paymentUrl: string | null = null;
+  if (data.paymentMethod === "online") {
+    const payment = await startPayment(order);
+    if (payment.ok) paymentUrl = payment.url;
+  }
+
+  return { ok: true, orderId: order.id, orderNumber: order.number, paymentUrl };
 }

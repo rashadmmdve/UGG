@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { getCurrentCustomer } from "@/server/auth/session";
 import { cancelShipment, syncShipment } from "@/server/orders/shipment";
+import { startPayment, type StartPaymentResult } from "@/server/payments/flow";
 import { getProductById } from "@/server/repositories/catalog";
 import { getOrderById } from "@/server/repositories/orders";
 import { revalidateProduct } from "@/server/seo/revalidate";
@@ -40,6 +41,23 @@ export async function refreshOrderStatusAction(orderId: string) {
     statusName: updated.cdek?.statusName ?? null,
     cdekNumber: updated.cdek?.cdekNumber ?? null,
   };
+}
+
+/**
+ * Оплатить заказ картой — из кабинета или со страницы после оформления.
+ *
+ * Страница «спасибо» открывается и без входа, поэтому кроме владельца
+ * пускаем и того, кто знает идентификатор заказа: он случайный и попадает
+ * только в адрес возврата с ЮKassa, а номер вида UG-00012 не подходит —
+ * его легко перебрать.
+ */
+export async function payOrderAction(orderId: string): Promise<StartPaymentResult> {
+  const order = (await ownedOrder(orderId)) ?? getOrderById(orderId);
+  if (!order) return { ok: false, error: "Заказ не найден" };
+  if (order.paymentMethod !== "online") {
+    return { ok: false, error: "Этот заказ оплачивается при получении." };
+  }
+  return startPayment(order);
 }
 
 export async function cancelOrderAction(orderId: string) {

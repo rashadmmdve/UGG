@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { CheckoutForm } from "@/components/shop/CheckoutForm";
 import { getCurrentCustomer } from "@/server/auth/session";
+import { isYookassaEnabled } from "@/server/payments/yookassa";
 
 export const metadata: Metadata = {
   title: "Оформление заказа",
@@ -14,7 +15,7 @@ export default async function CheckoutPage() {
   return (
     <div className="container-page py-10">
       <h1 className="heading-section">Оформление заказа</h1>
-      <CheckoutForm user={user} />
+      <CheckoutForm user={user} onlinePayment={isYookassaEnabled()} />
     </div>
   );
 }

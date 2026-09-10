@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { InfoPage } from "@/components/shop/InfoPage";
+import { isYookassaEnabled } from "@/server/payments/yookassa";
 import { getLogistics } from "@/server/repositories/settings";
 import { pageCrumbs } from "@/server/seo/breadcrumbs";
 import { faqLd } from "@/server/seo/jsonld";
@@ -30,12 +31,13 @@ const FAQ = [
   {
     question: "Как оплатить заказ?",
     answer:
-      "После оформления с вами свяжется менеджер и согласует удобный способ оплаты. Онлайн-оплата картой на сайте подключается.",
+      "При получении — наличными или картой в пункте выдачи или курьеру СДЭК. Или картой на сайте при оформлении: платёж проходит через ЮKassa, чек приходит на почту.",
   },
 ];
 
 export default function DeliveryPage() {
   const logistics = getLogistics();
+  const online = isYookassaEnabled();
 
   return (
     <InfoPage
@@ -69,11 +71,17 @@ export default function DeliveryPage() {
       </p>
 
       <h2>Оплата</h2>
-      <p>
-        После оформления с вами свяжется менеджер и согласует способ оплаты. Оплата
-        картой на сайте подключается — как только она заработает, платить можно будет
-        сразу при оформлении.
-      </p>
+      <ul>
+        <li>
+          <strong>При получении.</strong> Наличными или картой в пункте выдачи или
+          курьеру СДЭК — платите, когда посылка уже у вас.
+        </li>
+        <li>
+          <strong>Картой на сайте.</strong> Банковская карта, СБП и другие способы
+          через ЮKassa. Чек по 54-ФЗ приходит на почту.
+          {!online && " Способ подключается и скоро появится при оформлении."}
+        </li>
+      </ul>
 
       <h2>Часто спрашивают</h2>
       {FAQ.map((item) => (

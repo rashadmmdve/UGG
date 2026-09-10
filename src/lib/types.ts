@@ -313,7 +313,18 @@ export type OrderStatus =
   | "completed"
   | "cancelled";
 
-export type PaymentStatus = "unpaid" | "pending" | "paid" | "refunded";
+/**
+ * Статус оплаты. У заказа — «не оплачен / ждёт / оплачен / возвращён»;
+ * у отдельного платежа ЮKassa бывает ещё «отменён» — покупатель закрыл
+ * страницу оплаты или банк отказал, и заказ ждёт новой попытки.
+ */
+export type PaymentStatus = "unpaid" | "pending" | "paid" | "refunded" | "canceled";
+
+/**
+ * Как покупатель платит: картой на сайте через ЮKassa или при получении —
+ * наложенным платежом через СДЭК.
+ */
+export type PaymentMethod = "online" | "on_delivery";
 
 /** Куда едет посылка: в пункт выдачи СДЭК или курьером до двери. */
 export type DeliveryMode = "pvz" | "courier";
@@ -397,6 +408,7 @@ export type Order = {
   total: number;
   promocode: string | null;
   status: OrderStatus;
+  paymentMethod: PaymentMethod;
   paymentStatus: PaymentStatus;
   cdek: CdekShipment | null;
   createdAt: string;

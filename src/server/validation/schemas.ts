@@ -104,6 +104,9 @@ export const checkoutSchema = z
     pointCode: z.string().trim().max(20).nullable().default(null),
     comment: z.string().trim().max(500).default(""),
     promocode: z.string().trim().max(40).default(""),
+    paymentMethod: z.enum(["online", "on_delivery"], {
+      message: "Выберите способ оплаты",
+    }),
     items: z.array(cartItemSchema).min(1, "Корзина пуста"),
   })
   // Что именно обязательно, зависит от способа доставки: курьеру нужен

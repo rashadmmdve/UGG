@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 
 import { ShipmentPanel } from "@/components/admin/ShipmentPanel";
 import { SubmitButton } from "@/components/admin/ui";
-import { ORDER_STATUS_LABELS, PAYMENT_STATUS_LABELS } from "@/lib/constants";
+import { ORDER_STATUS_LABELS, PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS } from "@/lib/constants";
 import { formatPrice } from "@/lib/utils";
 import {
   updateOrderStatusAction,
@@ -11,6 +11,7 @@ import {
 } from "@/server/admin/actions/orders";
 import { canCancel } from "@/server/orders/shipment";
 import { getOrderById } from "@/server/repositories/orders";
+import { getPaymentsByOrderId } from "@/server/repositories/payments";
 import type { OrderStatus, PaymentStatus } from "@/lib/types";
 
 /** Ручной перевод возможен между рабочими статусами; отмена — отдельной кнопкой. */
@@ -23,6 +24,7 @@ export default async function AdminOrderPage(props: PageProps<"/admin/orders/[id
   if (!order) notFound();
 
   const isCancelled = order.status === "cancelled";
+  const payments = order.paymentMethod === "online" ? getPaymentsByOrderId(order.id) : [];
 
   return (
     <div>
@@ -138,6 +140,26 @@ export default async function AdminOrderPage(props: PageProps<"/admin/orders/[id
 
           <section className="rounded-lg border border-line bg-bg p-5">
             <h2 className="font-semibold">Оплата</h2>
+            <p className="mt-2 text-sm">
+              {PAYMENT_METHOD_LABELS[order.paymentMethod]}
+              {order.paymentMethod === "on_delivery" && (
+                <span className="block text-xs text-muted">Деньги собирает СДЭК при выдаче.</span>
+              )}
+            </p>
+            {payments.length > 0 && (
+              <ul className="mt-3 space-y-1 border-t border-line pt-3 text-xs">
+                {payments.map((payment) => (
+                  <li key={payment.id} className="flex justify-between gap-2">
+                    <span className="truncate font-mono text-muted" title={payment.externalId}>
+                      {payment.externalId.slice(0, 8)}…
+                    </span>
+                    <span className={payment.status === "paid" ? "text-success" : "text-muted"}>
+                      {PAYMENT_STATUS_LABELS[payment.status]} · {new Date(payment.updatedAt).toLocaleString("ru-RU")}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
             <form action={updatePaymentStatusAction} className="mt-3 flex gap-2">
               <input type="hidden" name="id" value={order.id} />
               {/*

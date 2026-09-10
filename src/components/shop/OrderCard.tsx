@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { Download, Eye, X } from "lucide-react";
+import { CreditCard, Download, Eye, X } from "lucide-react";
 
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { ORDER_STATUS_LABELS } from "@/lib/constants";
+import { ORDER_STATUS_LABELS, PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS } from "@/lib/constants";
 import { cn, formatDate, formatPrice } from "@/lib/utils";
-import { cancelOrderAction, refreshOrderStatusAction } from "@/server/orders/actions";
+import { cancelOrderAction, payOrderAction, refreshOrderStatusAction } from "@/server/orders/actions";
 import type { Order } from "@/lib/types";
 
 /** Как часто спрашиваем у СДЭК свежий статус, пока страница открыта. */
@@ -22,6 +22,7 @@ export function OrderCard({ order }: { order: Order }) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cancelling, startCancel] = useTransition();
+  const [paying, startPay] = useTransition();
 
   const settled = status === "cancelled" || status === "completed";
 
@@ -56,6 +57,21 @@ export function OrderCard({ order }: { order: Order }) {
   // защищён токеном, которого у браузера нет.
   function openLabel(download: boolean) {
     window.open(`/api/orders/${order.id}/label${download ? "?download=1" : ""}`, download ? "_self" : "_blank");
+  }
+
+  // Ждёт оплаты картой: платёж не начат или попытка не удалась.
+  const awaitingPayment =
+    order.paymentMethod === "online" &&
+    (order.paymentStatus === "pending" || order.paymentStatus === "unpaid") &&
+    status !== "cancelled";
+
+  function handlePay() {
+    setError(null);
+    startPay(async () => {
+      const result = await payOrderAction(order.id);
+      if (result.ok) window.location.assign(result.url);
+      else setError(result.error);
+    });
   }
 
   function handleCancel() {
@@ -93,6 +109,12 @@ export function OrderCard({ order }: { order: Order }) {
           <div className="flex justify-between gap-4"><dt className="text-muted">Трек-номер СДЭК</dt><dd className="font-mono">{shipment.cdekNumber}</dd></div>
         )}
         <div className="flex justify-between gap-4">
+          <dt className="text-muted">Оплата</dt>
+          <dd className={cn("text-right", order.paymentStatus === "paid" && "text-success")}>
+            {PAYMENT_METHOD_LABELS[order.paymentMethod]} · {PAYMENT_STATUS_LABELS[order.paymentStatus].toLowerCase()}
+          </dd>
+        </div>
+        <div className="flex justify-between gap-4">
           <dt className="text-muted">Статус доставки</dt>
           <dd className="text-right">{shipment?.statusName ?? "Готовится к отправке"}</dd>
         </div>
@@ -110,8 +132,14 @@ export function OrderCard({ order }: { order: Order }) {
 
       {error && <p role="alert" className="mt-3 text-sm text-danger">{error}</p>}
 
-      {(shipment || cancellable) && status !== "cancelled" && (
+      {(shipment || cancellable || awaitingPayment) && status !== "cancelled" && (
         <div className="mt-4 flex flex-wrap gap-2">
+          {awaitingPayment && (
+            <button type="button" disabled={paying} onClick={handlePay}
+              className="inline-flex h-9 items-center gap-1.5 rounded bg-accent px-4 text-sm font-semibold text-white hover:bg-accent-hover disabled:opacity-60">
+              <CreditCard className="h-4 w-4" strokeWidth={1.6} /> {paying ? "Открываем…" : "Оплатить"}
+            </button>
+          )}
           {shipment && (
             <>
               <button type="button" className={button} onClick={() => openLabel(false)}><Eye className="h-4 w-4" strokeWidth={1.6} /> Этикетка</button>

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { cdekRequest } from "@/server/cdek/client";
+import { settledLines } from "@/server/orders/pricing";
 import { getLogistics } from "@/server/repositories/settings";
 import type {
   CdekCity,
@@ -236,6 +237,7 @@ export async function createCdekOrder(
   order: Order,
 ): Promise<CreateOrderResult> {
   const logistics = getLogistics();
+  const cod = order.paymentMethod === "on_delivery";
 
   const result = await cdekRequest<OrderCreateResponse>("/v2/orders", {
     body: {
@@ -261,6 +263,12 @@ export async function createCdekOrder(
         order.delivery.mode === "courier"
           ? { code: order.delivery.cityCode, address: order.delivery.address }
           : undefined,
+      // При оплате при получении деньги за товар и доставку собирает
+      // курьер или пункт выдачи. Для этого у СДЭК должен быть включён
+      // наложенный платёж в договоре — иначе заказ отклонят.
+      ...(cod
+        ? { delivery_recipient_cost: { value: order.deliveryPrice } }
+        : {}),
       recipient: {
         name: order.customer.name,
         email: order.customer.email,
@@ -270,17 +278,19 @@ export async function createCdekOrder(
         {
           number: order.number,
           weight: Math.max(order.packageWeight ?? 1, 1),
-          items: order.items.map((item) => ({
-            name: `${item.title}, размер ${item.sizeEu}`,
-            ware_key: item.variantId,
-            cost: item.price,
+          items: settledLines(order).map((line) => ({
+            name: `${line.item.title}, размер ${line.item.sizeEu}`,
+            // Разбитая скидкой позиция даёт две строки на один артикул —
+            // ключи должны отличаться.
+            ware_key: line.part > 1 ? `${line.item.variantId}-${line.part}` : line.item.variantId,
+            cost: line.unitPrice,
             weight: Math.max(
               Math.round((order.packageWeight ?? 500) / order.items.length),
               1,
             ),
-            amount: item.quantity,
-            // Товар оплачен на сайте — наложенного платежа нет.
-            payment: { value: 0 },
+            amount: line.quantity,
+            // Сколько взять с получателя за единицу: при оплате на сайте — ничего.
+            payment: { value: cod ? line.unitPrice : 0 },
           })),
         },
       ],

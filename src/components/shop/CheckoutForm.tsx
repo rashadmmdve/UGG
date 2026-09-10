@@ -11,9 +11,36 @@ import { cartSubtotal, useCartStore } from "@/lib/store/cart";
 import { cn, formatPrice, plural } from "@/lib/utils";
 import { quoteDeliveryAction } from "@/server/cdek/actions";
 import { previewPromocode, submitOrder } from "@/server/orders/createOrder";
-import type { CdekCity, CdekDeliveryPoint, CdekQuote, DeliveryMode, PublicUser } from "@/lib/types";
+import type {
+  CdekCity,
+  CdekDeliveryPoint,
+  CdekQuote,
+  DeliveryMode,
+  PaymentMethod,
+  PublicUser,
+} from "@/lib/types";
 
-export function CheckoutForm({ user }: { user: PublicUser | null }) {
+const PAYMENT_OPTIONS: { value: PaymentMethod; title: string; hint: string }[] = [
+  {
+    value: "online",
+    title: "Картой онлайн",
+    hint: "Банковская карта, СБП и другие способы через ЮKassa. Чек придёт на почту.",
+  },
+  {
+    value: "on_delivery",
+    title: "При получении",
+    hint: "Наличными или картой в пункте выдачи или курьеру СДЭК.",
+  },
+];
+
+export function CheckoutForm({
+  user,
+  onlinePayment,
+}: {
+  user: PublicUser | null;
+  /** Подключена ли ЮKassa. Без неё остаётся только оплата при получении. */
+  onlinePayment: boolean;
+}) {
   const router = useRouter();
   const hydrated = useHydrated();
   const items = useCartStore((state) => state.items);
@@ -29,6 +56,9 @@ export function CheckoutForm({ user }: { user: PublicUser | null }) {
   const [promoChecking, setPromoChecking] = useState(false);
 
   const [mode, setMode] = useState<DeliveryMode>("pvz");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(
+    onlinePayment ? "online" : "on_delivery",
+  );
   const [city, setCity] = useState<CdekCity | null>(null);
   const [point, setPoint] = useState<CdekDeliveryPoint | null>(null);
   const [address, setAddress] = useState("");
@@ -126,6 +156,7 @@ export function CheckoutForm({ user }: { user: PublicUser | null }) {
         pointCode: mode === "pvz" ? (point?.code ?? null) : null,
         comment: formData.get("comment") ?? "",
         promocode,
+        paymentMethod,
         items: cartLines,
       });
       if (!result.ok) {
@@ -134,7 +165,14 @@ export function CheckoutForm({ user }: { user: PublicUser | null }) {
         return;
       }
       clear();
-      router.push(`/checkout/success?order=${result.orderNumber}`);
+      // На оплату — полным переходом: страница ЮKassa живёт на другом
+      // домене, и роутер Next туда не доведёт. Если платёж не создался,
+      // страница «спасибо» предложит попробовать ещё раз.
+      if (result.paymentUrl) {
+        window.location.assign(result.paymentUrl);
+        return;
+      }
+      router.push(`/checkout/success?order=${result.orderId}`);
     });
   }
 
@@ -164,6 +202,45 @@ export function CheckoutForm({ user }: { user: PublicUser | null }) {
           <div className="mt-5">
             <ATextarea id="co-comment" name="comment" label="Комментарий к заказу" placeholder="Необязательно" rows={3} />
           </div>
+        </fieldset>
+
+        <fieldset>
+          <legend className="mb-4 text-lg font-semibold">Оплата</legend>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {PAYMENT_OPTIONS.map((option) => {
+              const disabled = option.value === "online" && !onlinePayment;
+              const checked = paymentMethod === option.value;
+              return (
+                <label
+                  key={option.value}
+                  className={cn(
+                    "flex cursor-pointer gap-3 rounded-lg border p-4 transition-colors",
+                    checked ? "border-accent" : "border-line hover:border-line-strong",
+                    disabled && "cursor-not-allowed opacity-50",
+                  )}
+                >
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value={option.value}
+                    checked={checked}
+                    disabled={disabled}
+                    onChange={() => setPaymentMethod(option.value)}
+                    className="mt-1 h-4 w-4 shrink-0 accent-accent"
+                  />
+                  <span>
+                    <span className="block text-sm font-semibold">{option.title}</span>
+                    <span className="mt-0.5 block text-xs text-muted">
+                      {disabled ? "Подключается — пока недоступно." : option.hint}
+                    </span>
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+          {fieldErrors.paymentMethod && (
+            <p role="alert" className="mt-2 text-sm text-danger">{fieldErrors.paymentMethod}</p>
+          )}
         </fieldset>
       </div>
 
@@ -232,7 +309,7 @@ export function CheckoutForm({ user }: { user: PublicUser | null }) {
               равно пересчитает её и вернёт ошибку. */}
           <button type="submit" disabled={pending || !quote}
             className="mt-5 inline-flex h-12 w-full items-center justify-center rounded-md bg-accent text-sm font-semibold text-white transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:bg-line-strong">
-            {pending ? "Оформляем…" : "Подтвердить заказ"}
+            {pending ? "Оформляем…" : paymentMethod === "online" ? "Перейти к оплате" : "Подтвердить заказ"}
           </button>
 
           {!quote && !quoting && (
@@ -241,7 +318,11 @@ export function CheckoutForm({ user }: { user: PublicUser | null }) {
             </p>
           )}
           <p className="mt-3 text-xs text-muted">
-            После оформления с вами свяжется менеджер для подтверждения и оплаты.
+            {paymentMethod === "online"
+              ? "После подтверждения откроется защищённая страница оплаты ЮKassa."
+              : "Оплатите заказ при получении — наличными или картой."}
+            {" "}Оформляя заказ, вы соглашаетесь с{" "}
+            <Link href="/oferta" className="underline hover:text-accent">офертой</Link>.
           </p>
         </div>
       </aside>

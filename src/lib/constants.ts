@@ -1,4 +1,4 @@
-import type { OrderStatus, PaymentStatus } from "@/lib/types";
+import type { OrderStatus, PaymentMethod, PaymentStatus } from "@/lib/types";
 
 /**
  * Название магазина. Пока это заглушка: собственное имя бренда ещё не
@@ -62,6 +62,12 @@ export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
   pending: "Ожидает оплаты",
   paid: "Оплачен",
   refunded: "Возвращён",
+  canceled: "Отменён",
+};
+
+export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+  online: "Картой онлайн",
+  on_delivery: "При получении",
 };
 
 /** Товаров на странице каталога. Страницы со второй закрыты от индексации. */

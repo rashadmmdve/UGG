@@ -191,6 +191,7 @@ CREATE TABLE IF NOT EXISTS orders (
   total          INTEGER NOT NULL DEFAULT 0,
   promocode      TEXT,
   status         TEXT NOT NULL DEFAULT 'new',
+  payment_method TEXT NOT NULL DEFAULT 'on_delivery',
   payment_status TEXT NOT NULL DEFAULT 'unpaid',
   cdek           TEXT,
   created_at     TEXT NOT NULL,

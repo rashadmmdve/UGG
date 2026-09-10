@@ -81,8 +81,9 @@ export function createOrder(input: NewOrder): Order {
       `INSERT INTO orders
          (id, number, user_id, customer, delivery, comment, items,
           subtotal, discount, delivery_price, package_weight, total,
-          promocode, status, payment_status, cdek, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          promocode, status, payment_method, payment_status, cdek,
+          created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .run(
       order.id,
@@ -99,6 +100,7 @@ export function createOrder(input: NewOrder): Order {
       order.total,
       order.promocode,
       order.status,
+      order.paymentMethod,
       order.paymentStatus,
       order.cdek ? JSON.stringify(order.cdek) : null,
       order.createdAt,
