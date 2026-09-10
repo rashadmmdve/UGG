@@ -215,8 +215,10 @@ export async function resendVerificationAction(
 /**
  * «Забыли пароль?» — письмо со ссылкой на смену пароля.
  *
- * Ответ один для любой почты, чтобы по нему нельзя было проверить,
- * есть ли аккаунт. Счётчик попыток — общий с входом.
+ * Незнакомой почте отвечаем прямо, что её нет в базе: так решил
+ * владелец — понятный ответ вместо обтекаемого. Плата за это в том,
+ * что через форму можно проверить, зарегистрирован ли адрес; перебор
+ * сдерживает общий с входом счётчик попыток.
  */
 export async function requestPasswordResetAction(
   _prev: FormState,
@@ -238,18 +240,21 @@ export async function requestPasswordResetAction(
   registerFailedAttempt(key);
 
   const user = getUserByEmail(parsed.data);
-  if (user) {
-    try {
-      await issuePasswordReset(user);
-    } catch (error) {
-      console.error(`Не удалось отправить письмо восстановления на ${user.email}:`, error);
-      return { error: "Не удалось отправить письмо. Попробуйте через минуту." };
-    }
+  if (!user) {
+    return {
+      error: `Извините, но почта ${parsed.data} не зарегистрирована на сайте.`,
+      action: { href: "/account/register", label: "Зарегистрироваться" },
+    };
   }
 
-  return {
-    success: `Если ${parsed.data} зарегистрирована, письмо со ссылкой уже в пути. Ссылка действует час.`,
-  };
+  try {
+    await issuePasswordReset(user);
+  } catch (error) {
+    console.error(`Не удалось отправить письмо восстановления на ${user.email}:`, error);
+    return { error: "Не удалось отправить письмо. Попробуйте через минуту." };
+  }
+
+  return { success: "Письмо со ссылкой уже в пути. Ссылка действует час." };
 }
 
 /** Новый пароль по ссылке из письма. После смены — сразу вход. */
