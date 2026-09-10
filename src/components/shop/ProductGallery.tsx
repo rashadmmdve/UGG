@@ -82,7 +82,15 @@ export function ProductGallery({
       </div>
 
       {total > 1 && (
-        <div className="no-scrollbar flex gap-2 overflow-x-auto">
+        // Миниатюры растянуты на всю ширину главного кадра: колонок
+        // столько же, сколько снимков, но не больше шести — дальше ряд
+        // переносится, иначе на десяти фото каждое стало бы неразличимым.
+        <div
+          className="grid gap-2"
+          style={{
+            gridTemplateColumns: `repeat(${Math.min(total, 6)}, minmax(0, 1fr))`,
+          }}
+        >
           {images.map((image, index) => (
             <button
               key={image}
@@ -91,11 +99,17 @@ export function ProductGallery({
               aria-label={`Фото ${index + 1}`}
               aria-current={index === active}
               className={cn(
-                "relative aspect-square w-16 shrink-0 overflow-hidden rounded border bg-elevated transition-colors",
+                "relative aspect-square overflow-hidden rounded border bg-elevated transition-colors",
                 index === active ? "border-accent" : "border-line hover:border-line-strong",
               )}
             >
-              <Image src={image} alt="" fill sizes="64px" className="object-cover" />
+              <Image
+                src={image}
+                alt=""
+                fill
+                sizes="(min-width: 1024px) 8vw, 16vw"
+                className="object-cover"
+              />
             </button>
           ))}
         </div>

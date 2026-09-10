@@ -65,11 +65,23 @@ async function placeholder(name, hex) {
   return `/uploads/${name}`;
 }
 
+
+/** Осветлить цвет на заданное число пунктов — для набора разных кадров. */
+function shade(hex, amount) {
+  const n = parseInt(hex.slice(1), 16);
+  const clamp = (v) => Math.max(0, Math.min(255, v + amount));
+  const r = clamp((n >> 16) & 255);
+  const g = clamp((n >> 8) & 255);
+  const b = clamp(n & 255);
+  return "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("");
+}
+
 // ─── Демо-товары ─────────────────────────────────────────────────────────────
 const DEMO = [
   {
     slug: "demo-classic-mini-chestnut",
     group: "demo-classic-mini",
+    shots: 4,
     title: "UGG Classic Mini Chestnut",
     sku: "1016222-CHE",
     colorTitle: "Chestnut",
@@ -186,7 +198,15 @@ for (const item of DEMO) {
     process.exit(1);
   }
 
-  const image = await placeholder(`${item.slug}.jpg`, item.hex);
+  // Первому товару даём несколько снимков разных оттенков — иначе под
+  // главным кадром не видно полосу миниатюр.
+  const images = item.shots
+    ? await Promise.all(
+        Array.from({ length: item.shots }, (_, i) =>
+          placeholder(`${item.slug}-${i + 1}.jpg`, shade(item.hex, i * 14)),
+        ),
+      )
+    : [await placeholder(`${item.slug}.jpg`, item.hex)];
   const color = findColor.get(item.colorTitle);
   const line = findLine.get(item.category.slug === "tapochki" ? "tasman" : "classic");
   const productId = id();
@@ -209,7 +229,7 @@ for (const item of DEMO) {
       17,
       item.price,
       item.oldPrice,
-      JSON.stringify([image]),
+      JSON.stringify(images),
       item.slug.includes("classic-mini") ? 1 : 0,
       now,
       now,
