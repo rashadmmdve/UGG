@@ -72,11 +72,12 @@ const source = JSON.parse(fs.readFileSync(SOURCE, "utf8"));
 console.log(`Записей в файле: ${source.length}\n`);
 
 // ─── Разделы ─────────────────────────────────────────────────────────────────
+// Аксессуаров в магазине нет: раздел заменён распродажей, и записи с
+// таким полом пропускаются при заливке.
 const SECTIONS = {
   Женские: { gender: "women", section: "zhenskie" },
   Мужские: { gender: "men", section: "muzhskie" },
   Детские: { gender: "kids", section: "detskie" },
-  Аксессуары: { gender: "accessory", section: "aksessuary" },
 };
 
 // ─── Категории источника → наши ──────────────────────────────────────────────
@@ -122,23 +123,10 @@ const CATEGORY_MAP = {
   "detskie/Пинетки": "pinetki",
   "detskie/Новинки": "novinki",
 
-  "aksessuary/Женские перчатки": "zhenskie-perchatki",
-  "aksessuary/Мужские перчатки": "muzhskie-perchatki",
-  "aksessuary/Шарфы и шапки": "sharfy-i-shapki",
-  "aksessuary/Наушники": "naushniki",
-  "aksessuary/Средства для ухода": "sredstva-dlya-uhoda",
-  "aksessuary/Галоши": "galoshi",
-  // «Ботинки» в аксессуарах — резиновые, у нас это галоши.
-  "aksessuary/Ботинки": "galoshi",
 };
 
 /** Запасной разбор по названию — для товаров, пришедших без категории. */
 const CATEGORY_RULES = [
-  [/варежк|перчат|glove|mitten/i, { aksessuary: "zhenskie-perchatki" }],
-  [/crossbody|bucket|сумк|\bbag\b/i, { aksessuary: "sumki" }],
-  [/\bhat\b|beanie|шапк|шарф|scarf|snood/i, { aksessuary: "sharfy-i-shapki" }],
-  [/earmuff|наушник/i, { aksessuary: "naushniki" }],
-  [/cleaner|protector|уход|care kit/i, { aksessuary: "sredstva-dlya-uhoda" }],
 
   [/пинетк|\bbaby\b|sparrow|erin/i, { detskie: "pinetki" }],
 
@@ -171,7 +159,6 @@ const FALLBACK = {
   zhenskie: "novinki",
   muzhskie: "novinki",
   detskie: "novinki",
-  aksessuary: "sharfy-i-shapki",
 };
 
 // ─── Цвета ───────────────────────────────────────────────────────────────────
@@ -242,11 +229,6 @@ function slugify(text) {
 function resolveCategory(section, rawCategory, name) {
   const direct = CATEGORY_MAP[`${section}/${rawCategory}`];
   if (direct) return direct;
-
-  // «Перчатки» без уточнения пола: смотрим на само название.
-  if (section === "aksessuary" && /перчат|варежк|glove/i.test(rawCategory ?? "")) {
-    return /мужск|\bmen/i.test(name) ? "muzhskie-perchatki" : "zhenskie-perchatki";
-  }
 
   for (const [pattern, targets] of CATEGORY_RULES) {
     if (pattern.test(name) && targets[section]) return targets[section];

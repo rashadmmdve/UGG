@@ -78,9 +78,11 @@ export function Header({ menu }: { menu: MenuSection[] }) {
             <Link
               key={section.slug}
               href={section.href}
-              onMouseEnter={() => setOpenSection(section.slug)}
-              onFocus={() => setOpenSection(section.slug)}
-              aria-expanded={openSection === section.slug}
+              // У раздела без категорий раскрывать нечего — ведём себя
+              // как обычная ссылка и не рисуем стрелку.
+              onMouseEnter={() => setOpenSection(section.categories.length ? section.slug : null)}
+              onFocus={() => setOpenSection(section.categories.length ? section.slug : null)}
+              aria-expanded={section.categories.length ? openSection === section.slug : undefined}
               className={cn(
                 "flex items-center gap-1 text-base font-medium transition-colors hover:text-accent",
                 pathname.startsWith(section.href) ? "text-accent" : "text-fg",
@@ -88,13 +90,15 @@ export function Header({ menu }: { menu: MenuSection[] }) {
             >
               {section.title}
               {/* Стрелка разворачивается на 180°, пока открыто меню раздела. */}
-              <ChevronDown
-                className={cn(
-                  "h-4 w-4 opacity-60 transition-transform duration-300 ease-out",
-                  openSection === section.slug && "rotate-180",
-                )}
-                strokeWidth={2}
-              />
+              {section.categories.length > 0 && (
+                <ChevronDown
+                  className={cn(
+                    "h-4 w-4 opacity-60 transition-transform duration-300 ease-out",
+                    openSection === section.slug && "rotate-180",
+                  )}
+                  strokeWidth={2}
+                />
+              )}
             </Link>
           ))}
           {NAV_LINKS.map((link) => (
@@ -269,18 +273,20 @@ function MobileDrawer({
                   >
                     {section.title}
                   </Link>
-                  <button
-                    type="button"
-                    onClick={() => setExpanded(isOpen ? null : section.slug)}
-                    aria-expanded={isOpen}
-                    aria-label={`Категории: ${section.title}`}
-                    className="flex h-10 w-10 items-center justify-center"
-                  >
-                    <ChevronDown
-                      className={cn("h-4 w-4 transition-transform", isOpen ? "rotate-180" : "")}
-                      strokeWidth={2}
-                    />
-                  </button>
+                  {section.categories.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setExpanded(isOpen ? null : section.slug)}
+                      aria-expanded={isOpen}
+                      aria-label={`Категории: ${section.title}`}
+                      className="flex h-10 w-10 items-center justify-center"
+                    >
+                      <ChevronDown
+                        className={cn("h-4 w-4 transition-transform", isOpen ? "rotate-180" : "")}
+                        strokeWidth={2}
+                      />
+                    </button>
+                  )}
                 </div>
                 <div className={cn("grid transition-[grid-template-rows] duration-300", isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
                   <ul className="overflow-hidden">

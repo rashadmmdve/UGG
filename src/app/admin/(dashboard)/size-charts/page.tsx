@@ -7,7 +7,6 @@ const GENDER_LABELS: Record<string, string> = {
   men: "Мужская",
   kids: "Детская",
   unisex: "Унисекс",
-  accessory: "Аксессуары",
 };
 
 export default function AdminSizeChartsPage() {

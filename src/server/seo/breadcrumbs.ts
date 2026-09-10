@@ -1,6 +1,6 @@
 import "server-only";
 
-import { SECTIONS, SITE_URL } from "@/lib/constants";
+import { SALE_SECTION, SECTIONS, SITE_URL } from "@/lib/constants";
 import { getCategoryById, getCategoryBySlug } from "@/server/repositories/catalog";
 import type { Product, SeoLanding } from "@/lib/types";
 
@@ -20,7 +20,9 @@ export type Crumb = {
 };
 
 const sectionTitle = (slug: string): string =>
-  SECTIONS.find((section) => section.slug === slug)?.title ?? slug;
+  slug === SALE_SECTION.slug
+    ? SALE_SECTION.title
+    : (SECTIONS.find((section) => section.slug === slug)?.title ?? slug);
 
 const HOME: Crumb = { title: "Главная", url: SITE_URL };
 const CATALOG: Crumb = { title: "Каталог", url: `${SITE_URL}/catalog` };

@@ -40,7 +40,6 @@ const GENDERS: { value: Gender; label: string }[] = [
   { value: "men", label: "Мужские" },
   { value: "kids", label: "Детские" },
   { value: "unisex", label: "Унисекс" },
-  { value: "accessory", label: "Аксессуар" },
 ];
 
 const MATERIALS: { value: Material; label: string }[] = [
@@ -602,6 +601,13 @@ export function ProductForm({
           defaultChecked={product?.isPublished ?? false} />
         <ACheckbox id="isBestseller" name="isBestseller" label="Показывать в хитах на главной"
           defaultChecked={product?.isBestseller ?? false} />
+        {/*
+          Раздел «Распродажа» собирается вручную этой галочкой, а не по
+          наличию старой цены: скидка бывает и вне распродажи. Работает
+          для женских и мужских товаров — см. SALE_GENDERS.
+        */}
+        <ACheckbox id="isSale" name="isSale" label="В распродаже"
+          defaultChecked={product?.isSale ?? false} />
         <SubmitButton className="ml-auto">
           {isNew ? "Создать товар" : "Сохранить"}
         </SubmitButton>

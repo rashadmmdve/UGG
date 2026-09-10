@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
 import { InfoPage } from "@/components/shop/InfoPage";
 import { pageCrumbs } from "@/server/seo/breadcrumbs";
@@ -96,7 +95,7 @@ export default function CareGuidePage() {
 
       <p className="mt-8">
         Все средства для ухода — в разделе{" "}
-        <Link href="/catalog/aksessuary/uhod">средства по уходу</Link>.
+        средства по уходу.
       </p>
 
       <h2>Частые вопросы</h2>

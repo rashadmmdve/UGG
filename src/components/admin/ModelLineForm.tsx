@@ -20,7 +20,6 @@ const GENDERS: { value: Gender; label: string }[] = [
   { value: "men", label: "Мужские" },
   { value: "kids", label: "Детские" },
   { value: "unisex", label: "Унисекс" },
-  { value: "accessory", label: "Аксессуары" },
 ];
 
 export function ModelLineForm({

@@ -1,10 +1,11 @@
 import type { MetadataRoute } from "next";
 
-import { SECTIONS, SITE_URL } from "@/lib/constants";
+import { SALE_SECTION, SECTIONS, SITE_URL } from "@/lib/constants";
 import {
   getCategoryBySlug,
   getProductsByCategory,
   getProductsBySection,
+  getSaleProducts,
   getPublishedCategories,
   getPublishedProducts,
 } from "@/server/repositories/catalog";
@@ -71,6 +72,16 @@ function catalogSitemap(): MetadataRoute.Sitemap {
     changeFrequency: "weekly",
     priority: 0.9,
   }));
+
+  // Распродажа — по тому же правилу: пока подборка пуста, страница
+  // отдаётся с noindex и в карту не идёт.
+  if (getSaleProducts().length > 0) {
+    sections.push({
+      url: `${SITE_URL}/catalog/${SALE_SECTION.slug}`,
+      changeFrequency: "daily",
+      priority: 0.8,
+    });
+  }
 
   /**
    * Категории без товаров не попадают в карту сайта: страница всё равно

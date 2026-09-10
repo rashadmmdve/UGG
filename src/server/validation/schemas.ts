@@ -157,7 +157,7 @@ export const productSchema = z.object({
   sku: z.string().trim().max(40).default(""),
   description: z.string().trim().max(5000).default(""),
 
-  gender: z.enum(["women", "men", "kids", "unisex", "accessory"]),
+  gender: z.enum(["women", "men", "kids", "unisex"]),
   modelLineId: z.string().nullable().default(null),
   colorId: z.string().nullable().default(null),
   categoryIds: z.array(z.string()).min(1, "Выберите хотя бы одну категорию"),
@@ -187,6 +187,7 @@ export const productSchema = z.object({
 
   isPublished: z.boolean(),
   isBestseller: z.boolean(),
+  isSale: z.boolean(),
   seo: seoFieldsSchema,
 })
   // Основная категория задаёт хлебные крошки и родителя в канонической
@@ -218,7 +219,7 @@ export const modelLineSchema = z.object({
   title: z.string().trim().min(2, "Укажите название").max(80),
   description: z.string().trim().max(2000).default(""),
   genders: z
-    .array(z.enum(["women", "men", "kids", "unisex", "accessory"]))
+    .array(z.enum(["women", "men", "kids", "unisex"]))
     .min(1, "Укажите, для кого выпускается линия"),
   sizeChartId: z.string().nullable().default(null),
   order: z.coerce.number().int().min(0).max(999),
@@ -244,7 +245,7 @@ export const sizeChartSchema = z.object({
   id: z.string().min(1),
   slug: z.string().trim().min(1).regex(/^[a-z0-9-]+$/),
   title: z.string().trim().min(2).max(80),
-  gender: z.enum(["women", "men", "kids", "unisex", "accessory"]),
+  gender: z.enum(["women", "men", "kids", "unisex"]),
   rows: z
     .array(
       z.object({

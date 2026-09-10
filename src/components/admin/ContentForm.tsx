@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 
 import { ImageUploader } from "@/components/admin/ImageUploader";
 import { AField, ATextarea, FormMessage, SubmitButton } from "@/components/admin/ui";
-import { SECTIONS } from "@/lib/constants";
+import { CATALOG_TILES } from "@/lib/constants";
 import { saveContentAction } from "@/server/admin/actions/settings";
 import type { SiteContent } from "@/server/repositories/settings";
 import type { ActionState } from "@/server/validation/errors";
@@ -19,7 +19,7 @@ export function ContentForm({ content }: { content: SiteContent }) {
   const [hero, setHero] = useState<string[]>(content.home.heroImage ? [content.home.heroImage] : []);
   const [sectionImages, setSectionImages] = useState<Record<string, string>>(() =>
     Object.fromEntries(
-      SECTIONS.map((section) => [section.slug, content.sectionImages?.[section.slug] ?? ""]),
+      CATALOG_TILES.map((section) => [section.slug, content.sectionImages?.[section.slug] ?? ""]),
     ),
   );
   const [faq, setFaq] = useState<FaqRow[]>(
@@ -33,7 +33,7 @@ export function ContentForm({ content }: { content: SiteContent }) {
   return (
     <form action={action} className="space-y-8" noValidate>
       <input type="hidden" name="heroImage" value={hero[0] ?? ""} />
-      {SECTIONS.map((section) => (
+      {CATALOG_TILES.map((section) => (
         <input
           key={section.slug}
           type="hidden"
@@ -70,7 +70,7 @@ export function ContentForm({ content }: { content: SiteContent }) {
               по центру. Без фото плитка остаётся с одним названием.
             </p>
             <div className="mt-2 grid gap-4 sm:grid-cols-2">
-              {SECTIONS.map((section) => (
+              {CATALOG_TILES.map((section) => (
                 <div key={section.slug}>
                   <p className="mb-1.5 text-xs text-muted">{section.title}</p>
                   <ImageUploader

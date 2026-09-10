@@ -18,7 +18,7 @@ import type { Database } from "better-sqlite3";
  * IF NOT EXISTS. Версия схемы хранится в user_version — по ней будут
  * добавляться миграции, когда структура изменится.
  */
-const SCHEMA_VERSION = 4;
+const SCHEMA_VERSION = 5;
 
 function readDdl(): string {
   return fs.readFileSync(
@@ -48,6 +48,10 @@ export function applySchema(db: Database): void {
     addColumn(db, "users", "reset_token_hash", "TEXT");
     addColumn(db, "users", "reset_token_expires_at", "TEXT");
     db.exec("CREATE INDEX IF NOT EXISTS idx_users_reset_token ON users(reset_token_hash)");
+  }
+  if (current < 5) {
+    addColumn(db, "products", "is_sale", "INTEGER NOT NULL DEFAULT 0");
+    db.exec("CREATE INDEX IF NOT EXISTS idx_products_sale ON products(is_sale, is_published)");
   }
 
   if (current < SCHEMA_VERSION) {

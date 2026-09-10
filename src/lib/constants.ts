@@ -81,10 +81,29 @@ export const SECTIONS = [
   { slug: "zhenskie", title: "Женские", gender: "women" },
   { slug: "muzhskie", title: "Мужские", gender: "men" },
   { slug: "detskie", title: "Детские", gender: "kids" },
-  { slug: "aksessuary", title: "Аксессуары", gender: "accessory" },
 ] as const;
 
 export type SectionSlug = (typeof SECTIONS)[number]["slug"];
+
+/**
+ * Распродажа — не пол, а ручная подборка поверх женского и мужского
+ * разделов: товар попадает в неё галочкой в карточке. Поэтому она живёт
+ * отдельно от SECTIONS: там каждая запись задаёт ещё и пол товара, а у
+ * распродажи пола нет.
+ *
+ * В меню и на главной стоит рядом с разделами — для покупателя это такой
+ * же пункт каталога.
+ */
+export const SALE_SECTION = { slug: "rasprodazha", title: "Распродажа" } as const;
+
+/** Полы, товары которых могут попасть в распродажу. */
+export const SALE_GENDERS = ["women", "men"] as const;
+
+/** Плитки каталога: разделы по полу плюс распродажа. */
+export const CATALOG_TILES = [
+  ...SECTIONS.map((section) => ({ slug: section.slug, title: section.title })),
+  { slug: SALE_SECTION.slug, title: SALE_SECTION.title },
+];
 
 /**
  * Слаги, которые нельзя занять категорией или товаром: они уже что-то
@@ -92,6 +111,7 @@ export type SectionSlug = (typeof SECTIONS)[number]["slug"];
  */
 export const RESERVED_SLUGS = new Set<string>([
   ...SECTIONS.map((section) => section.slug),
+  SALE_SECTION.slug,
   "catalog",
   "product",
   "collection",

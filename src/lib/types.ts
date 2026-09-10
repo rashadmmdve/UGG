@@ -7,7 +7,7 @@
  */
 
 /** Пол/назначение товара. Определяет, в какой раздел каталога он попадает. */
-export type Gender = "women" | "men" | "kids" | "unisex" | "accessory";
+export type Gender = "women" | "men" | "kids" | "unisex";
 
 /** Сезонность — используется в фильтрах и в описании карточки. */
 export type Season = "winter" | "demi" | "summer" | "home";
@@ -193,6 +193,8 @@ export type Product = {
 
   isPublished: boolean;
   isBestseller: boolean;
+  /** Отмечен для раздела «Распродажа» — вручную, галочкой в карточке. */
+  isSale: boolean;
 
   /** Денормализация из отзывов, чтобы не считать при каждом рендере. */
   rating: { value: number; count: number } | null;

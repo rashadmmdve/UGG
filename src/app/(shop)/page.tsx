@@ -5,7 +5,7 @@ import Link from "next/link";
 import { JsonLd } from "@/components/JsonLd";
 import { Logo } from "@/components/Logo";
 import { ProductCard } from "@/components/shop/ProductCard";
-import { SECTIONS, SITE_DESCRIPTION, SITE_NAME } from "@/lib/constants";
+import { CATALOG_TILES, SECTIONS, SITE_DESCRIPTION, SITE_NAME } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import {
   getBestsellers,
@@ -69,7 +69,7 @@ export default function HomePage() {
 
         {/* Разделы — рядом под героем */}
         <div className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {SECTIONS.map((section) => (
+          {CATALOG_TILES.map((section) => (
             // Пропорция 3:4, а не фиксированная высота: плитки останутся
             // вертикальными на любой ширине экрана, и в них без переделки
             // встанут фотографии разделов, когда их загрузят.

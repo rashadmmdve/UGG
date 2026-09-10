@@ -7,7 +7,6 @@ const GENDER_LABELS: Record<string, string> = {
   men: "муж.",
   kids: "дет.",
   unisex: "унисекс",
-  accessory: "аксесс.",
 };
 
 export default function AdminModelLinesPage() {

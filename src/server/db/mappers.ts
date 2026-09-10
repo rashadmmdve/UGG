@@ -171,6 +171,7 @@ export type ProductRow = {
   height: number | null;
   is_published: number;
   is_bestseller: number;
+  is_sale: number;
   rating_value: number | null;
   rating_count: number;
   seo: string;
@@ -238,6 +239,7 @@ export function mapProduct(
     height: row.height,
     isPublished: bool(row.is_published),
     isBestseller: bool(row.is_bestseller),
+    isSale: bool(row.is_sale),
     rating:
       row.rating_value !== null && row.rating_count > 0
         ? { value: row.rating_value, count: row.rating_count }

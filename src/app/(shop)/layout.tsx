@@ -1,10 +1,11 @@
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { CartDrawer } from "@/components/shop/CartDrawer";
-import { SECTIONS } from "@/lib/constants";
+import { SALE_SECTION, SECTIONS } from "@/lib/constants";
 import {
   getCategoriesBySection,
   getProductsByCategory,
+  getSaleProducts,
 } from "@/server/repositories/catalog";
 import { getContent } from "@/server/repositories/settings";
 import type { MenuSection } from "@/lib/types";
@@ -16,7 +17,7 @@ import type { MenuSection } from "@/lib/types";
  * откуда берутся категории.
  */
 function buildMenu(): MenuSection[] {
-  return SECTIONS.map((section) => ({
+  const sections: MenuSection[] = SECTIONS.map((section) => ({
     slug: section.slug,
     title: section.title,
     href: `/catalog/${section.slug}`,
@@ -27,6 +28,19 @@ function buildMenu(): MenuSection[] {
       hasProducts: getProductsByCategory(category.id).length > 0,
     })),
   }));
+
+  // Распродажа встаёт последним пунктом и только когда в ней что-то есть:
+  // пустой раздел в шапке — это обещание, которого магазин не выполняет.
+  if (getSaleProducts().length > 0) {
+    sections.push({
+      slug: SALE_SECTION.slug,
+      title: SALE_SECTION.title,
+      href: `/catalog/${SALE_SECTION.slug}`,
+      categories: [],
+    });
+  }
+
+  return sections;
 }
 
 export default function ShopLayout({ children }: LayoutProps<"/">) {

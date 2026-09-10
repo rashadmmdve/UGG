@@ -2,6 +2,8 @@ import "server-only";
 
 import { cache } from "react";
 
+import { SALE_GENDERS } from "@/lib/constants";
+
 import { getDb, transaction } from "@/server/db/connection";
 import {
   mapCategory,
@@ -211,6 +213,25 @@ export const getProductsBySection = cache((sectionSlug: string): Product[] => {
        ORDER BY p.created_at DESC`,
     )
     .all(sectionSlug) as ProductRow[];
+  return hydrate(rows);
+});
+
+/**
+ * Товары распродажи — отмеченные галочкой в карточке.
+ *
+ * Ограничены женским и мужским разделом: так распорядился владелец
+ * магазина. Отметка у детского товара останется в базе, но на витрину
+ * не выйдет — чтобы расширить, достаточно поменять SALE_GENDERS.
+ */
+export const getSaleProducts = cache((): Product[] => {
+  const genders = SALE_GENDERS.map(() => "?").join(", ");
+  const rows = getDb()
+    .prepare(
+      `SELECT * FROM products
+       WHERE is_sale = 1 AND is_published = 1 AND gender IN (${genders})
+       ORDER BY created_at DESC`,
+    )
+    .all(...SALE_GENDERS) as ProductRow[];
   return hydrate(rows);
 });
 

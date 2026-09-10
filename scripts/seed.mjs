@@ -167,14 +167,6 @@ const CATEGORIES = [
   { section: "detskie", slug: "s-pugovicami", title: "С пуговицами", aliases: ["bailey-button"] },
   { section: "detskie", slug: "pinetki", title: "Пинетки", aliases: ["baby", "erin"] },
 
-  // ── Аксессуары ──
-  { section: "aksessuary", slug: "zhenskie-perchatki", title: "Женские перчатки", aliases: ["perchatki"] },
-  { section: "aksessuary", slug: "muzhskie-perchatki", title: "Мужские перчатки", aliases: [] },
-  { section: "aksessuary", slug: "sharfy-i-shapki", title: "Шарфы и шапки", aliases: ["shapki", "sharfy", "snudy"] },
-  { section: "aksessuary", slug: "naushniki", title: "Наушники", aliases: ["earmuffs"] },
-  { section: "aksessuary", slug: "galoshi", title: "Галоши", aliases: [] },
-  { section: "aksessuary", slug: "sumki", title: "Сумки", aliases: ["bags", "crossbody"] },
-  { section: "aksessuary", slug: "sredstva-dlya-uhoda", title: "Средства для ухода", aliases: ["uhod", "care-kit"] },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
