@@ -117,6 +117,7 @@ export async function saveProductAction(
     heelHeightCm: numberOrNull(formData.get("heelHeightCm")),
     price: formData.get("price"),
     oldPrice: numberOrNull(formData.get("oldPrice")),
+    costPrice: numberOrNull(formData.get("costPrice")),
     images: jsonField<string[]>(formData, "images", []),
     variants,
     weight: formData.get("weight"),

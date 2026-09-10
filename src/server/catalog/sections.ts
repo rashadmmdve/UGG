@@ -1,6 +1,7 @@
 import "server-only";
 
 import { CATALOG_TILES, SALE_SECTION, SECTIONS } from "@/lib/constants";
+import { getSaleProducts } from "@/server/repositories/catalog";
 import { getContent } from "@/server/repositories/settings";
 
 /**
@@ -35,4 +36,17 @@ export function catalogTiles(): { slug: string; title: string }[] {
 /** Только разделы по полу, без распродажи. */
 export function genderSections(): { slug: string; title: string }[] {
   return SECTIONS.map((section) => ({ slug: section.slug, title: sectionTitle(section.slug) }));
+}
+
+/**
+ * Плитки на главной. Распродажа появляется, только когда в ней есть
+ * товары — тем же правилом, что и пункт в меню: пустая плитка обещает
+ * то, чего нет.
+ */
+export function homeTiles(): { slug: string; title: string }[] {
+  const tiles = genderSections();
+  if (getSaleProducts().length > 0) {
+    tiles.push({ slug: SALE_SECTION.slug, title: sectionTitle(SALE_SECTION.slug) });
+  }
+  return tiles;
 }

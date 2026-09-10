@@ -68,6 +68,7 @@ export function saveProduct(input: ProductInput): Product {
       input.heelHeightCm,
       input.price,
       input.oldPrice,
+      input.costPrice,
       JSON.stringify(input.images),
       input.weight,
       input.length,
@@ -86,7 +87,7 @@ export function saveProduct(input: ProductInput): Product {
            slug = ?, title = ?, sku = ?, description = ?, gender = ?,
            model_line_id = ?, color_id = ?, primary_category_id = ?, group_id = ?,
            materials = ?, seasons = ?, shaft_height_cm = ?, heel_height_cm = ?,
-           price = ?, old_price = ?, images = ?, weight = ?, length = ?, width = ?,
+           price = ?, old_price = ?, cost_price = ?, images = ?, weight = ?, length = ?, width = ?,
            height = ?, is_published = ?, is_bestseller = ?, is_sale = ?,
            seo = ?, updated_at = ?
          WHERE id = ?`,
@@ -96,10 +97,10 @@ export function saveProduct(input: ProductInput): Product {
         `INSERT INTO products
            (slug, title, sku, description, gender, model_line_id, color_id,
             primary_category_id, group_id, materials, seasons, shaft_height_cm,
-            heel_height_cm, price, old_price, images, weight, length, width,
+            heel_height_cm, price, old_price, cost_price, images, weight, length, width,
             height, is_published, is_bestseller, is_sale, seo, updated_at,
             id, rating_value, rating_count, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                  ?, NULL, 0, ?)`,
       ).run(...values, id, now);
     }
@@ -198,6 +199,7 @@ export function cloneProduct(sourceId: string): Product | null {
     heelHeightCm: source.heelHeightCm,
     price: source.price,
     oldPrice: source.oldPrice,
+    costPrice: source.costPrice,
     images: [],
     variants: source.variants.map((variant) => ({
       sizeEu: variant.sizeEu,

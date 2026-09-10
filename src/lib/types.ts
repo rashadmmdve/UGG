@@ -181,6 +181,8 @@ export type Product = {
   /** Цена в рублях, целое число. */
   price: number;
   oldPrice: number | null;
+  /** Закупочная цена. Внутренняя, на витрину не выводится. */
+  costPrice: number | null;
 
   images: string[];
   variants: ProductVariant[];

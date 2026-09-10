@@ -436,6 +436,16 @@ export function ProductForm({
             hint="Если заполнена — карточка получит бейдж скидки"
             error={errors.oldPrice}
           />
+          <AField
+            id="costPrice"
+            name="costPrice"
+            label="Себестоимость, ₽"
+            type="number"
+            min={0}
+            defaultValue={product?.costPrice ?? ""}
+            hint="Закупочная. На сайте не показывается"
+            error={errors.costPrice}
+          />
         </div>
       </section>
 

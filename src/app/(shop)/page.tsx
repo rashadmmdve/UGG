@@ -7,7 +7,7 @@ import { Logo } from "@/components/Logo";
 import { HeroCarousel } from "@/components/shop/HeroCarousel";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { SECTIONS, SITE_DESCRIPTION, SITE_NAME } from "@/lib/constants";
-import { catalogTiles } from "@/server/catalog/sections";
+import { homeTiles } from "@/server/catalog/sections";
 import { cn } from "@/lib/utils";
 import {
   getBestsellers,
@@ -39,6 +39,8 @@ export default function HomePage() {
       .map((category) => ({ ...category, sectionTitle: section.title })),
   ).slice(0, 8);
 
+  const tiles = homeTiles();
+
   return (
     <>
       {content.faq.length > 0 && <JsonLd data={faqLd(content.faq)} />}
@@ -69,8 +71,9 @@ export default function HomePage() {
         </div>
 
         {/* Разделы — рядом под героем */}
-        <div className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {catalogTiles().map((section) => (
+        {/* Три плитки без распродажи или четыре с ней — сетка подстраивается. */}
+        <div className={cn("mt-4 grid grid-cols-2 gap-4", tiles.length === 4 ? "lg:grid-cols-4" : "lg:grid-cols-3")}>
+          {tiles.map((section) => (
             // Пропорция 3:4, а не фиксированная высота: плитки останутся
             // вертикальными на любой ширине экрана, и в них без переделки
             // встанут фотографии разделов, когда их загрузят.

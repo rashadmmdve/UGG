@@ -18,7 +18,7 @@ import type { Database } from "better-sqlite3";
  * IF NOT EXISTS. Версия схемы хранится в user_version — по ней будут
  * добавляться миграции, когда структура изменится.
  */
-const SCHEMA_VERSION = 5;
+const SCHEMA_VERSION = 6;
 
 function readDdl(): string {
   return fs.readFileSync(
@@ -53,6 +53,7 @@ export function applySchema(db: Database): void {
     addColumn(db, "products", "is_sale", "INTEGER NOT NULL DEFAULT 0");
     db.exec("CREATE INDEX IF NOT EXISTS idx_products_sale ON products(is_sale, is_published)");
   }
+  if (current < 6) addColumn(db, "products", "cost_price", "INTEGER");
 
   if (current < SCHEMA_VERSION) {
     db.pragma(`user_version = ${SCHEMA_VERSION}`);

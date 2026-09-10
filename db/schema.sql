@@ -84,6 +84,9 @@ CREATE TABLE IF NOT EXISTS products (
   heel_height_cm      REAL,
   price               INTEGER NOT NULL,
   old_price           INTEGER,
+  -- Закупочная цена. Внутренняя: на витрину не выводится, нужна для
+  -- маржи в блоке «Цены».
+  cost_price          INTEGER,
   images              TEXT NOT NULL DEFAULT '[]',
   weight              INTEGER,
   length              INTEGER,

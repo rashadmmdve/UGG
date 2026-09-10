@@ -174,6 +174,7 @@ export const productSchema = z.object({
 
   price: z.coerce.number().int().min(0, "Цена не может быть отрицательной"),
   oldPrice: z.coerce.number().int().min(0).nullable(),
+  costPrice: z.coerce.number().int().min(0).nullable(),
 
   images: z.array(z.string()).default([]),
   variants: z.array(productVariantSchema).min(1, "Добавьте хотя бы один размер"),

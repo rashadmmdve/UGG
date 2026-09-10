@@ -164,6 +164,7 @@ export type ProductRow = {
   heel_height_cm: number | null;
   price: number;
   old_price: number | null;
+  cost_price: number | null;
   images: string;
   weight: number | null;
   length: number | null;
@@ -229,6 +230,7 @@ export function mapProduct(
     heelHeightCm: row.heel_height_cm,
     price: row.price,
     oldPrice: row.old_price,
+    costPrice: row.cost_price ?? null,
     images: parseJson<string[]>(row.images, []),
     variants: variants
       .map(mapVariant)

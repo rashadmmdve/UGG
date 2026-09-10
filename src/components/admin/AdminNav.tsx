@@ -13,6 +13,7 @@ const SECTIONS: { href: string; label: string; group?: string }[] = [
   { href: "/admin", label: "Обзор" },
   { href: "/admin/orders", label: "Заказы" },
   { href: "/admin/products", label: "Товары" },
+  { href: "/admin/prices", label: "Цены" },
   { href: "/admin/reviews", label: "Отзывы" },
 
   { href: "/admin/categories", label: "Категории", group: "Каталог" },
