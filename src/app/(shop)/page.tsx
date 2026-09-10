@@ -23,13 +23,6 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-const SECTION_TAGLINES: Record<string, string> = {
-  zhenskie: "Classic, Tasman, Ultra Mini и другие линии",
-  muzhskie: "Neumel, Classic Short, тапочки",
-  detskie: "От первых шагов до подростковых размеров",
-  aksessuary: "Перчатки, шапки, уход за обувью",
-};
-
 export default function HomePage() {
   const content = getContent();
   const bestsellers = getBestsellers(8);
@@ -81,7 +74,6 @@ export default function HomePage() {
             <Link key={section.slug} href={`/catalog/${section.slug}`}
               className="group flex aspect-[3/4] flex-col justify-end rounded-xl border border-line bg-bg p-5 transition hover:border-accent">
               <span className="text-lg font-semibold group-hover:text-accent">{section.title}</span>
-              <span className="mt-1 text-xs text-muted">{SECTION_TAGLINES[section.slug]}</span>
             </Link>
           ))}
         </div>
