@@ -47,39 +47,40 @@ export default function HomePage() {
     <>
       {content.faq.length > 0 && <JsonLd data={faqLd(content.faq)} />}
 
-      {/* Герой */}
+      {/* Герой во всю ширину */}
       <section className="container-page pt-6">
-        <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
-          <div className="relative flex min-h-[320px] flex-col justify-end overflow-hidden rounded-xl bg-sand p-8 md:min-h-[440px] md:p-12">
-            {content.home.heroImage ? (
-              <Image src={content.home.heroImage} alt="" fill sizes="(min-width: 1024px) 60vw, 100vw"
-                className="object-cover" loading="eager" fetchPriority="high" />
-            ) : (
-              // Подложка занимает весь герой и оказывается самым крупным
-              // элементом первого экрана — грузим её сразу, иначе она
-              // портит LCP, а он учитывается в оценке скорости.
-              <div className="absolute inset-0 flex items-center justify-center opacity-[0.07]">
-                <Logo width={520} href={null} eager />
-              </div>
-            )}
-            <div className="relative max-w-md">
-              <h1 className="text-3xl font-bold leading-tight md:text-4xl">{content.home.heroTitle}</h1>
-              {content.home.heroSubtitle && <p className="mt-3 text-muted">{content.home.heroSubtitle}</p>}
-              <Link href="/catalog/zhenskie" className="mt-6 inline-flex h-12 items-center rounded-md bg-accent px-6 text-sm font-semibold text-white hover:bg-accent-hover">
-                Смотреть коллекцию
-              </Link>
+        <div className="relative flex min-h-[340px] flex-col justify-end overflow-hidden rounded-xl bg-sand p-8 md:min-h-[460px] md:p-12">
+          {content.home.heroImage ? (
+            <Image src={content.home.heroImage} alt="" fill sizes="100vw"
+              className="object-cover" loading="eager" fetchPriority="high" />
+          ) : (
+            // Подложка занимает весь герой и оказывается самым крупным
+            // элементом первого экрана — грузим её сразу, иначе она
+            // портит LCP, а он учитывается в оценке скорости.
+            <div className="absolute inset-0 flex items-center justify-center opacity-[0.07]">
+              <Logo width={760} href={null} eager />
             </div>
+          )}
+          <div className="relative max-w-xl">
+            <h1 className="text-3xl font-bold leading-tight md:text-5xl">{content.home.heroTitle}</h1>
+            {content.home.heroSubtitle && (
+              <p className="mt-3 text-muted md:text-lg">{content.home.heroSubtitle}</p>
+            )}
+            <Link href="/catalog/zhenskie" className="mt-6 inline-flex h-12 items-center rounded-md bg-accent px-6 text-sm font-semibold text-white hover:bg-accent-hover">
+              Смотреть коллекцию
+            </Link>
           </div>
+        </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            {SECTIONS.map((section) => (
-              <Link key={section.slug} href={`/catalog/${section.slug}`}
-                className="group flex flex-col justify-end rounded-xl border border-line bg-bg p-5 transition hover:border-accent">
-                <span className="text-lg font-semibold group-hover:text-accent">{section.title}</span>
-                <span className="mt-1 text-xs text-muted">{SECTION_TAGLINES[section.slug]}</span>
-              </Link>
-            ))}
-          </div>
+        {/* Разделы — рядом под героем */}
+        <div className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {SECTIONS.map((section) => (
+            <Link key={section.slug} href={`/catalog/${section.slug}`}
+              className="group flex min-h-[130px] flex-col justify-end rounded-xl border border-line bg-bg p-5 transition hover:border-accent">
+              <span className="text-lg font-semibold group-hover:text-accent">{section.title}</span>
+              <span className="mt-1 text-xs text-muted">{SECTION_TAGLINES[section.slug]}</span>
+            </Link>
+          ))}
         </div>
       </section>
 
