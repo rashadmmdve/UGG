@@ -34,6 +34,26 @@ type Filters = {
  */
 const COLLAPSE_FROM = 8;
 
+/**
+ * Номера страниц для показа: первая, последняя и окно вокруг текущей;
+ * null — многоточие. На телефоне всё это помещается в один ряд.
+ */
+function pageWindow(current: number, total: number): (number | null)[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+
+  const around = new Set([1, total, current - 1, current, current + 1]);
+  if (current <= 3) [2, 3, 4].forEach((n) => around.add(n));
+  if (current >= total - 2) [total - 3, total - 2, total - 1].forEach((n) => around.add(n));
+
+  const pages = [...around].filter((n) => n >= 1 && n <= total).sort((a, b) => a - b);
+  const result: (number | null)[] = [];
+  pages.forEach((n, i) => {
+    if (i > 0 && n - pages[i - 1] > 1) result.push(null);
+    result.push(n);
+  });
+  return result;
+}
+
 const DEFAULT_FILTERS: Filters = {
   colors: [],
   sizes: [],
@@ -347,22 +367,53 @@ export function CatalogGrid({
           </ul>
         )}
 
+        {/*
+          Страниц может быть много: 576 женских моделей — это 12 кнопок, и ряд
+          из них шире телефона. Ряд без переноса растягивал всю страницу
+          вширь, а за ней — и фиксированные шторки, которые прижимаются к её
+          дальнему краю. Поэтому показываем окно вокруг текущей страницы с
+          многоточиями, а ряду на всякий случай разрешён перенос.
+        */}
         {pages > 1 && (
-          <nav aria-label="Страницы" className="mt-10 flex justify-center gap-1">
-            {Array.from({ length: pages }, (_, i) => i + 1).map((n) => (
-              <button
-                key={n}
-                type="button"
-                onClick={() => update({ page: n })}
-                aria-current={n === page ? "page" : undefined}
-                className={cn(
-                  "h-9 min-w-9 rounded border px-2 text-sm",
-                  n === page ? "border-fg bg-fg text-bg" : "border-line hover:border-fg",
-                )}
-              >
-                {n}
-              </button>
-            ))}
+          <nav aria-label="Страницы" className="mt-10 flex flex-wrap justify-center gap-1">
+            <button
+              type="button"
+              onClick={() => update({ page: page - 1 })}
+              disabled={page === 1}
+              aria-label="Предыдущая страница"
+              className="h-9 min-w-9 rounded border border-line px-2 text-sm hover:border-fg disabled:opacity-30 disabled:hover:border-line"
+            >
+              ‹
+            </button>
+            {pageWindow(page, pages).map((n, i) =>
+              n === null ? (
+                <span key={`gap-${i}`} className="flex h-9 min-w-9 items-center justify-center text-sm text-muted">
+                  …
+                </span>
+              ) : (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => update({ page: n })}
+                  aria-current={n === page ? "page" : undefined}
+                  className={cn(
+                    "h-9 min-w-9 rounded border px-2 text-sm",
+                    n === page ? "border-fg bg-fg text-bg" : "border-line hover:border-fg",
+                  )}
+                >
+                  {n}
+                </button>
+              ),
+            )}
+            <button
+              type="button"
+              onClick={() => update({ page: page + 1 })}
+              disabled={page === pages}
+              aria-label="Следующая страница"
+              className="h-9 min-w-9 rounded border border-line px-2 text-sm hover:border-fg disabled:opacity-30 disabled:hover:border-line"
+            >
+              ›
+            </button>
           </nav>
         )}
       </div>
