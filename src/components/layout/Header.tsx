@@ -85,7 +85,14 @@ export function Header({ menu }: { menu: MenuSection[] }) {
               )}
             >
               {section.title}
-              <ChevronDown className="h-3.5 w-3.5 opacity-60" strokeWidth={2} />
+              {/* Стрелка разворачивается на 180°, пока открыто меню раздела. */}
+              <ChevronDown
+                className={cn(
+                  "h-3.5 w-3.5 opacity-60 transition-transform duration-300 ease-out",
+                  openSection === section.slug && "rotate-180",
+                )}
+                strokeWidth={2}
+              />
             </Link>
           ))}
           {NAV_LINKS.map((link) => (

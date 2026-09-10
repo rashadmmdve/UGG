@@ -94,7 +94,7 @@ export type MetaInput = {
 function emptyDescription(categoryTitle: string | undefined): string {
   const subject = categoryTitle ? `${categoryTitle} — ` : "";
   return (
-    `${subject}раздел каталога оригинальной обуви UGG®. ` +
+    `${subject}раздел каталога обуви UGG®. ` +
     "Сейчас товары этой категории закончились, скоро поступят новые."
   );
 }

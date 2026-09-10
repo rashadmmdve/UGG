@@ -30,7 +30,7 @@ if (clear) {
     .run();
   const landings = db
     .prepare(
-      "DELETE FROM seo_landings WHERE section_slug = 'zhenskie' AND category_slug = 'classic-mini' AND facet_slug = 'chernye'",
+      "DELETE FROM seo_landings WHERE section_slug = 'zhenskie' AND category_slug = 'mini' AND facet_slug = 'chernye'",
     )
     .run();
   const orders = db.prepare("DELETE FROM orders WHERE id LIKE 'demo-%'").run();
@@ -76,7 +76,7 @@ const DEMO = [
     hex: "#a05c33",
     price: 13990,
     oldPrice: 19990,
-    category: { section: "zhenskie", slug: "classic-mini" },
+    category: { section: "zhenskie", slug: "mini" },
     sizes: [36, 37, 38, 39, 40],
     description:
       "Классические мини-угги из натуральной овчины. Высота голенища 17 см, " +
@@ -91,7 +91,7 @@ const DEMO = [
     hex: "#1a1a1a",
     price: 13990,
     oldPrice: null,
-    category: { section: "zhenskie", slug: "classic-mini" },
+    category: { section: "zhenskie", slug: "mini" },
     sizes: [37, 38, 39],
     description:
       "Чёрные мини-угги из натуральной овчины. Универсальный вариант на " +
@@ -108,7 +108,7 @@ const DEMO = [
     hex: "#0f0f10",
     price: 13990,
     oldPrice: null,
-    category: { section: "zhenskie", slug: "classic-mini" },
+    category: { section: "zhenskie", slug: "mini" },
     sizes: [37, 38, 39],
     description:
       "Глубокий чёрный оттенок Onyx без отлива. Овчина внутри, замша снаружи.",
@@ -122,7 +122,7 @@ const DEMO = [
     hex: "#232326",
     price: 14990,
     oldPrice: null,
-    category: { section: "zhenskie", slug: "classic-mini" },
+    category: { section: "zhenskie", slug: "mini" },
     sizes: [36, 37, 38],
     description:
       "Чёрная замша с металлическим напылением. Вариант на выход, " +
@@ -137,7 +137,7 @@ const DEMO = [
     hex: "#8a6a4a",
     price: 11990,
     oldPrice: 15990,
-    category: { section: "zhenskie", slug: "tasman" },
+    category: { section: "zhenskie", slug: "tapochki" },
     sizes: [36, 38, 40],
     description:
       "Тапочки-слиперы Tasman с фирменным орнаментом по канту. " +
@@ -188,7 +188,7 @@ for (const item of DEMO) {
 
   const image = await placeholder(`${item.slug}.jpg`, item.hex);
   const color = findColor.get(item.colorTitle);
-  const line = findLine.get(item.category.slug === "tasman" ? "tasman" : "classic");
+  const line = findLine.get(item.category.slug === "tapochki" ? "tasman" : "classic");
   const productId = id();
 
   db.transaction(() => {
@@ -241,7 +241,7 @@ const LANDING_TEXT =
 
 const landingExists = db
   .prepare(
-    "SELECT id FROM seo_landings WHERE section_slug='zhenskie' AND category_slug='classic-mini' AND facet_slug='chernye'",
+    "SELECT id FROM seo_landings WHERE section_slug='zhenskie' AND category_slug='mini' AND facet_slug='chernye'",
   )
   .get();
 
@@ -251,7 +251,7 @@ if (!landingExists) {
        (id, section_slug, category_slug, facet_slug, facet_type, facet_value,
         title, h1, meta_title, meta_description, seo_text, aliases,
         is_published, created_at, updated_at)
-     VALUES (?, 'zhenskie', 'classic-mini', 'chernye', 'color', 'chernye',
+     VALUES (?, 'zhenskie', 'mini', 'chernye', 'color', 'chernye',
              ?, ?, ?, ?, ?, ?, 1, ?, ?)`,
   ).run(
     id(),
@@ -264,7 +264,7 @@ if (!landingExists) {
     now,
     now,
   );
-  console.log("Демо-посадочная создана: /catalog/zhenskie/classic-mini/chernye");
+  console.log("Демо-посадочная создана: /catalog/zhenskie/mini/chernye");
 }
 
 // ─── Демо-заказ ──────────────────────────────────────────────────────────────

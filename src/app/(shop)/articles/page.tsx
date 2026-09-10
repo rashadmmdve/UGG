@@ -12,9 +12,9 @@ import { breadcrumbLd } from "@/server/seo/jsonld";
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "Статьи об UGG: выбор, уход, подлинность",
+  title: "Статьи об UGG: выбор размера и уход",
   description:
-    "Как выбрать размер, отличить оригинал, ухаживать за замшей и овчиной — статьи о обуви UGG®.",
+    "Как выбрать размер, ухаживать за замшей и овчиной, с чем носить — статьи об обуви UGG®.",
   alternates: { canonical: "/articles" },
 };
 

@@ -20,7 +20,7 @@ export const metadata: Metadata = {
    */
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${SITE_NAME} — магазин оригинальной обуви UGG®`,
+    default: `${SITE_NAME} — угги с доставкой по России`,
     // Шаблон применяется к вложенным страницам, но не к самому макету.
     template: `%s | ${SITE_NAME}`,
   },
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "ru_RU",
     siteName: SITE_NAME,
-    title: `${SITE_NAME} — магазин оригинальной обуви UGG®`,
+    title: `${SITE_NAME} — угги с доставкой по России`,
     description: SITE_DESCRIPTION,
     url: SITE_URL,
   },

@@ -3,9 +3,10 @@
 import { startTransition, useEffect, useMemo, useState } from "react";
 import { SlidersHorizontal, X } from "lucide-react";
 
+import { PriceSlider } from "@/components/shop/PriceSlider";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { PRODUCTS_PER_PAGE } from "@/lib/constants";
-import { cn, formatPrice, plural } from "@/lib/utils";
+import { cn, plural } from "@/lib/utils";
 import type { Color, Material, Product } from "@/lib/types";
 
 const MATERIAL_LABELS: Record<Material, string> = {
@@ -22,7 +23,7 @@ type Filters = {
   colors: string[];
   sizes: number[];
   materials: string[];
-  priceMax: number | null;
+  price: [number, number] | null;
   sort: Sort;
   page: number;
 };
@@ -31,7 +32,7 @@ const DEFAULT_FILTERS: Filters = {
   colors: [],
   sizes: [],
   materials: [],
-  priceMax: null,
+  price: null,
   sort: "new",
   page: 1,
 };
@@ -39,11 +40,14 @@ const DEFAULT_FILTERS: Filters = {
 /** Фильтры из адресной строки — читаются только в браузере, после гидрации. */
 function filtersFromUrl(): Filters {
   const params = new URLSearchParams(window.location.search);
+  const min = Number(params.get("price_min"));
+  const max = Number(params.get("price_max"));
+
   return {
     colors: params.getAll("color"),
     sizes: params.getAll("size").map(Number).filter((n) => !Number.isNaN(n)),
     materials: params.getAll("material"),
-    priceMax: params.get("price_max") ? Number(params.get("price_max")) : null,
+    price: min && max ? [min, max] : null,
     sort: (params.get("sort") as Sort) || "new",
     page: Math.max(1, Number(params.get("page")) || 1),
   };
@@ -59,8 +63,7 @@ function filtersFromUrl(): Filters {
  * Параметры адреса читаются через window уже после гидрации, а не через
  * useSearchParams: тот заставил бы React отрисовать сетку только в
  * браузере, и в серверном HTML осталась бы заглушка — робот без
- * JavaScript увидел бы пустую категорию. Сервер всегда отдаёт полный
- * список, для поисковика канонический адрес — чистый, без параметров.
+ * JavaScript увидел бы пустую категорию.
  */
 export function CatalogGrid({
   products,
@@ -76,8 +79,7 @@ export function CatalogGrid({
 
   useEffect(() => {
     // Первый рендер в браузере совпадает с серверным (без фильтров), затем
-    // применяем то, что есть в адресе. Через transition, чтобы не звать
-    // setState синхронно в теле эффекта.
+    // применяем то, что есть в адресе.
     if (!window.location.search) return;
     startTransition(() => setFilters(filtersFromUrl()));
   }, []);
@@ -85,15 +87,18 @@ export function CatalogGrid({
   function update(patch: Partial<Filters>) {
     setFilters((current) => {
       const next = { ...current, ...patch, page: patch.page ?? 1 };
-      // Адрес меняется без обращения к серверу и без записи в историю.
       const params = new URLSearchParams();
       next.colors.forEach((c) => params.append("color", c));
       next.sizes.forEach((s) => params.append("size", String(s)));
       next.materials.forEach((m) => params.append("material", m));
-      if (next.priceMax) params.set("price_max", String(next.priceMax));
+      if (next.price) {
+        params.set("price_min", String(next.price[0]));
+        params.set("price_max", String(next.price[1]));
+      }
       if (next.sort !== "new") params.set("sort", next.sort);
       if (next.page > 1) params.set("page", String(next.page));
       const query = params.toString();
+      // Адрес меняется без обращения к серверу и без записи в историю.
       window.history.replaceState(null, "", query ? `?${query}` : window.location.pathname);
       return next;
     });
@@ -104,161 +109,165 @@ export function CatalogGrid({
     const colorGroups = new Map<string, { title: string; count: number }>();
     const sizes = new Map<number, number>();
     const materials = new Map<string, number>();
+    let minPrice = Infinity;
     let maxPrice = 0;
 
     for (const product of products) {
       const available = product.variants.filter((v) => v.stock > 0);
       if (available.length === 0) continue;
+
+      minPrice = Math.min(minPrice, product.price);
       maxPrice = Math.max(maxPrice, product.price);
+
       const color = product.colorId ? colorById.get(product.colorId) : null;
       if (color) {
         const entry = colorGroups.get(color.slug) ?? { title: color.group, count: 0 };
         entry.count += 1;
         colorGroups.set(color.slug, entry);
       }
-      for (const size of new Set(available.map((v) => v.sizeEu))) sizes.set(size, (sizes.get(size) ?? 0) + 1);
-      for (const material of product.materials) materials.set(material, (materials.get(material) ?? 0) + 1);
+      for (const size of new Set(available.map((v) => v.sizeEu))) {
+        sizes.set(size, (sizes.get(size) ?? 0) + 1);
+      }
+      for (const material of product.materials) {
+        materials.set(material, (materials.get(material) ?? 0) + 1);
+      }
     }
 
+    // Границы округляются до пятисот, чтобы шаг ползунка попадал в края.
+    const floor = Number.isFinite(minPrice) ? Math.floor(minPrice / 500) * 500 : 0;
+    const ceil = maxPrice ? Math.ceil(maxPrice / 500) * 500 : 0;
+
     return {
-      colors: [...colorGroups.entries()].sort((a, b) => b[1].count - a[1].count),
-      sizes: [...sizes.keys()].sort((a, b) => a - b),
+      colors: [...colorGroups.entries()].sort((a, b) => a[1].title.localeCompare(b[1].title, "ru")),
+      sizes: [...sizes.entries()].sort((a, b) => a[0] - b[0]),
       materials: [...materials.entries()].sort((a, b) => b[1] - a[1]),
-      maxPrice,
+      priceMin: floor,
+      // Диапазон в один шаг ползунок не отрисует — расширяем.
+      priceMax: ceil > floor ? ceil : floor + 500,
     };
   }, [products, colorById]);
 
   const filtered = useMemo(() => {
-    let list = products.filter((product) => {
+    const list = products.filter((product) => {
       if (filters.colors.length) {
         const color = product.colorId ? colorById.get(product.colorId) : null;
         if (!color || !filters.colors.includes(color.slug)) return false;
       }
       if (filters.sizes.length) {
-        if (!product.variants.some((v) => v.stock > 0 && filters.sizes.includes(v.sizeEu))) return false;
+        if (!product.variants.some((v) => v.stock > 0 && filters.sizes.includes(v.sizeEu))) {
+          return false;
+        }
       }
       if (filters.materials.length) {
         if (!product.materials.some((m) => filters.materials.includes(m))) return false;
       }
-      if (filters.priceMax && product.price > filters.priceMax) return false;
+      if (filters.price) {
+        const [from, to] = filters.price;
+        if (product.price < from || product.price > to) return false;
+      }
       return true;
     });
 
     // Распроданное — в конец, внутри групп по выбранной сортировке.
     const inStock = (p: Product) => p.variants.some((v) => v.stock > 0);
-    list = [...list].sort((a, b) => {
+    return [...list].sort((a, b) => {
       const stockDiff = Number(inStock(b)) - Number(inStock(a));
       if (stockDiff !== 0) return stockDiff;
       if (filters.sort === "price-asc") return a.price - b.price;
       if (filters.sort === "price-desc") return b.price - a.price;
       return b.createdAt.localeCompare(a.createdAt);
     });
-    return list;
   }, [products, filters, colorById]);
 
   const pages = Math.max(1, Math.ceil(filtered.length / PRODUCTS_PER_PAGE));
   const page = Math.min(filters.page, pages);
   const visible = filtered.slice((page - 1) * PRODUCTS_PER_PAGE, page * PRODUCTS_PER_PAGE);
 
-  const activeCount = filters.colors.length + filters.sizes.length + filters.materials.length + (filters.priceMax ? 1 : 0);
-  const toggle = <T,>(list: T[], value: T) => (list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
+  const activeCount =
+    filters.colors.length +
+    filters.sizes.length +
+    filters.materials.length +
+    (filters.price ? 1 : 0);
 
-  const priceSteps = facets.maxPrice
-    ? [5000, 10000, 15000, 20000, 30000].filter((step) => step < facets.maxPrice)
-    : [];
+  const toggle = <T,>(list: T[], value: T) =>
+    list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
 
   const panel = (
-    <div className="flex flex-col gap-6 text-sm">
+    <div className="flex flex-col divide-y divide-line">
       {facets.colors.length > 1 && (
-        <fieldset>
-          <legend className="label-caps mb-2">Цвет</legend>
-          <ul className="space-y-1">
-            {facets.colors.map(([slug, { title, count }]) => (
-              <li key={slug}>
-                <label className="flex cursor-pointer items-center gap-2">
-                  <input type="checkbox" checked={filters.colors.includes(slug)}
-                    onChange={() => update({ colors: toggle(filters.colors, slug) })} className="h-4 w-4 accent-[var(--accent)]" />
-                  <span className="flex-1">{title}</span>
-                  <span className="text-xs text-muted">{count}</span>
-                </label>
-              </li>
-            ))}
-          </ul>
-        </fieldset>
+        <FilterBlock title="Цвет">
+          {facets.colors.map(([slug, { title, count }]) => (
+            <CheckRow
+              key={slug}
+              label={title}
+              count={count}
+              checked={filters.colors.includes(slug)}
+              onChange={() => update({ colors: toggle(filters.colors, slug) })}
+            />
+          ))}
+        </FilterBlock>
       )}
 
       {facets.sizes.length > 1 && (
-        <fieldset>
-          <legend className="label-caps mb-2">Размер EU</legend>
-          <div className="flex flex-wrap gap-1.5">
-            {facets.sizes.map((size) => {
-              const active = filters.sizes.includes(size);
-              return (
-                <button key={size} type="button" aria-pressed={active}
-                  onClick={() => update({ sizes: toggle(filters.sizes, size) })}
-                  className={cn("min-w-10 rounded border px-2 py-1 text-sm transition-colors",
-                    active ? "border-accent bg-accent text-white" : "border-line hover:border-accent")}>
-                  {size}
-                </button>
-              );
-            })}
-          </div>
-        </fieldset>
+        <FilterBlock title="Размер">
+          {facets.sizes.map(([size, count]) => (
+            <CheckRow
+              key={size}
+              label={String(size)}
+              count={count}
+              checked={filters.sizes.includes(size)}
+              onChange={() => update({ sizes: toggle(filters.sizes, size) })}
+            />
+          ))}
+        </FilterBlock>
       )}
 
       {facets.materials.length > 1 && (
-        <fieldset>
-          <legend className="label-caps mb-2">Материал</legend>
-          <ul className="space-y-1">
-            {facets.materials.map(([material, count]) => (
-              <li key={material}>
-                <label className="flex cursor-pointer items-center gap-2">
-                  <input type="checkbox" checked={filters.materials.includes(material)}
-                    onChange={() => update({ materials: toggle(filters.materials, material) })} className="h-4 w-4 accent-[var(--accent)]" />
-                  <span className="flex-1">{MATERIAL_LABELS[material as Material] ?? material}</span>
-                  <span className="text-xs text-muted">{count}</span>
-                </label>
-              </li>
-            ))}
-          </ul>
-        </fieldset>
+        <FilterBlock title="Материал">
+          {facets.materials.map(([material, count]) => (
+            <CheckRow
+              key={material}
+              label={MATERIAL_LABELS[material as Material] ?? material}
+              count={count}
+              checked={filters.materials.includes(material)}
+              onChange={() => update({ materials: toggle(filters.materials, material) })}
+            />
+          ))}
+        </FilterBlock>
       )}
 
-      {priceSteps.length > 0 && (
-        <fieldset>
-          <legend className="label-caps mb-2">Цена</legend>
-          <ul className="space-y-1">
-            {priceSteps.map((step) => (
-              <li key={step}>
-                <label className="flex cursor-pointer items-center gap-2">
-                  <input type="radio" name="price" checked={filters.priceMax === step}
-                    onChange={() => update({ priceMax: step })} className="accent-[var(--accent)]" />
-                  до {formatPrice(step)}
-                </label>
-              </li>
-            ))}
-            <li>
-              <label className="flex cursor-pointer items-center gap-2">
-                <input type="radio" name="price" checked={filters.priceMax === null}
-                  onChange={() => update({ priceMax: null })} className="accent-[var(--accent)]" />
-                любая
-              </label>
-            </li>
-          </ul>
-        </fieldset>
+      {facets.priceMax > facets.priceMin && (
+        <FilterBlock title="Цена" scroll={false}>
+          <PriceSlider
+            /* Сброс фильтров пересоздаёт ползунок — так его внутреннее
+               положение возвращается к границам без синхронизации эффектом. */
+            key={filters.price ? "set" : "reset"}
+            min={facets.priceMin}
+            max={facets.priceMax}
+            value={filters.price ?? [facets.priceMin, facets.priceMax]}
+            onChange={(price) => update({ price })}
+          />
+        </FilterBlock>
       )}
 
       {activeCount > 0 && (
-        <button type="button" onClick={() => update({ colors: [], sizes: [], materials: [], priceMax: null })}
-          className="text-left text-sm text-accent hover:underline">
-          Сбросить фильтры
-        </button>
+        <div className="py-4">
+          <button
+            type="button"
+            onClick={() =>
+              update({ colors: [], sizes: [], materials: [], price: null })
+            }
+            className="text-sm underline underline-offset-4 hover:text-muted"
+          >
+            Сбросить фильтры
+          </button>
+        </div>
       )}
     </div>
   );
 
   return (
-    <div className="mt-6 grid gap-8 lg:grid-cols-[220px_1fr]">
+    <div className="mt-6 grid gap-8 lg:grid-cols-[240px_1fr]">
       <aside className="hidden lg:block">{panel}</aside>
 
       <div>
@@ -267,13 +276,20 @@ export function CatalogGrid({
             {filtered.length} {plural(filtered.length, ["модель", "модели", "моделей"])}
           </p>
           <div className="flex items-center gap-2">
-            <button type="button" onClick={() => setPanelOpen(true)}
-              className="inline-flex h-9 items-center gap-1.5 rounded border border-line px-3 text-sm lg:hidden">
+            <button
+              type="button"
+              onClick={() => setPanelOpen(true)}
+              className="inline-flex h-9 items-center gap-1.5 rounded border border-line px-3 text-sm lg:hidden"
+            >
               <SlidersHorizontal className="h-4 w-4" strokeWidth={1.6} />
               Фильтры{activeCount > 0 && ` · ${activeCount}`}
             </button>
-            <select value={filters.sort} onChange={(e) => update({ sort: e.target.value as Sort })}
-              aria-label="Сортировка" className="h-9 rounded border border-line bg-bg px-2 text-sm">
+            <select
+              value={filters.sort}
+              onChange={(event) => update({ sort: event.target.value as Sort })}
+              aria-label="Сортировка"
+              className="h-9 rounded border border-line bg-bg px-2 text-sm"
+            >
               <option value="new">Сначала новые</option>
               <option value="price-asc">Дешевле</option>
               <option value="price-desc">Дороже</option>
@@ -288,7 +304,9 @@ export function CatalogGrid({
         ) : (
           <ul className="mt-5 grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 xl:grid-cols-4">
             {visible.map((product, index) => (
-              <li key={product.id}><ProductCard product={product} eager={page === 1 && index < 4} /></li>
+              <li key={product.id}>
+                <ProductCard product={product} eager={page === 1 && index < 4} />
+              </li>
             ))}
           </ul>
         )}
@@ -296,8 +314,16 @@ export function CatalogGrid({
         {pages > 1 && (
           <nav aria-label="Страницы" className="mt-10 flex justify-center gap-1">
             {Array.from({ length: pages }, (_, i) => i + 1).map((n) => (
-              <button key={n} type="button" onClick={() => update({ page: n })} aria-current={n === page ? "page" : undefined}
-                className={cn("h-9 min-w-9 rounded border px-2 text-sm", n === page ? "border-accent bg-accent text-white" : "border-line hover:border-accent")}>
+              <button
+                key={n}
+                type="button"
+                onClick={() => update({ page: n })}
+                aria-current={n === page ? "page" : undefined}
+                className={cn(
+                  "h-9 min-w-9 rounded border px-2 text-sm",
+                  n === page ? "border-fg bg-fg text-bg" : "border-line hover:border-fg",
+                )}
+              >
                 {n}
               </button>
             ))}
@@ -308,20 +334,83 @@ export function CatalogGrid({
       {/* Фильтры на мобильном — шторка */}
       {panelOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <button type="button" aria-label="Закрыть фильтры" onClick={() => setPanelOpen(false)} className="absolute inset-0 bg-fg/30" />
-          <div className="absolute inset-y-0 left-0 w-80 max-w-full overflow-y-auto bg-bg p-5">
-            <div className="mb-5 flex items-center justify-between">
+          <button
+            type="button"
+            aria-label="Закрыть фильтры"
+            onClick={() => setPanelOpen(false)}
+            className="absolute inset-0 bg-fg/30"
+          />
+          <div className="absolute inset-y-0 left-0 flex w-80 max-w-full flex-col bg-bg">
+            <div className="flex items-center justify-between border-b border-line px-5 py-4">
               <p className="font-semibold">Фильтры</p>
-              <button type="button" onClick={() => setPanelOpen(false)} aria-label="Закрыть"><X className="h-5 w-5" /></button>
+              <button type="button" onClick={() => setPanelOpen(false)} aria-label="Закрыть">
+                <X className="h-5 w-5" />
+              </button>
             </div>
-            {panel}
-            <button type="button" onClick={() => setPanelOpen(false)}
-              className="mt-6 h-11 w-full rounded-md bg-accent text-sm font-semibold text-white">
-              Показать {filtered.length}
-            </button>
+            <div className="flex-1 overflow-y-auto px-5">{panel}</div>
+            <div className="border-t border-line p-5">
+              <button
+                type="button"
+                onClick={() => setPanelOpen(false)}
+                className="h-11 w-full rounded-md bg-fg text-sm font-semibold text-bg"
+              >
+                Показать {filtered.length}
+              </button>
+            </div>
           </div>
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * Блок фильтра.
+ *
+ * У списка фиксированная высота: значений бывает и пять, и пятьдесят, и без
+ * ограничения один цвет отодвигал бы цену на два экрана вниз. Длинный
+ * список прокручивается внутри блока.
+ */
+function FilterBlock({
+  title,
+  scroll = true,
+  children,
+}: {
+  title: string;
+  scroll?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="py-4">
+      <h3 className="mb-2 text-sm font-semibold">{title}</h3>
+      <div className={cn(scroll && "thin-scrollbar max-h-52 overflow-y-auto pr-1")}>
+        {children}
+      </div>
+    </section>
+  );
+}
+
+function CheckRow({
+  label,
+  count,
+  checked,
+  onChange,
+}: {
+  label: string;
+  count: number;
+  checked: boolean;
+  onChange: () => void;
+}) {
+  return (
+    <label className="flex cursor-pointer items-center gap-2.5 py-1.5 text-sm">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={onChange}
+        className="h-4 w-4 shrink-0 accent-[var(--accent)]"
+      />
+      <span className="flex-1">{label}</span>
+      <span className="text-xs text-muted tabular-nums">{count}</span>
+    </label>
   );
 }

@@ -194,22 +194,22 @@ const DEFAULT_SEO_SETTINGS: SeoSettings = {
   googleVerification: "",
   templates: {
     category: {
-      title: "{category} — купить оригинал | {site}",
+      title: "{category} — купить в интернет-магазине | {site}",
       description:
         "{category}: {count} моделей в наличии, от {minPrice} ₽. " +
-        "Оригинальная обувь UGG® с доставкой по России. Обмен и возврат 14 дней.",
+        "Обувь UGG® с доставкой по России. Обмен и возврат 14 дней.",
     },
     product: {
-      title: "{title} — купить оригинал | {site}",
+      title: "{title} — купить | {site}",
       description:
-        "{title} за {price} ₽. Оригинал, гарантия подлинности, " +
-        "доставка по России, обмен и возврат 14 дней.",
+        "{title} за {price} ₽. Доставка по России, " +
+        "обмен и возврат 14 дней, размерная сетка на сайте.",
     },
     landing: {
-      title: "{category} {facet} — купить оригинал | {site}",
+      title: "{category} {facet} — купить | {site}",
       description:
         "{category} {facet}: {count} моделей в наличии от {minPrice} ₽. " +
-        "Оригинальная обувь UGG® с доставкой по России.",
+        "Обувь UGG® с доставкой по России.",
     },
   },
 };

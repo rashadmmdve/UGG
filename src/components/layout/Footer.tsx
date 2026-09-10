@@ -8,9 +8,7 @@ import type { SiteContent } from "@/server/repositories/settings";
 const INFO_LINKS = [
   { href: "/dostavka-i-oplata", label: "Доставка и оплата" },
   { href: "/obmen-i-vozvrat", label: "Обмен и возврат" },
-  { href: "/garantiya-podlinnosti", label: "Гарантия подлинности" },
   { href: "/razmery-ugg", label: "Размерная сетка" },
-  { href: "/kak-otlichit-original", label: "Как отличить оригинал" },
   { href: "/uhod-za-ugg", label: "Уход за обувью" },
 ];
 
@@ -25,7 +23,7 @@ const COMPANY_LINKS = [
 /**
  * Подвал. Реквизиты и дисклеймер выводятся на каждой странице: первые —
  * требование закона и коммерческий фактор для Яндекса, второй — то, что
- * отличает независимого продавца оригинала от того, кто выдаёт себя за
+ * отличает независимый магазин от того, кто выдаёт себя за
  * официального представителя.
  */
 export function Footer({
@@ -42,8 +40,8 @@ export function Footer({
           <div className="lg:col-span-2">
             <Logo width={110} />
             <p className="mt-4 max-w-sm text-sm text-muted">
-              Магазин оригинальной обуви UGG®. Натуральная овчина, проверенные
-              поставки, доставка по всей России.
+              Угги, тапочки и аксессуары UGG®. Женские, мужские и детские
+              модели с доставкой по всей России.
             </p>
             {(contacts.phone || contacts.email) && (
               <ul className="mt-5 space-y-1 text-sm">

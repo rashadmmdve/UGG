@@ -86,8 +86,8 @@ export type SiteContent = {
 
 const DEFAULT_CONTENT: SiteContent = {
   home: {
-    heroTitle: "Оригинальная обувь UGG®",
-    heroSubtitle: "Натуральная овчина, гарантия подлинности, доставка по России",
+    heroTitle: "Новая зимняя коллекция",
+    heroSubtitle: "Женские, мужские и детские модели с доставкой по России",
     heroImage: null,
   },
   about: { title: "О магазине", body: "" },

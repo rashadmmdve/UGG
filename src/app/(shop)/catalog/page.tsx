@@ -17,10 +17,10 @@ import { breadcrumbLd, itemListLd } from "@/server/seo/jsonld";
 export const revalidate = 600;
 
 export const metadata: Metadata = {
-  title: { absolute: `Каталог оригинальной обуви UGG® | ${SITE_NAME}` },
+  title: { absolute: `Каталог обуви UGG® | ${SITE_NAME}` },
   description:
-    "Полный каталог оригинальной обуви UGG®: женские, мужские и детские " +
-    "модели, аксессуары. Доставка по России, гарантия подлинности.",
+    "Полный каталог обуви UGG®: женские, мужские и детские модели, " +
+    "аксессуары. Доставка по России, обмен и возврат 14 дней.",
   alternates: { canonical: "/catalog" },
 };
 

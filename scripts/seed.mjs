@@ -121,79 +121,59 @@ const MODEL_LINES = [
 ];
 
 // ─── Категории ───────────────────────────────────────────────────────────────
-// Слаг уникален внутри раздела, а не глобально: /catalog/zhenskie/classic-mini
-// и /catalog/muzhskie/classic-mini — два разных адреса под два разных запроса.
+// Слаг уникален внутри раздела, а не глобально: /catalog/zhenskie/mini
+// и /catalog/muzhskie/mini — два разных адреса под два разных запроса.
+// Поэтому «Новинки», «Мини» и «Тапочки» спокойно повторяются в разделах.
 //
-// `aliases` — синонимы и словоформы, по которым ищут то же самое. Они
-// отдаются редиректом на эту категорию, а не отдельной страницей: у
-// конкурента classic-short, classic-short-2, classic-short-uggi и
-// korotkie-uggi существуют одновременно и отбирают позиции друг у друга.
+// `aliases` — синонимы и прежние адреса, по которым ищут то же самое. Они
+// отдаются редиректом на эту категорию, а не отдельной страницей: две
+// страницы под один запрос отбирали бы позиции друг у друга.
 const CATEGORIES = [
   // ── Женские ──
-  { section: "zhenskie", slug: "classic-mini", title: "UGG Classic Mini", aliases: ["mini-uggi", "klassicheskie-mini"] },
-  { section: "zhenskie", slug: "classic-short", title: "UGG Classic Short", aliases: ["korotkie-uggi", "classic-short-uggi"] },
-  { section: "zhenskie", slug: "classic-tall", title: "UGG Classic Tall", aliases: ["vysokie-uggi", "dlinnye-uggi"] },
-  { section: "zhenskie", slug: "ultra-mini", title: "UGG Classic Ultra Mini", aliases: [] },
-  { section: "zhenskie", slug: "classic-clear-mini", title: "UGG Classic Clear Mini", aliases: [] },
-  { section: "zhenskie", slug: "bailey-bow", title: "UGG Bailey Bow", aliases: ["uggi-s-bantom", "uggi-s-lentoy"] },
-  { section: "zhenskie", slug: "mini-bailey-bow", title: "UGG Mini Bailey Bow", aliases: [] },
-  { section: "zhenskie", slug: "bailey-button", title: "UGG Bailey Button", aliases: ["uggi-s-pugovitsey"] },
-  { section: "zhenskie", slug: "bailey-button-triplet", title: "UGG Bailey Button Triplet", aliases: [] },
-  { section: "zhenskie", slug: "mini-bailey-button", title: "UGG Mini Bailey Button", aliases: [] },
-  { section: "zhenskie", slug: "zip", title: "UGG с молнией", aliases: ["uggi-s-molniey"] },
-  { section: "zhenskie", slug: "blaise", title: "UGG Blaise", aliases: [] },
-  { section: "zhenskie", slug: "tazz", title: "UGG Tazz", aliases: [] },
-  { section: "zhenskie", slug: "na-platforme", title: "UGG на платформе", aliases: ["uggi-na-platforme", "ultra-mini-platform"] },
-  { section: "zhenskie", slug: "tasman", title: "UGG Tasman", aliases: [] },
-  { section: "zhenskie", slug: "neumel", title: "UGG Neumel", aliases: ["neumel-boots-women"] },
-  { section: "zhenskie", slug: "vyazanye", title: "Вязаные UGG", aliases: ["classic-cardy", "vyazannye-uggi", "classic-argyle-knit"] },
-  { section: "zhenskie", slug: "s-mehom-lisy", title: "UGG с мехом лисы", aliases: ["uggi-s-mekhom-lisy"] },
-  { section: "zhenskie", slug: "s-payetkami", title: "UGG с пайетками", aliases: ["sparkles", "uggi-s-payetkami"] },
-  { section: "zhenskie", slug: "so-strazami", title: "UGG со стразами", aliases: ["uggi-so-strazami", "s-kristallami"] },
-  { section: "zhenskie", slug: "tapochki", title: "Домашние тапочки UGG", aliases: ["uggi-domashnie-tapochki", "slippers"] },
-  { section: "zhenskie", slug: "mokasiny", title: "Мокасины UGG", aliases: ["uggi-mokasiny-zhenskie", "dakota", "ansley"] },
-  { section: "zhenskie", slug: "krossovki", title: "Кроссовки UGG Lowmel", aliases: ["lowmel", "krossovki-ugg", "slipony"] },
-  { section: "zhenskie", slug: "hybrid", title: "UGG Weather Hybrid", aliases: ["ugg-hybrid", "neumel-hybrid"] },
-  { section: "zhenskie", slug: "letnie", title: "Летние UGG", aliases: ["slide", "ugg-letnyaya-kollektsiya"] },
-  { section: "zhenskie", slug: "kollaboracii", title: "Коллаборации UGG", aliases: ["jimmy-choo", "star-wars", "palace"] },
+  { section: "zhenskie", slug: "novinki", title: "Новинки", aliases: ["new"] },
+  { section: "zhenskie", slug: "mini", title: "Мини", aliases: ["classic-mini", "mini-uggi"] },
+  { section: "zhenskie", slug: "ultra-mini", title: "Ультра мини", aliases: ["classic-ultra-mini"] },
+  { section: "zhenskie", slug: "srednie", title: "Средние", aliases: ["classic-short", "korotkie-uggi"] },
+  { section: "zhenskie", slug: "vysokie", title: "Высокие", aliases: ["classic-tall", "vysokie-uggi"] },
+  { section: "zhenskie", slug: "mini-s-pugovicami", title: "Мини с пуговицами", aliases: ["mini-bailey-button"] },
+  { section: "zhenskie", slug: "srednie-s-pugovicami", title: "Средние с пуговицами", aliases: ["bailey-button"] },
+  { section: "zhenskie", slug: "s-bantom", title: "С бантом", aliases: ["bailey-bow", "uggi-s-bantom"] },
+  { section: "zhenskie", slug: "s-molniey", title: "С молнией", aliases: ["zip", "uggi-s-molniey"] },
+  { section: "zhenskie", slug: "na-platforme", title: "На платформе", aliases: ["platform", "tazz"] },
+  { section: "zhenskie", slug: "botinki", title: "Ботинки", aliases: ["neumel", "neumel-boots"] },
+  { section: "zhenskie", slug: "gibridy", title: "Гибриды", aliases: ["hybrid", "weather-hybrid"] },
+  { section: "zhenskie", slug: "tapochki", title: "Тапочки", aliases: ["slippers", "tasman"] },
+  { section: "zhenskie", slug: "mokasiny", title: "Мокасины", aliases: ["dakota", "ansley"] },
+  { section: "zhenskie", slug: "slipony", title: "Слипоны", aliases: ["lowmel", "krossovki"] },
+  { section: "zhenskie", slug: "vyazanye", title: "Вязаные", aliases: ["classic-cardy"] },
+  { section: "zhenskie", slug: "silikonovye", title: "Силиконовые", aliases: ["clear-mini", "classic-clear-mini"] },
+  { section: "zhenskie", slug: "bosonozhki", title: "Босоножки", aliases: ["slide", "letnie"] },
 
   // ── Мужские ──
-  { section: "muzhskie", slug: "neumel", title: "UGG Neumel мужские", aliases: ["neumel-boots"] },
-  { section: "muzhskie", slug: "neumel-flex", title: "UGG Neumel Flex", aliases: [] },
-  { section: "muzhskie", slug: "neumel-snapback", title: "UGG Neumel Snapback", aliases: [] },
-  { section: "muzhskie", slug: "classic-short", title: "UGG Classic Short мужские", aliases: ["classic-short-muzh"] },
-  { section: "muzhskie", slug: "classic-mini", title: "UGG Classic Mini мужские", aliases: ["classic-mini-muzh"] },
-  { section: "muzhskie", slug: "ultra-mini", title: "UGG Ultra Mini мужские", aliases: ["ultra-mini-men-s"] },
-  { section: "muzhskie", slug: "zip", title: "UGG с молнией мужские", aliases: ["muzhskie-zip"] },
-  { section: "muzhskie", slug: "capulin", title: "UGG Capulin", aliases: [] },
-  { section: "muzhskie", slug: "ailen", title: "UGG Ailen", aliases: [] },
-  { section: "muzhskie", slug: "beckham", title: "UGG Beckham", aliases: [] },
-  { section: "muzhskie", slug: "hannen", title: "UGG Hannen", aliases: [] },
-  { section: "muzhskie", slug: "stoneman", title: "UGG Stoneman", aliases: ["polson"] },
-  { section: "muzhskie", slug: "tasman", title: "UGG Tasman мужские", aliases: [] },
-  { section: "muzhskie", slug: "tapochki", title: "Домашние тапочки UGG мужские", aliases: ["mens-slippers"] },
-  { section: "muzhskie", slug: "krossovki", title: "Кроссовки UGG Lowmel мужские", aliases: ["ugg-men-lowmel"] },
-  { section: "muzhskie", slug: "hybrid", title: "UGG Hybrid мужские", aliases: ["ugg-mens-hybrid"] },
+  { section: "muzhskie", slug: "novinki", title: "Новинки", aliases: ["new"] },
+  { section: "muzhskie", slug: "botinki", title: "Ботинки", aliases: ["neumel", "neumel-boots"] },
+  { section: "muzhskie", slug: "mini", title: "Мини", aliases: ["classic-mini"] },
+  { section: "muzhskie", slug: "ultra-mini", title: "Ультра мини", aliases: [] },
+  { section: "muzhskie", slug: "srednie", title: "Средние", aliases: ["classic-short"] },
+  { section: "muzhskie", slug: "gibridy", title: "Гибриды", aliases: ["hybrid"] },
+  { section: "muzhskie", slug: "tapochki", title: "Тапочки", aliases: ["slippers", "tasman"] },
+  { section: "muzhskie", slug: "mokasiny", title: "Мокасины", aliases: [] },
+  { section: "muzhskie", slug: "slipony", title: "Слипоны", aliases: ["lowmel", "krossovki"] },
 
   // ── Детские ──
-  { section: "detskie", slug: "neumel", title: "UGG Kids Neumel", aliases: ["kids-neumel-boots"] },
-  { section: "detskie", slug: "gita", title: "UGG Kids Gita", aliases: ["kids-gita"] },
-  { section: "detskie", slug: "classic-tall", title: "UGG Kids Classic Tall", aliases: ["kids-tall"] },
-  { section: "detskie", slug: "bailey-button-triplet", title: "UGG Kids Bailey Button Triplet", aliases: [] },
-  { section: "detskie", slug: "classic-clear-mini", title: "UGG Kids Classic Clear Mini", aliases: [] },
-  { section: "detskie", slug: "hybrid", title: "UGG Kids Hybrid", aliases: ["ugg-kids-hybrid"] },
-  { section: "detskie", slug: "baby", title: "UGG для малышей", aliases: ["baby-erin", "uggi-dlya-novorozhdennyh", "pinetki"] },
+  { section: "detskie", slug: "novinki", title: "Новинки", aliases: ["new"] },
+  { section: "detskie", slug: "klassicheskie", title: "Классические", aliases: ["classic", "mini"] },
+  { section: "detskie", slug: "botinki", title: "Ботинки", aliases: ["neumel", "kids-neumel"] },
+  { section: "detskie", slug: "s-pugovicami", title: "С пуговицами", aliases: ["bailey-button"] },
+  { section: "detskie", slug: "pinetki", title: "Пинетки", aliases: ["baby", "erin"] },
 
   // ── Аксессуары ──
-  { section: "aksessuary", slug: "perchatki", title: "Перчатки UGG", aliases: ["kozhanye-perchatki"] },
-  { section: "aksessuary", slug: "varezhki", title: "Варежки UGG", aliases: [] },
-  { section: "aksessuary", slug: "naushniki", title: "Меховые наушники UGG", aliases: ["earmuffs", "mekhovye-naushniki"] },
-  { section: "aksessuary", slug: "shapki", title: "Шапки UGG", aliases: ["shapka"] },
-  { section: "aksessuary", slug: "sharfy", title: "Шарфы UGG", aliases: ["sharf"] },
-  { section: "aksessuary", slug: "snudy", title: "Снуды UGG", aliases: ["snud"] },
-  { section: "aksessuary", slug: "sumki", title: "Сумки UGG", aliases: ["sumki-ugg"] },
-  { section: "aksessuary", slug: "koshelki", title: "Кошельки UGG", aliases: ["koshelek-wallet"] },
-  { section: "aksessuary", slug: "uhod", title: "Средства по уходу UGG", aliases: ["care-kit", "sredstva-po-ukhodu"] },
+  { section: "aksessuary", slug: "zhenskie-perchatki", title: "Женские перчатки", aliases: ["perchatki"] },
+  { section: "aksessuary", slug: "muzhskie-perchatki", title: "Мужские перчатки", aliases: [] },
+  { section: "aksessuary", slug: "sharfy-i-shapki", title: "Шарфы и шапки", aliases: ["shapki", "sharfy", "snudy"] },
+  { section: "aksessuary", slug: "naushniki", title: "Наушники", aliases: ["earmuffs"] },
+  { section: "aksessuary", slug: "galoshi", title: "Галоши", aliases: [] },
+  { section: "aksessuary", slug: "sredstva-dlya-uhoda", title: "Средства для ухода", aliases: ["uhod", "care-kit"] },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -203,6 +183,9 @@ const db = new Database(path.join(root, "data", "shop.db"));
 db.pragma("journal_mode = WAL");
 db.pragma("foreign_keys = ON");
 db.exec(fs.readFileSync(path.join(root, "db", "schema.sql"), "utf8"));
+
+let removed = 0;
+const kept = [];
 
 const seed = db.transaction(() => {
   // Цвета: ключ — пара «слаг группы + название оттенка».
@@ -294,6 +277,34 @@ const seed = db.transaction(() => {
       );
     }
   });
+
+  /**
+   * Категории, которых больше нет в списке, — наследие прежней структуры.
+   *
+   * Пустые удаляем: они всё равно отдавались с noindex и только мешали в
+   * меню. Те, где уже есть товары, оставляем и предупреждаем — удалять
+   * категорию вместе со связями товаров скрипт наполнения не должен,
+   * это решение за администратором.
+   */
+  const wanted = new Set(CATEGORIES.map((c) => `${c.section}/${c.slug}`));
+  const stale = db
+    .prepare(
+      `SELECT c.id, c.section_slug, c.slug, c.title,
+              (SELECT COUNT(*) FROM product_categories pc WHERE pc.category_id = c.id) AS products
+       FROM categories c`,
+    )
+    .all()
+    .filter((row) => !wanted.has(`${row.section_slug}/${row.slug}`));
+
+  const removeCategory = db.prepare("DELETE FROM categories WHERE id = ?");
+  for (const row of stale) {
+    if (row.products === 0) {
+      removeCategory.run(row.id);
+      removed += 1;
+    } else {
+      kept.push(`${row.section_slug}/${row.slug} (${row.products} товаров)`);
+    }
+  }
 });
 
 seed();
@@ -306,6 +317,15 @@ console.log(`  цветов:           ${count("colors")}`);
 console.log(`  размерных сеток:  ${count("size_charts")}`);
 console.log(`  модельных линий:  ${count("model_lines")}`);
 console.log(`  категорий:        ${count("categories")}`);
+
+if (removed > 0) {
+  console.log(`  удалено устаревших пустых категорий: ${removed}`);
+}
+if (kept.length > 0) {
+  console.log("\nОстались категории вне новой структуры — в них есть товары,");
+  console.log("перенесите товары и удалите категории через админку:");
+  for (const item of kept) console.log(`  · ${item}`);
+}
 
 // Проверка на конфликт слагов внутри раздела — схема его не поймает,
 // если два раздела используют одно имя, а это как раз норма.

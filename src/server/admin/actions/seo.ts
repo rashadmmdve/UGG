@@ -141,7 +141,7 @@ export async function createLandingDraftAction(formData: FormData): Promise<void
     facetValue,
     title: facetCap,
     h1,
-    metaTitle: `${h1} — купить оригинал`,
+    metaTitle: `${h1} — купить`,
     metaDescription: "",
     seoText: "",
     aliases: [],
