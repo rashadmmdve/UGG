@@ -55,10 +55,10 @@ if [[ ! -d $release ]]; then
   git -C "$release" log --oneline -1
 fi
 
-# Общее для всех версий подключается ссылками, а не копируется:
-# база одна, фото одни, секреты одни.
-ln -sfn "$ROOT/shared/data"    "$release/data"
-ln -sfn "$ROOT/shared/uploads" "$release/public/uploads"
+# Секреты — ссылкой до сборки: в неё запекается адрес сайта, а база
+# берётся из DATA_DIR оттуда же. Ссылку на папку с базой внутри проекта
+# не делаем вовсе: Turbopack при сборке отказывается идти по ссылке за
+# пределы корня проекта и падает. Фото подключаются после сборки — см. ниже.
 ln -sfn "$ROOT/shared/.env.local" "$release/.env.local"
 
 echo "── Зависимости ──"
@@ -76,6 +76,12 @@ else
 fi
 
 previous=$(readlink -f "$ROOT/current" 2>/dev/null || true)
+
+# Фото — общие для всех версий и обязаны лежать под public/, иначе Next их
+# не отдаст. Ссылка ставится только теперь, после сборки: в клоне папка
+# уже есть (в git лежит .gitkeep), и ln без rm положил бы ссылку внутрь неё.
+rm -rf "$release/public/uploads"
+ln -sfn "$ROOT/shared/uploads" "$release/public/uploads"
 
 echo "── Переключение ──"
 ln -sfn "$release" "$ROOT/current.new" && mv -Tf "$ROOT/current.new" "$ROOT/current"

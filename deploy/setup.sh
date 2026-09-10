@@ -82,6 +82,10 @@ fi
 mkdir -p "$ROOT/releases" "$ROOT/shared/data" "$ROOT/shared/uploads" "$ROOT/backups"
 touch "$ROOT/shared/.env.local"
 chmod 600 "$ROOT/shared/.env.local"
+# База лежит вне папки версии и находится через DATA_DIR: и приложение
+# (через .env.local), и служебные скрипты, которые запускают от ugg.
+grep -q "^DATA_DIR=" "$ROOT/shared/.env.local" || echo "DATA_DIR=$ROOT/shared/data" >> "$ROOT/shared/.env.local"
+grep -qs "DATA_DIR" "$ROOT/.profile" || echo "export DATA_DIR=$ROOT/shared/data" >> "$ROOT/.profile"
 
 # Первая версия — просто клон; собирать её будет deploy.sh, когда
 # появится .env.local.

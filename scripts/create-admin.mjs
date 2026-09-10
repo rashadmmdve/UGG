@@ -29,7 +29,7 @@ if (password.length < 8) {
 }
 
 const root = process.cwd();
-const dataDir = path.join(root, "data");
+const dataDir = process.env.DATA_DIR ?? path.join(root, "data");
 fs.mkdirSync(dataDir, { recursive: true });
 
 const db = new Database(path.join(dataDir, "shop.db"));

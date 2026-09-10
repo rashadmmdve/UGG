@@ -36,7 +36,7 @@ if (!fs.existsSync(SOURCE)) {
 
 const root = process.cwd();
 const uploadsDir = path.join(root, "public", "uploads");
-const db = new Database(path.join(root, "data", "shop.db"));
+const db = new Database(path.join(process.env.DATA_DIR ?? path.join(root, "data"), "shop.db"));
 db.pragma("journal_mode = WAL");
 
 const PHOTO_EXT = new Set([".jpg", ".jpeg", ".png", ".webp", ".avif"]);
@@ -141,7 +141,7 @@ console.log(`  без пары: ${orphans.length}`);
 console.log(`Товаров со снимками: ${matched.size} из ${products.length}\n`);
 
 if (orphans.length) {
-  const listFile = path.join(root, "data", "photos-orphans.txt");
+  const listFile = path.join(process.env.DATA_DIR ?? path.join(root, "data"), "photos-orphans.txt");
   fs.writeFileSync(listFile, orphans.join("\r\n"), "utf8");
   console.log(`Файлы без пары выписаны в ${path.relative(root, listFile)}`);
 }

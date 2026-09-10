@@ -43,7 +43,7 @@ const CLEAR = flag("--clear");
 const STOCK = Number(value("--stock", 3));
 
 const root = process.cwd();
-const db = new Database(path.join(root, "data", "shop.db"));
+const db = new Database(path.join(process.env.DATA_DIR ?? path.join(root, "data"), "shop.db"));
 db.pragma("journal_mode = WAL");
 db.pragma("foreign_keys = ON");
 

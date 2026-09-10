@@ -20,7 +20,7 @@ const now = new Date().toISOString();
 const root = process.cwd();
 const clear = process.argv.includes("--clear");
 
-const db = new Database(path.join(root, "data", "shop.db"));
+const db = new Database(path.join(process.env.DATA_DIR ?? path.join(root, "data"), "shop.db"));
 db.pragma("journal_mode = WAL");
 db.pragma("foreign_keys = ON");
 

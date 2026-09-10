@@ -16,7 +16,7 @@ import path from "node:path";
 import Database from "better-sqlite3";
 
 const root = process.cwd();
-const db = new Database(path.join(root, "data", "shop.db"));
+const db = new Database(path.join(process.env.DATA_DIR ?? path.join(root, "data"), "shop.db"));
 db.pragma("journal_mode = WAL");
 
 /** Убираем шапку-комментарий: она для нас, а не для покупателя. */

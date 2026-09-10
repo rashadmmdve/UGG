@@ -13,7 +13,15 @@ import { applySchema } from "./schema";
  * База лежит в `data/shop.db` рядом с проектом. Файл в git не попадает:
  * в нём персональные данные покупателей и хеши паролей.
  */
-const DATA_DIR = path.join(process.cwd(), "data");
+/**
+ * Папка базы задаётся переменной DATA_DIR, если она есть. На сервере база
+ * общая для всех версий кода и лежит вне папки проекта: символическая
+ * ссылка на неё внутри проекта роняет сборку — Turbopack не пускает пути
+ * за пределы корня.
+ */
+const DATA_DIR = process.env.DATA_DIR
+  ? path.resolve(process.env.DATA_DIR)
+  : path.join(process.cwd(), "data");
 const DB_PATH = path.join(DATA_DIR, "shop.db");
 
 /**
