@@ -80,7 +80,9 @@ export default async function ProductPage(props: PageProps<"/product/[slug]">) {
       <JsonLd data={[breadcrumbLd(crumbs), productLd(product, reviews)]} />
       <Breadcrumbs items={crumbs} />
 
-      <div className="mt-6 grid gap-10 lg:grid-cols-2">
+      {/* Галерее отведено меньше половины ширины: в квадрате на пол-экрана
+          обувь выглядела непропорционально крупной. */}
+      <div className="mt-6 grid gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
         <ProductGallery images={product.images} title={product.title} productId={product.id} />
 
         <div className="lg:pl-4">

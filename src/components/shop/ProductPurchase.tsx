@@ -52,7 +52,7 @@ export function ProductPurchase({ product }: { product: Product }) {
 
     setAdded(true);
     if (addedTimer.current) clearTimeout(addedTimer.current);
-    addedTimer.current = setTimeout(() => setAdded(false), 2000);
+    addedTimer.current = setTimeout(() => setAdded(false), 3000);
   }
 
   const buttonClass = cn(
@@ -116,7 +116,9 @@ export function ProductPurchase({ product }: { product: Product }) {
         )}
       </div>
 
-      <div className="hidden md:block">
+      {/* На широком экране кнопка занимает треть колонки: во всю ширину
+          она перетягивала на себя весь блок покупки. */}
+      <div className="hidden md:block md:w-1/3">
         <button type="button" className={buttonClass} disabled={!inStock} onClick={handleAdd}>
           {label}
         </button>
