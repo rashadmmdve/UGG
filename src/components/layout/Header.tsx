@@ -15,8 +15,8 @@ import { cn } from "@/lib/utils";
 
 /** Ссылки после разделов каталога. */
 const NAV_LINKS = [
-  { href: "/articles", label: "Статьи" },
   { href: "/dostavka-i-oplata", label: "Доставка" },
+  { href: "/articles", label: "Статьи" },
 ];
 
 /**
@@ -82,7 +82,7 @@ export function Header({ menu }: { menu: MenuSection[] }) {
               onFocus={() => setOpenSection(section.slug)}
               aria-expanded={openSection === section.slug}
               className={cn(
-                "flex items-center gap-1 text-sm font-medium transition-colors hover:text-accent",
+                "flex items-center gap-1 text-base font-medium transition-colors hover:text-accent",
                 pathname.startsWith(section.href) ? "text-accent" : "text-fg",
               )}
             >
@@ -90,7 +90,7 @@ export function Header({ menu }: { menu: MenuSection[] }) {
               {/* Стрелка разворачивается на 180°, пока открыто меню раздела. */}
               <ChevronDown
                 className={cn(
-                  "h-3.5 w-3.5 opacity-60 transition-transform duration-300 ease-out",
+                  "h-4 w-4 opacity-60 transition-transform duration-300 ease-out",
                   openSection === section.slug && "rotate-180",
                 )}
                 strokeWidth={2}
@@ -103,7 +103,7 @@ export function Header({ menu }: { menu: MenuSection[] }) {
               href={link.href}
               onMouseEnter={() => setOpenSection(null)}
               className={cn(
-                "text-sm font-medium transition-colors hover:text-accent",
+                "text-base font-medium transition-colors hover:text-accent",
                 pathname.startsWith(link.href) ? "text-accent" : "text-fg",
               )}
             >
