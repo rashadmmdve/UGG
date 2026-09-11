@@ -5,6 +5,7 @@ import { CheckCircle2, Clock } from "lucide-react";
 import { PayOrderButton } from "@/components/shop/PayOrderButton";
 import { SelfDeliveryDialog } from "@/components/shop/SelfDeliveryDialog";
 import { isSelfDelivery } from "@/lib/delivery";
+import { canPayOnline } from "@/lib/payable";
 import { getCurrentCustomer } from "@/server/auth/session";
 import { syncOrderPayments } from "@/server/payments/flow";
 import { getOrderById } from "@/server/repositories/orders";
@@ -36,6 +37,9 @@ export default async function CheckoutSuccessPage(props: PageProps<"/checkout/su
   const online = order?.paymentMethod === "online";
   const paid = order?.paymentStatus === "paid";
   const awaitingPayment = online && !paid && order?.status !== "cancelled";
+  // Заказ с оплатой при получении тоже можно оплатить картой, если
+  // деньги не собирает СДЭК: ссылка на эту страницу уходит в письме.
+  const payable = Boolean(order && canPayOnline(order));
   // Окно показываем, когда с заказом уже всё решено: висеть поверх
   // страницы «оплатите заказ» ему незачем.
   const selfDelivery = Boolean(order && isSelfDelivery(order.delivery)) && !awaitingPayment;
@@ -73,7 +77,7 @@ export default async function CheckoutSuccessPage(props: PageProps<"/checkout/su
       </p>
 
       <div className="mt-8 flex flex-wrap justify-center gap-3">
-        {awaitingPayment && order && <PayOrderButton orderId={order.id} />}
+        {payable && order && <PayOrderButton orderId={order.id} />}
         {user ? (
           <Link href="/account" className={`${button} ${awaitingPayment ? "border border-line hover:border-accent" : "bg-accent text-white hover:bg-accent-hover"}`}>
             Мои заказы

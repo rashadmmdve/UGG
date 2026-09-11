@@ -6,6 +6,7 @@ import { getCurrentCustomer } from "@/server/auth/session";
 import { cancelShipment, syncShipment } from "@/server/orders/shipment";
 import { startPayment, type StartPaymentResult } from "@/server/payments/flow";
 import { getProductById } from "@/server/repositories/catalog";
+import { canPayOnline } from "@/lib/payable";
 import { getOrderById } from "@/server/repositories/orders";
 import { revalidateProduct } from "@/server/seo/revalidate";
 import type { Order } from "@/lib/types";
@@ -54,8 +55,8 @@ export async function refreshOrderStatusAction(orderId: string) {
 export async function payOrderAction(orderId: string): Promise<StartPaymentResult> {
   const order = (await ownedOrder(orderId)) ?? getOrderById(orderId);
   if (!order) return { ok: false, error: "Заказ не найден" };
-  if (order.paymentMethod !== "online") {
-    return { ok: false, error: "Этот заказ оплачивается при получении." };
+  if (!canPayOnline(order)) {
+    return { ok: false, error: "Этот заказ оплачивается при получении — деньги возьмёт курьер СДЭК." };
   }
   return startPayment(order);
 }

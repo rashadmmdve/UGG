@@ -6,6 +6,7 @@ import { CreditCard, Download, Eye, X } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ORDER_STATUS_LABELS, PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS } from "@/lib/constants";
 import { isSelfDelivery } from "@/lib/delivery";
+import { canPayOnline } from "@/lib/payable";
 import { cn, formatDate, formatPrice, sizeLabel } from "@/lib/utils";
 import { cancelOrderAction, payOrderAction, refreshOrderStatusAction } from "@/server/orders/actions";
 import type { Order } from "@/lib/types";
@@ -63,11 +64,10 @@ export function OrderCard({ order }: { order: Order }) {
     window.open(`/api/orders/${order.id}/label${download ? "?download=1" : ""}`, download ? "_self" : "_blank");
   }
 
-  // Ждёт оплаты картой: платёж не начат или попытка не удалась.
-  const awaitingPayment =
-    order.paymentMethod === "online" &&
-    (order.paymentStatus === "pending" || order.paymentStatus === "unpaid") &&
-    status !== "cancelled";
+  // Ждёт оплаты картой: платёж не начат или попытка не удалась. Для
+  // заказа с оплатой при получении кнопка появляется, только когда
+  // деньги не собирает СДЭК, — см. canPayOnline.
+  const awaitingPayment = canPayOnline({ ...order, status, cdek: shipment });
 
   function handlePay() {
     setError(null);

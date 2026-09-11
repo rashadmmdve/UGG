@@ -2,6 +2,7 @@ import "server-only";
 
 import { PAYMENT_METHOD_LABELS, SITE_URL } from "@/lib/constants";
 import { isSelfDelivery } from "@/lib/delivery";
+import { canPayOnline } from "@/lib/payable";
 import { formatPrice, sizeLabel } from "@/lib/utils";
 import type { Mail } from "@/server/mail/mailer";
 import type { Order } from "@/lib/types";
@@ -172,17 +173,24 @@ ${payUrl ? button(payUrl, "Оплатить заказ") : ""}
  * как ошибка в заказе.
  */
 export function deliveryChangedMail(order: Order, deliveryWas: number): Mail {
+  // Оплатить картой можно и заказ «при получении», если деньги не
+  // собирает СДЭК. Ссылка ведёт на страницу заказа — она открывается
+  // без входа, а платёж заводится уже по нажатию кнопки на ней.
+  const payUrl = canPayOnline(order) ? `${SITE_URL}/checkout/success?order=${order.id}` : null;
+
   const html = layout(
     `Доставка по заказу ${order.number}`,
     `<p style="margin:0 0 12px">${order.customer.name ? `${escape(order.customer.name)}, доставку` : "Доставку"} по заказу <strong>${order.number}</strong> мы берём на себя — привезём сами.</p>
 <p style="margin:0 0 12px">Доставка ${formatPrice(deliveryWas)} из заказа убрана. К оплате теперь <strong>${formatPrice(order.total)}</strong>${order.paymentMethod === "on_delivery" ? " — эту сумму и передайте при получении" : ""}.</p>
-<p style="margin:0;color:#555">Скоро свяжемся с вами и согласуем время.</p>`,
+${payUrl ? `${button(payUrl, "Оплатить онлайн")}<p style="margin:12px 0 0;color:#555">Картой можно заплатить заранее — чек придёт на почту сразу после оплаты.</p>` : ""}
+<p style="margin:16px 0 0;color:#555">Скоро свяжемся с вами и согласуем время.</p>`,
   );
 
   const text = [
     `Доставку по заказу ${order.number} мы берём на себя — привезём сами.`,
     "",
     `Доставка ${formatPrice(deliveryWas)} из заказа убрана. К оплате теперь ${formatPrice(order.total)}.`,
+    ...(payUrl ? ["", `Оплатить картой заранее: ${payUrl}`] : []),
     "",
     "Скоро свяжемся с вами и согласуем время.",
   ].join("\n");
