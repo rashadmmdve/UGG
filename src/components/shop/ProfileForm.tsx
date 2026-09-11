@@ -3,7 +3,12 @@
 import { useActionState } from "react";
 
 import { AField, FormMessage, SubmitButton } from "@/components/admin/ui";
-import { logoutAction, updateProfileAction, type FormState } from "@/server/auth/actions";
+import {
+  changePasswordAction,
+  logoutAction,
+  updateProfileAction,
+  type FormState,
+} from "@/server/auth/actions";
 import type { PublicUser } from "@/lib/types";
 
 export function ProfileForm({ user }: { user: PublicUser }) {
@@ -22,11 +27,38 @@ export function ProfileForm({ user }: { user: PublicUser }) {
         <SubmitButton className="h-11 w-fit">Сохранить</SubmitButton>
       </form>
 
+      <PasswordForm />
+
       <form action={logoutAction} className="mt-8 border-t border-line pt-6">
         <button type="submit" className="text-sm text-muted underline underline-offset-4 hover:text-fg">
           Выйти из аккаунта
         </button>
       </form>
     </div>
+  );
+}
+
+/**
+ * Смена пароля — отдельная форма с отдельным состоянием: ошибка в
+ * пароле не должна подсвечивать поля профиля, и наоборот. После удачной
+ * смены поля очищаются ключом на форме.
+ */
+function PasswordForm() {
+  const [state, action] = useActionState(changePasswordAction, {} as FormState);
+
+  return (
+    <form
+      key={state.success ?? "form"}
+      action={action}
+      noValidate
+      className="mt-8 flex flex-col gap-4 border-t border-line pt-6"
+    >
+      <h2 className="font-semibold">Смена пароля</h2>
+      <FormMessage error={state.error} success={state.success} />
+      <AField id="pw-current" name="current" type="password" label="Текущий пароль" autoComplete="current-password" error={state.fieldErrors?.current} />
+      <AField id="pw-new" name="password" type="password" label="Новый пароль" autoComplete="new-password" hint="Минимум 8 символов" error={state.fieldErrors?.password} />
+      <AField id="pw-confirm" name="confirm" type="password" label="Ещё раз" autoComplete="new-password" error={state.fieldErrors?.confirm} />
+      <SubmitButton className="h-11 w-fit">Изменить пароль</SubmitButton>
+    </form>
   );
 }

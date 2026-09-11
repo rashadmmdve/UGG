@@ -93,6 +93,21 @@ export const profileSchema = z.object({
   phone: phoneSchema,
 });
 
+export const changePasswordSchema = z
+  .object({
+    current: z.string().min(1, "Введите текущий пароль"),
+    password: passwordSchema,
+    confirm: z.string(),
+  })
+  .refine((data) => data.password === data.confirm, {
+    message: "Пароли не совпадают",
+    path: ["confirm"],
+  })
+  .refine((data) => data.password !== data.current, {
+    message: "Новый пароль совпадает с текущим",
+    path: ["password"],
+  });
+
 // ─── Оформление заказа ───────────────────────────────────────────────────────
 
 export const cartItemSchema = z.object({

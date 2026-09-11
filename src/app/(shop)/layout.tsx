@@ -1,6 +1,10 @@
+import { cookies } from "next/headers";
+
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { CartDrawer } from "@/components/shop/CartDrawer";
+import { CookieConsent } from "@/components/shop/CookieConsent";
+import { CONSENT_COOKIE, type Consent } from "@/lib/consent";
 import { SALE_SECTION, SECTIONS } from "@/lib/constants";
 import { sectionTitle } from "@/server/catalog/sections";
 import {
@@ -44,9 +48,16 @@ function buildMenu(): MenuSection[] {
   return sections;
 }
 
-export default function ShopLayout({ children }: LayoutProps<"/">) {
+/** Ответ на вопрос о cookies; всё, кроме двух известных значений, — «не отвечал». */
+async function readConsent(): Promise<Consent | null> {
+  const value = (await cookies()).get(CONSENT_COOKIE)?.value;
+  return value === "accepted" || value === "declined" ? value : null;
+}
+
+export default async function ShopLayout({ children }: LayoutProps<"/">) {
   const menu = buildMenu();
   const content = getContent();
+  const consent = await readConsent();
 
   return (
     <>
@@ -54,6 +65,7 @@ export default function ShopLayout({ children }: LayoutProps<"/">) {
       <main className="min-h-[60vh]">{children}</main>
       <Footer menu={menu} contacts={content.contacts} />
       <CartDrawer />
+      <CookieConsent consent={consent} />
     </>
   );
 }

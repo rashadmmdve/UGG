@@ -1,17 +1,31 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+import { CONSENT_COOKIE, isAllowedWhenDeclined } from "@/lib/consent";
+
 /**
  * В Next.js 16 middleware называется proxy. Файл лежит рядом с app/.
  *
- * Здесь только заголовки. Проверка сессии администратора делается в
- * layout админки и внутри каждого серверного действия: proxy не является
- * полноценным слоем авторизации, а серверные действия он и вовсе не
- * перехватывает — они приходят POST-запросом на тот же маршрут.
+ * Здесь заголовки и одно правило про cookies. Проверка сессии
+ * администратора делается в layout админки и внутри каждого серверного
+ * действия: proxy не является полноценным слоем авторизации, а серверные
+ * действия он и вовсе не перехватывает — они приходят POST-запросом на
+ * тот же маршрут.
  */
 export function proxy(request: NextRequest) {
-  const response = NextResponse.next();
   const { pathname } = request.nextUrl;
+
+  // Отказавшийся от cookies ходит только на главную и в политику.
+  // Без ответа (первый визит, поисковый робот) ограничений нет —
+  // иначе индексация уперлась бы в стену.
+  if (
+    request.cookies.get(CONSENT_COOKIE)?.value === "declined" &&
+    !isAllowedWhenDeclined(pathname)
+  ) {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
+
+  const response = NextResponse.next();
 
   const isPrivate =
     pathname.startsWith("/admin") ||

@@ -9,18 +9,21 @@ import {
   resetAttempts,
 } from "@/server/auth/rateLimit";
 import { hashPassword, verifyPassword } from "@/server/auth/password";
-import { createSession, destroySession } from "@/server/auth/session";
+import { createSession, destroySession, getCurrentUser } from "@/server/auth/session";
 import { issuePasswordReset, lookupResetToken } from "@/server/auth/passwordReset";
 import { isVerificationRequired, issueVerification } from "@/server/auth/verification";
 import { isMailEnabled } from "@/server/mail/mailer";
 import {
   createUser,
   getUserByEmail,
+  getUserById,
   resetPassword,
+  updatePasswordHash,
   updateUser,
 } from "@/server/repositories/users";
 import { fieldErrorsFrom, type ActionState } from "@/server/validation/errors";
 import {
+  changePasswordSchema,
   emailSchema,
   loginSchema,
   profileSchema,
@@ -300,4 +303,45 @@ export async function updateProfileAction(
 
   updateUser(userId, parsed.data);
   return {};
+}
+
+/**
+ * Смена пароля из кабинета.
+ *
+ * Кто меняет — берётся из сессии, а не из формы: чужой пароль этим
+ * путём не сменить. Текущий пароль спрашивается обязательно — иначе
+ * любой, кто сел за открытый браузер, отрезал бы владельца от аккаунта.
+ * Сессия после смены не сбрасывается: человек и так здесь.
+ */
+export async function changePasswordAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const me = await getCurrentUser();
+  if (!me) return { error: "Сессия истекла — войдите заново." };
+
+  const parsed = changePasswordSchema.safeParse({
+    current: formData.get("current"),
+    password: formData.get("password"),
+    confirm: formData.get("confirm"),
+  });
+  if (!parsed.success) {
+    return { fieldErrors: fieldErrorsFrom(parsed.error) };
+  }
+
+  const key = await rateLimitKey(`change:${me.email}`);
+  const limit = checkRateLimit(key);
+  if (!limit.allowed) {
+    return { error: `Слишком много попыток. Повторите через ${limit.retryAfterMinutes} мин.` };
+  }
+
+  const user = getUserById(me.id);
+  if (!user || !(await verifyPassword(user.passwordHash, parsed.data.current))) {
+    registerFailedAttempt(key);
+    return { fieldErrors: { current: "Текущий пароль не подошёл" } };
+  }
+
+  resetAttempts(key);
+  updatePasswordHash(user.id, await hashPassword(parsed.data.password));
+  return { success: "Пароль изменён." };
 }
