@@ -49,7 +49,7 @@ export default function HomePage() {
       {content.faq.length > 0 && <JsonLd data={faqLd(content.faq)} />}
 
       {/* Герой во всю ширину */}
-      <section className="container-page pt-6">
+      <section className="container-page">
         {/*
           С баннером блок держит ровно 2:1 — тот формат, который обещает
           админка: кадр 2:1 заполняет его без полей по бокам, а другой
