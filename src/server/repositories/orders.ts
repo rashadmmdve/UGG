@@ -15,26 +15,57 @@ import type { Order, OrderStatus, PaymentStatus } from "@/lib/types";
 const ORDER_PREFIX = "IM";
 
 /**
- * Следующий номер заказа.
+ * Дата в номере — «зеркальная»: сначала месяц наоборот, потом день.
+ * 12 сентября → «90» + «12» = 9012.
  *
- * Счётчик хранится отдельной строкой, а не считается как количество
- * заказов: при подсчёте строк удаление любого заказа приводит к тому,
- * что следующий получит уже занятый номер.
+ * День считается по московскому времени: сервер живёт по UTC, и заказ,
+ * оформленный ночью, иначе попал бы во вчерашний день.
+ */
+function orderDay(now: Date): { key: string; mirror: string } {
+  const parts = new Intl.DateTimeFormat("ru-RU", {
+    timeZone: "Europe/Moscow",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(now);
+  const part = (type: string) => parts.find((item) => item.type === type)?.value ?? "";
+  const day = part("day");
+  const month = part("month");
+  return {
+    key: `${part("year")}-${month}-${day}`,
+    mirror: `${[...month].reverse().join("")}${day}`,
+  };
+}
+
+/**
+ * Следующий номер заказа: IM-0019012 — три цифры счётчика за текущий
+ * день и четыре цифры «зеркальной» даты.
+ *
+ * Счётчик свой на каждый день и хранится отдельной строкой, а не
+ * считается как количество заказов за сутки: при подсчёте строк
+ * удаление любого заказа приводит к тому, что следующий получит уже
+ * занятый номер.
+ *
+ * Больше 999 заказов за день — номер станет на цифру длиннее, но
+ * останется уникальным; ломать нумерацию ради формата не стоит.
  *
  * Инкремент и чтение идут одной транзакцией — иначе два одновременных
  * оформления получили бы один номер.
  */
 function nextOrderNumber(): string {
+  const { key, mirror } = orderDay(new Date());
+  const counter = `order:${key}`;
+
   return transaction(() => {
     const db = getDb();
     db.prepare(
-      `INSERT INTO counters (name, value) VALUES ('order', 1)
+      `INSERT INTO counters (name, value) VALUES (?, 1)
        ON CONFLICT(name) DO UPDATE SET value = value + 1`,
-    ).run();
+    ).run(counter);
     const row = db
-      .prepare("SELECT value FROM counters WHERE name = 'order'")
-      .get() as { value: number };
-    return `${ORDER_PREFIX}-${String(row.value).padStart(4, "0")}`;
+      .prepare("SELECT value FROM counters WHERE name = ?")
+      .get(counter) as { value: number };
+    return `${ORDER_PREFIX}-${String(row.value).padStart(3, "0")}${mirror}`;
   });
 }
 
