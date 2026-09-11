@@ -68,10 +68,18 @@ export function Header({ menu }: { menu: MenuSection[] }) {
       onMouseLeave={() => setOpenSection(null)}
       className="sticky top-0 z-40 border-b border-line bg-bg/95 backdrop-blur-sm"
     >
-      <div className="container-page flex h-16 items-center gap-6">
+      {/*
+        На телефоне шапка симметрична: бургер у левого края, иконки у
+        правого на том же расстоянии (оба блока сдвинуты на -2 за поле),
+        логотип — строго по центру экрана, а не «после бургера». С lg
+        логотип возвращается в поток слева от меню.
+      */}
+      <div className="container-page relative flex h-16 items-center gap-6">
         <BurgerButton open={drawerOpen} onClick={() => setDrawerOpen((v) => !v)} />
 
-        <Logo width={88} eager />
+        <div className="absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0">
+          <Logo width={88} eager />
+        </div>
 
         <nav className="hidden flex-1 items-center gap-6 lg:flex" aria-label="Каталог">
           {menu.map((section) => (
@@ -116,7 +124,7 @@ export function Header({ menu }: { menu: MenuSection[] }) {
           ))}
         </nav>
 
-        <div className="ml-auto flex items-center gap-1">
+        <div className="-mr-2 ml-auto flex items-center gap-1 lg:mr-0">
           <Link
             href="/favorites"
             aria-label={`Избранное${favoritesCount ? `, ${favoritesCount}` : ""}`}
