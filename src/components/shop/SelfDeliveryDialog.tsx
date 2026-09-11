@@ -48,14 +48,14 @@ export function SelfDeliveryDialog() {
     >
       <div
         onClick={(event) => event.stopPropagation()}
-        className="w-full max-w-md border border-line bg-bg p-6 text-left md:p-8"
+        className="w-full max-w-md rounded-t-2xl border border-line bg-bg p-6 text-center sm:rounded-2xl md:p-8"
       >
         <h2 className="font-display text-2xl">Ваш товар готовится</h2>
         <p className="mt-3 text-sm leading-relaxed text-muted">
           Скоро свяжемся с вами и согласуем время.
         </p>
         <div className="mt-8">
-          <Button type="button" onClick={() => setOpen(false)} className="w-full">
+          <Button type="button" onClick={() => setOpen(false)} className="w-full rounded-lg">
             Понятно
           </Button>
         </div>
