@@ -3,6 +3,7 @@ import "server-only";
 import { cdekRequest } from "@/server/cdek/client";
 import { settledLines } from "@/server/orders/pricing";
 import { receiptItemName } from "@/server/orders/receipt";
+import { cdekVatRate } from "@/server/orders/vat";
 import { getLogistics } from "@/server/repositories/settings";
 import type {
   CdekCity,
@@ -239,6 +240,8 @@ export async function createCdekOrder(
 ): Promise<CreateOrderResult> {
   const logistics = getLogistics();
   const cod = order.paymentMethod === "on_delivery";
+  // Ставка нужна только там, где деньги собирает СДЭК: чек пробивает он.
+  const vatRate = cod ? cdekVatRate() : null;
 
   const result = await cdekRequest<OrderCreateResponse>("/v2/orders", {
     body: {
@@ -268,7 +271,12 @@ export async function createCdekOrder(
       // курьер или пункт выдачи. Для этого у СДЭК должен быть включён
       // наложенный платёж в договоре — иначе заказ отклонят.
       ...(cod
-        ? { delivery_recipient_cost: { value: order.deliveryPrice } }
+        ? {
+            delivery_recipient_cost: {
+              value: order.deliveryPrice,
+              ...(vatRate === null ? {} : { vat_rate: vatRate }),
+            },
+          }
         : {}),
       recipient: {
         name: order.customer.name,
@@ -294,7 +302,10 @@ export async function createCdekOrder(
             ),
             amount: line.quantity,
             // Сколько взять с получателя за единицу: при оплате на сайте — ничего.
-            payment: { value: cod ? line.unitPrice : 0 },
+            payment: {
+              value: cod ? line.unitPrice : 0,
+              ...(vatRate === null ? {} : { vat_rate: vatRate }),
+            },
           })),
         },
       ],

@@ -2,6 +2,7 @@ import "server-only";
 
 import { settledLines } from "@/server/orders/pricing";
 import { receiptItemName } from "@/server/orders/receipt";
+import { yookassaVatCode } from "@/server/orders/vat";
 import type { Order, PaymentStatus } from "@/lib/types";
 
 /**
@@ -108,8 +109,9 @@ async function request<T>(
  * чек, который пробивает СДЭК при наложенном платеже, разойдутся.
  */
 function receipt(order: Order) {
-  const vatCode = Number(process.env.YOOKASSA_VAT_CODE ?? 1);
+  const vatCode = yookassaVatCode();
   const paymentMode = process.env.YOOKASSA_PAYMENT_MODE ?? "full_payment";
+  const taxSystemCode = Number(process.env.YOOKASSA_TAX_SYSTEM_CODE ?? 0);
   const items = settledLines(order).map((line) => ({
     description: receiptItemName(line.item.title).slice(0, 128),
     quantity: line.quantity.toFixed(2),
@@ -143,6 +145,9 @@ function receipt(order: Order) {
     items,
     // Расчёт в интернете (тег 1125): чек без адреса торговой точки.
     internet: "true",
+    // Система налогообложения. Не задана — ЮKassa возьмёт единственную
+    // из настроек магазина; передавать нужно, когда их несколько.
+    ...(taxSystemCode ? { tax_system_code: taxSystemCode } : {}),
   };
 }
 
