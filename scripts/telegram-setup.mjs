@@ -7,6 +7,7 @@
  *     кнопок; адрес и секрет берутся из окружения
  *   node scripts/telegram-setup.mjs pin      — закрепить в группе доставки
  *     сообщение с кнопкой «Меню»
+ *   node scripts/telegram-setup.mjs keyboard — кнопка меню над полем ввода
  *   node scripts/telegram-setup.mjs check    — что сейчас настроено
  *
  * Идентификаторы групп руками искать не нужно: добавьте бота в группу и
@@ -122,6 +123,37 @@ if (command === "chats") {
   } catch (error) {
     console.log(`Сообщение отправлено, но закрепить не вышло: ${error.message}`);
     console.log("Сделайте бота администратором группы с правом закреплять сообщения и повторите.");
+  }
+} else if (command === "keyboard") {
+  // Кнопка над полем ввода. Нажатие отправляет её подпись обычным
+  // сообщением, а при включённой приватности бот слышит только то, что
+  // начинается со слеша, — поэтому подпись выбирается по настройке бота.
+  const item = configured.find((role) => role.role === "delivery");
+  const chat = item && process.env[item.chat];
+  if (!item || !chat) {
+    console.error("Нужны TELEGRAM_BOT_DELIVERY и TELEGRAM_CHAT_DELIVERY");
+    process.exit(1);
+  }
+  const me = await api(process.env[item.token], "getMe");
+  const label = me.can_read_all_group_messages ? "📋 Меню" : "/menu";
+
+  await api(process.env[item.token], "sendMessage", {
+    chat_id: chat,
+    text: "Кнопка меню закреплена над полем ввода.",
+    reply_markup: {
+      keyboard: [[{ text: label }]],
+      resize_keyboard: true,
+      is_persistent: true,
+    },
+  });
+
+  console.log(`Кнопка добавлена, подпись: ${label}`);
+  if (!me.can_read_all_group_messages) {
+    console.log(
+      "Чтобы подпись стала «📋 Меню» без слеша: @BotFather → /mybots → " +
+        `@${me.username} → Bot Settings → Group Privacy → Turn off, ` +
+        "затем удалить бота из группы и добавить заново, и повторить эту команду.",
+    );
   }
 } else if (command === "unhook") {
   for (const item of configured) {

@@ -119,12 +119,18 @@ export async function POST(
     | { callback_query?: Callback; message?: Message }
     | null;
 
-  // Команда в группе: /menu открывает меню. Остальное бот не слышит —
-  // режим приватности отдаёт ему только команды.
+  // Сообщение в группе открывает меню: команда /menu или нажатие кнопки
+  // над полем ввода — она присылает свой текст обычным сообщением.
+  // Обе формы ведут в одно место: подпись кнопки зависит от того,
+  // выключен ли у бота режим приватности, а поведение — нет.
   const message = update?.message;
   if (message?.text && isKnownChat(role, message.chat.id)) {
-    const command = message.text.trim().split(/[\s@]/)[0].toLowerCase();
-    if (role === "delivery" && (command === "/menu" || command === "/start")) {
+    const text = message.text.trim().toLowerCase();
+    const command = text.split(/[\s@]/)[0];
+    const opensMenu =
+      command === "/menu" || command === "/start" || text.replace(/[^\p{L}]/gu, "") === "меню";
+
+    if (role === "delivery" && opensMenu) {
       const menu = rootMenu();
       await sendMessage(role, menu.text, menu.buttons);
     }
