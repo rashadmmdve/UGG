@@ -11,6 +11,9 @@
  */
 export const SELF_DELIVERY_CITY_CODES = new Set([44]);
 
-export function isSelfDelivery(delivery: { cityCode: number }): boolean {
-  return SELF_DELIVERY_CITY_CODES.has(delivery.cityCode);
+export function isSelfDelivery(delivery: {
+  cityCode: number;
+  selfDelivery?: boolean;
+}): boolean {
+  return delivery.selfDelivery === true || SELF_DELIVERY_CITY_CODES.has(delivery.cityCode);
 }

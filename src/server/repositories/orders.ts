@@ -162,6 +162,38 @@ export function updateOrderPaymentStatus(
 }
 
 /** Частичное обновление заказа — статусы, данные отправления. */
+/**
+ * Перевести заказ на свою доставку.
+ *
+ * Доставка становится бесплатной, итог пересчитывается, отправление
+ * отвязывается: за него уже никто не везёт. Сумма наложенного платежа
+ * тем самым уменьшается ровно на стоимость доставки — покупателю об
+ * этом уходит письмо.
+ */
+export function setSelfDelivery(id: string): Order | null {
+  const existing = getOrderById(id);
+  if (!existing) return null;
+
+  const next: Order = {
+    ...existing,
+    delivery: { ...existing.delivery, selfDelivery: true },
+    deliveryPrice: 0,
+    total: existing.subtotal - existing.discount,
+    cdek: null,
+    updatedAt: nowIso(),
+  };
+
+  getDb()
+    .prepare(
+      `UPDATE orders
+       SET delivery = ?, delivery_price = 0, total = ?, cdek = NULL, updated_at = ?
+       WHERE id = ?`,
+    )
+    .run(JSON.stringify(next.delivery), next.total, next.updatedAt, id);
+
+  return next;
+}
+
 export function patchOrder(
   id: string,
   patch: Partial<Pick<Order, "status" | "paymentStatus" | "cdek" | "comment">>,

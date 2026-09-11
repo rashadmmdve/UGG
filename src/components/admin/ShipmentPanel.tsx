@@ -4,10 +4,12 @@ import { useState, useTransition } from "react";
 
 import { FormMessage } from "@/components/admin/ui";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { formatPrice } from "@/lib/utils";
 import {
   cancelOrderAction,
   refreshShipmentAction,
   registerShipmentAction,
+  selfDeliveryAction,
 } from "@/server/admin/actions/orders";
 import type { CdekShipment } from "@/lib/types";
 
@@ -25,6 +27,7 @@ export function ShipmentPanel({
   canCancel,
   isCancelled,
   selfDelivery,
+  deliveryPrice,
 }: {
   orderId: string;
   orderNumber: string;
@@ -33,10 +36,13 @@ export function ShipmentPanel({
   isCancelled: boolean;
   /** Город, куда возим сами: в СДЭК такой заказ автоматически не уходит. */
   selfDelivery: boolean;
+  /** Стоимость доставки в заказе — на столько уменьшится сумма. */
+  deliveryPrice: number;
 }) {
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<{ error?: string; success?: string }>({});
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [selfOpen, setSelfOpen] = useState(false);
 
   function register() {
     startTransition(async () => {
@@ -49,6 +55,18 @@ export function ShipmentPanel({
     startTransition(async () => {
       await refreshShipmentAction(orderId);
       setMessage({ success: "Статус обновлён" });
+    });
+  }
+
+  function takeSelfDelivery() {
+    startTransition(async () => {
+      const result = await selfDeliveryAction(orderId);
+      setSelfOpen(false);
+      setMessage(
+        result.ok
+          ? { success: "Везём сами: доставка убрана из заказа, покупателю ушло письмо" }
+          : { error: result.error },
+      );
     });
   }
 
@@ -111,6 +129,12 @@ export function ShipmentPanel({
             </button>
           )}
 
+          {!selfDelivery && (
+            <button type="button" onClick={() => setSelfOpen(true)} disabled={pending} className={button}>
+              Везём сами
+            </button>
+          )}
+
           {canCancel && (
             <button
               type="button"
@@ -123,6 +147,17 @@ export function ShipmentPanel({
           )}
         </div>
       )}
+
+      <ConfirmDialog
+        open={selfOpen}
+        title={`Везём заказ ${orderNumber} сами?`}
+        description={`Отправление в СДЭК будет удалено, доставка из заказа уйдёт, а сумма уменьшится на её стоимость${deliveryPrice > 0 ? ` — на ${formatPrice(deliveryPrice)}` : ""}. Покупателю уйдёт письмо с новой суммой. Вернуть заказ в СДЭК можно будет кнопкой «Передать в СДЭК», но доставка в нём уже не появится.`}
+        confirmLabel="Везём сами"
+        cancelLabel="Не надо"
+        pending={pending}
+        onConfirm={takeSelfDelivery}
+        onClose={() => setSelfOpen(false)}
+      />
 
       <ConfirmDialog
         open={confirmOpen}

@@ -99,6 +99,7 @@ export default async function AdminOrderPage(props: PageProps<"/admin/orders/[id
             orderNumber={order.number}
             shipment={order.cdek}
             selfDelivery={isSelfDelivery(order.delivery)}
+            deliveryPrice={order.deliveryPrice}
             canCancel={canCancel(order)}
             isCancelled={isCancelled}
           />

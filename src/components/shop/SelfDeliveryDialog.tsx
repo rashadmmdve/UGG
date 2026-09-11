@@ -52,8 +52,7 @@ export function SelfDeliveryDialog() {
       >
         <h2 className="font-display text-2xl">Ваш товар готовится</h2>
         <p className="mt-3 text-sm leading-relaxed text-muted">
-          Заказ по вашему городу мы доставляем сами — скоро свяжемся с вами и
-          согласуем время. Трек-номер по такому заказу не выдаётся.
+          Скоро свяжемся с вами и согласуем время.
         </p>
         <div className="mt-8">
           <Button type="button" onClick={() => setOpen(false)} className="w-full">

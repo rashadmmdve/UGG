@@ -2,8 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 
+import { isSelfDelivery } from "@/lib/delivery";
 import { assertAdmin } from "@/server/admin/guard";
+import { deleteCdekOrder } from "@/server/cdek/api";
+import { isMailEnabled, sendMail } from "@/server/mail/mailer";
+import { deliveryChangedMail } from "@/server/mail/templates";
 import {
+  canCancel,
   cancelShipment,
   registerShipment,
   syncShipment,
@@ -12,6 +17,7 @@ import {
 import { getProductById } from "@/server/repositories/catalog";
 import {
   getOrderById,
+  setSelfDelivery,
   updateOrderPaymentStatus,
   updateOrderStatus,
 } from "@/server/repositories/orders";
@@ -97,6 +103,58 @@ export async function registerShipmentAction(
 
   const result = await registerShipment(orderId);
   if (!result.ok) return result;
+
+  refreshOrderPages(orderId);
+  return { ok: true };
+}
+
+/**
+ * Взять доставку на себя.
+ *
+ * Для городов рядом со своим складом дешевле отвезти самим, чем платить
+ * СДЭК. Отправление при этом удаляется, доставка из заказа уходит, а
+ * сумма уменьшается — при наложенном платеже покупатель отдаст курьеру
+ * меньше, чем ожидал, поэтому ему сразу уходит письмо.
+ *
+ * Оплаченный картой заказ так переключать нельзя: деньги за доставку уже
+ * взяты, и их пришлось бы возвращать через ЮKassa.
+ */
+export async function selfDeliveryAction(
+  orderId: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!(await assertAdmin())) return { ok: false, error: "Нет доступа" };
+
+  const order = getOrderById(orderId);
+  if (!order) return { ok: false, error: "Заказ не найден" };
+  if (order.status === "cancelled") return { ok: false, error: "Заказ отменён" };
+  if (isSelfDelivery(order.delivery)) {
+    return { ok: false, error: "Этот заказ и так везём сами" };
+  }
+  if (order.paymentStatus === "paid") {
+    return {
+      ok: false,
+      error: "Заказ оплачен — доставка уже в платеже. Сначала верните её стоимость в ЮKassa.",
+    };
+  }
+
+  if (order.cdek) {
+    if (!canCancel(order)) {
+      return { ok: false, error: "Посылка уже принята в СДЭК — отменить её можно только через поддержку." };
+    }
+    if (!(await deleteCdekOrder(order.cdek.uuid))) {
+      return { ok: false, error: "СДЭК не дал удалить отправление. Попробуйте позже." };
+    }
+  }
+
+  const deliveryWas = order.deliveryPrice;
+  const updated = setSelfDelivery(orderId);
+  if (!updated) return { ok: false, error: "Не удалось сохранить заказ" };
+
+  if (isMailEnabled() && deliveryWas > 0) {
+    sendMail(deliveryChangedMail(updated, deliveryWas)).catch((error) =>
+      console.error(`Не удалось сообщить об изменении доставки ${updated.number}:`, error),
+    );
+  }
 
   refreshOrderPages(orderId);
   return { ok: true };

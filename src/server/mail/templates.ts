@@ -163,3 +163,34 @@ ${payUrl ? button(payUrl, "Оплатить заказ") : ""}
     text,
   };
 }
+
+/**
+ * Доставку взяли на себя: сумма к оплате уменьшилась.
+ *
+ * Письмо обязательно: покупатель ждал курьера СДЭК и был готов отдать
+ * сумму с доставкой, а отдаст меньше — без предупреждения это выглядит
+ * как ошибка в заказе.
+ */
+export function deliveryChangedMail(order: Order, deliveryWas: number): Mail {
+  const html = layout(
+    `Доставка по заказу ${order.number}`,
+    `<p style="margin:0 0 12px">${order.customer.name ? `${escape(order.customer.name)}, доставку` : "Доставку"} по заказу <strong>${order.number}</strong> мы берём на себя — привезём сами.</p>
+<p style="margin:0 0 12px">Доставка ${formatPrice(deliveryWas)} из заказа убрана. К оплате теперь <strong>${formatPrice(order.total)}</strong>${order.paymentMethod === "on_delivery" ? " — эту сумму и передайте при получении" : ""}.</p>
+<p style="margin:0;color:#555">Скоро свяжемся с вами и согласуем время.</p>`,
+  );
+
+  const text = [
+    `Доставку по заказу ${order.number} мы берём на себя — привезём сами.`,
+    "",
+    `Доставка ${formatPrice(deliveryWas)} из заказа убрана. К оплате теперь ${formatPrice(order.total)}.`,
+    "",
+    "Скоро свяжемся с вами и согласуем время.",
+  ].join("\n");
+
+  return {
+    to: order.customer.email,
+    subject: `Заказ ${order.number}: доставку берём на себя — UGG`,
+    html,
+    text,
+  };
+}
