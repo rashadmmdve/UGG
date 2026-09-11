@@ -3,16 +3,26 @@ import "server-only";
 /**
  * Телеграм: низкоуровневые вызовы Bot API.
  *
- * Бот один, а групп три — по одной на роль: заказы для администраторов,
- * доставка для курьеров, оплата для тех, кто выставляет QR. Куда писать,
- * решает не бот, а вызывающий код: у каждой группы свой идентификатор в
- * настройках, и сообщение уходит ровно в ту, которой оно адресовано.
+ * Групп три — по одной на роль: заказы для администраторов, доставка для
+ * курьеров, оплата для тех, кто выставляет QR. У каждой свой бот и свой
+ * токен, поэтому бот курьеров физически не может написать в группу
+ * администраторов: разделение не на проверках в коде, а на уровне
+ * доступа.
  *
- * Без настроек бот молчит: ни токена, ни групп — ни одного запроса.
- * Магазин от этого не ломается, просто уведомлений нет.
+ * Роль, за которую отвечает вызов, передаётся первым аргументом — она же
+ * выбирает и токен, и группу. Без настроек бот молчит: нет токена или
+ * группы — ни одного запроса. Магазин от этого не ломается.
  */
 
 export type ChatRole = "orders" | "delivery" | "payments";
+
+export const CHAT_ROLES: ChatRole[] = ["orders", "delivery", "payments"];
+
+const TOKEN_ENV: Record<ChatRole, string> = {
+  orders: "TELEGRAM_BOT_ORDERS",
+  delivery: "TELEGRAM_BOT_DELIVERY",
+  payments: "TELEGRAM_BOT_PAYMENTS",
+};
 
 const CHAT_ENV: Record<ChatRole, string> = {
   orders: "TELEGRAM_CHAT_ORDERS",
@@ -20,30 +30,30 @@ const CHAT_ENV: Record<ChatRole, string> = {
   payments: "TELEGRAM_CHAT_PAYMENTS",
 };
 
-export function isTelegramEnabled(): boolean {
-  return Boolean(process.env.TELEGRAM_BOT_TOKEN);
+export function botToken(role: ChatRole): string | null {
+  return process.env[TOKEN_ENV[role]] || null;
+}
+
+export function isTelegramEnabled(role: ChatRole): boolean {
+  return Boolean(botToken(role) && chatId(role));
 }
 
 export function chatId(role: ChatRole): string | null {
   return process.env[CHAT_ENV[role]] || null;
 }
 
-/** Роль группы по её идентификатору — чтобы проверять, откуда пришло нажатие. */
-export function roleOfChat(id: string | number): ChatRole | null {
-  const value = String(id);
-  for (const role of Object.keys(CHAT_ENV) as ChatRole[]) {
-    if (chatId(role) === value) return role;
-  }
-  return null;
+/** Совпадает ли группа, из которой пришло нажатие, с настроенной для роли. */
+export function isKnownChat(role: ChatRole, id: string | number): boolean {
+  return chatId(role) === String(id);
 }
 
 export type InlineButton = { text: string; callback_data: string } | { text: string; url: string };
 
 class TelegramError extends Error {}
 
-async function call<T>(method: string, body: unknown): Promise<T> {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
-  if (!token) throw new TelegramError("Бот не настроен: нет TELEGRAM_BOT_TOKEN");
+async function call<T>(role: ChatRole, method: string, body: unknown): Promise<T> {
+  const token = botToken(role);
+  if (!token) throw new TelegramError(`Бот «${role}» не настроен: нет ${TOKEN_ENV[role]}`);
 
   const response = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
     method: "POST",
@@ -68,9 +78,9 @@ export async function sendMessage(
   buttons: InlineButton[][] = [],
 ): Promise<SentMessage | null> {
   const chat = chatId(role);
-  if (!isTelegramEnabled() || !chat) return null;
+  if (!isTelegramEnabled(role) || !chat) return null;
 
-  return call<SentMessage>("sendMessage", {
+  return call<SentMessage>(role, "sendMessage", {
     chat_id: chat,
     text,
     parse_mode: "HTML",
@@ -86,7 +96,7 @@ export async function sendPhoto(
   caption: string,
   fileName = "qr.png",
 ): Promise<SentMessage | null> {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const token = botToken(role);
   const chat = chatId(role);
   if (!token || !chat) return null;
 
@@ -110,9 +120,14 @@ export async function sendPhoto(
  * получит его, поэтому отвечать нужно всегда — даже когда действие не
  * удалось.
  */
-export async function answerCallback(id: string, text: string, alert = false): Promise<void> {
-  if (!isTelegramEnabled()) return;
-  await call("answerCallbackQuery", {
+export async function answerCallback(
+  role: ChatRole,
+  id: string,
+  text: string,
+  alert = false,
+): Promise<void> {
+  if (!botToken(role)) return;
+  await call(role, "answerCallbackQuery", {
     callback_query_id: id,
     text: text.slice(0, 200),
     show_alert: alert,
@@ -120,26 +135,15 @@ export async function answerCallback(id: string, text: string, alert = false): P
 }
 
 /** Убрать кнопки у сообщения — действие уже сделано, повторять нечего. */
-export async function clearButtons(chat: string | number, messageId: number): Promise<void> {
-  if (!isTelegramEnabled()) return;
-  await call("editMessageReplyMarkup", {
+export async function clearButtons(
+  role: ChatRole,
+  chat: string | number,
+  messageId: number,
+): Promise<void> {
+  if (!botToken(role)) return;
+  await call(role, "editMessageReplyMarkup", {
     chat_id: chat,
     message_id: messageId,
     reply_markup: { inline_keyboard: [] },
   }).catch(() => undefined);
-}
-
-/** Для наладки: последние обновления — по ним находятся id групп. */
-export async function getUpdates(): Promise<unknown[]> {
-  return call<unknown[]>("getUpdates", { limit: 50, allowed_updates: ["message", "callback_query"] });
-}
-
-/** Подписка на обновления. Секрет Телеграм присылает заголовком при каждом запросе. */
-export async function setWebhook(url: string, secret: string): Promise<void> {
-  await call("setWebhook", {
-    url,
-    secret_token: secret,
-    allowed_updates: ["callback_query"],
-    drop_pending_updates: true,
-  });
 }

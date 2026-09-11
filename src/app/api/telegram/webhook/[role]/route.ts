@@ -9,15 +9,21 @@ import { getOrderById } from "@/server/repositories/orders";
 import { selfDelivery } from "@/server/orders/self-delivery";
 import {
   answerCallback,
+  botToken,
   clearButtons,
-  roleOfChat,
+  isKnownChat,
   sendPhoto,
+  CHAT_ROLES,
   type ChatRole,
 } from "@/server/telegram/client";
 import { notifyCancelled, notifyDelivery } from "@/server/telegram/notify";
 
 /**
  * Нажатия кнопок в группах Телеграма.
+ *
+ * У каждой группы свой бот, поэтому и адрес свой: роль стоит в пути —
+ * /api/telegram/webhook/delivery и так далее. По ней выбирается токен,
+ * которым отвечать, и проверяется, из своей ли группы пришло нажатие.
  *
  * Телеграм шлёт сюда каждое нажатие и ждёт ответа: пока его нет, на
  * кнопке крутятся часики. Поэтому отвечаем всегда — и на успех, и на
@@ -26,8 +32,8 @@ import { notifyCancelled, notifyDelivery } from "@/server/telegram/notify";
  *
  * Кто что может, решает группа, а не нажавший: курьерам — вручение и
  * отмена, группе оплаты — QR, администраторам — забрать доставку себе.
- * Проверка по идентификатору чата: подделать его нельзя, Телеграм
- * подставляет его сам, а сам запрос подписан секретом из настроек.
+ * Запрос подписан секретом из настроек, а идентификатор чата Телеграм
+ * подставляет сам — подделать его нельзя.
  */
 
 const ACTIONS: Record<ChatRole, string[]> = {
@@ -45,31 +51,39 @@ type Callback = {
 
 const ok = () => NextResponse.json({ ok: true });
 
-export async function POST(request: Request): Promise<Response> {
+export async function POST(
+  request: Request,
+  context: RouteContext<"/api/telegram/webhook/[role]">,
+): Promise<Response> {
   const secret = process.env.TELEGRAM_WEBHOOK_SECRET;
   if (!secret || request.headers.get("x-telegram-bot-api-secret-token") !== secret) {
     return NextResponse.json({ error: "Не наш запрос" }, { status: 401 });
+  }
+
+  const { role: raw } = await context.params;
+  const role = CHAT_ROLES.find((item) => item === raw);
+  if (!role || !botToken(role)) {
+    return NextResponse.json({ error: "Такой группы нет" }, { status: 404 });
   }
 
   const update = (await request.json().catch(() => null)) as { callback_query?: Callback } | null;
   const callback = update?.callback_query;
   if (!callback?.data || !callback.message) return ok();
 
-  const role = roleOfChat(callback.message.chat.id);
-  if (!role) {
-    await answerCallback(callback.id, "Эта группа не подключена к магазину", true);
+  if (!isKnownChat(role, callback.message.chat.id)) {
+    await answerCallback(role, callback.id, "Эта группа не подключена к магазину", true);
     return ok();
   }
 
   const [action, orderId] = callback.data.split(":");
   if (!ACTIONS[role].includes(action)) {
-    await answerCallback(callback.id, "Здесь это действие недоступно", true);
+    await answerCallback(role, callback.id, "Здесь это действие недоступно", true);
     return ok();
   }
 
   const order = getOrderById(orderId ?? "");
   if (!order) {
-    await answerCallback(callback.id, "Заказ не найден", true);
+    await answerCallback(role, callback.id, "Заказ не найден", true);
     return ok();
   }
 
@@ -79,11 +93,12 @@ export async function POST(request: Request): Promise<Response> {
     if (action === "done") {
       const done = completeOrder(order.id);
       if (!done) {
-        await answerCallback(callback.id, "Заказ отменён — отметить вручение нельзя", true);
+        await answerCallback(role, callback.id, "Заказ отменён — отметить вручение нельзя", true);
         return ok();
       }
-      await clearButtons(callback.message.chat.id, callback.message.message_id);
+      await clearButtons(role, callback.message.chat.id, callback.message.message_id);
       await answerCallback(
+        role,
         callback.id,
         done.paymentStatus === "paid" && order.paymentStatus !== "paid"
           ? `Вручён, оплата ${formatPrice(done.total)} принята`
@@ -95,11 +110,11 @@ export async function POST(request: Request): Promise<Response> {
     if (action === "cancel") {
       const result = await cancelShipment(order.id);
       if (!result.ok) {
-        await answerCallback(callback.id, result.error, true);
+        await answerCallback(role, callback.id, result.error, true);
         return ok();
       }
-      await clearButtons(callback.message.chat.id, callback.message.message_id);
-      await answerCallback(callback.id, "Отменён, товары вернулись в каталог");
+      await clearButtons(role, callback.message.chat.id, callback.message.message_id);
+      await answerCallback(role, callback.id, "Отменён, товары вернулись в каталог");
       notifyCancelled(order, who);
       return ok();
     }
@@ -107,11 +122,11 @@ export async function POST(request: Request): Promise<Response> {
     if (action === "self") {
       const result = await selfDelivery(order.id);
       if (!result.ok) {
-        await answerCallback(callback.id, result.error, true);
+        await answerCallback(role, callback.id, result.error, true);
         return ok();
       }
-      await clearButtons(callback.message.chat.id, callback.message.message_id);
-      await answerCallback(callback.id, "Везём сами: доставка убрана, покупателю ушло письмо");
+      await clearButtons(role, callback.message.chat.id, callback.message.message_id);
+      await answerCallback(role, callback.id, "Везём сами: доставка убрана, покупателю ушло письмо");
       notifyDelivery(result.order);
       return ok();
     }
@@ -119,7 +134,7 @@ export async function POST(request: Request): Promise<Response> {
     if (action === "qr") {
       const payment = await startPayment(order);
       if (!payment.ok) {
-        await answerCallback(callback.id, payment.error, true);
+        await answerCallback(role, callback.id, payment.error, true);
         return ok();
       }
       // QR кодирует ту же ссылку, по которой платят с сайта: покупатель
@@ -135,12 +150,12 @@ export async function POST(request: Request): Promise<Response> {
         ].join("\n"),
         `qr-${order.number}.png`,
       );
-      await answerCallback(callback.id, "QR отправлен");
+      await answerCallback(role, callback.id, "QR отправлен");
       return ok();
     }
   } catch (error) {
     console.error(`Телеграм: не удалось выполнить ${callback.data}:`, error);
-    await answerCallback(callback.id, "Не получилось. Попробуйте ещё раз", true);
+    await answerCallback(role, callback.id, "Не получилось. Попробуйте ещё раз", true);
   }
 
   return ok();
