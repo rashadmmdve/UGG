@@ -60,8 +60,10 @@ export function notifyNewOrder(order: Order): void {
     `новый заказ ${order.number}`,
   );
 
+  // В группу оплаты заказ сам не попадает: там работают по просьбе
+  // курьера, когда покупатель на месте решил платить картой. Иначе
+  // группа заполнялась бы заказами, по которым никто ничего не просил.
   if (isSelfDelivery(order.delivery)) notifyDelivery(order);
-  if (!paid && order.paymentMethod === "on_delivery") notifyPayments(order);
 }
 
 /** Заказ курьерам: адрес, телефон, сумма к получению и кнопки. */
