@@ -136,7 +136,10 @@ export default function HomePage() {
           {tiles.map((section) => (
             // Пропорция 3:4: плитки остаются вертикальными на любой ширине
             // экрана, и высота меняется вместе с шириной колонки.
+            // Подпись — только введённая в админке; без неё ссылку
+            // называет aria-label, чтобы плитка не стала безымянной.
             <Link key={section.slug} href={`/catalog/${section.slug}`}
+              aria-label={section.caption ? undefined : section.title}
               className="group relative flex aspect-[3/4] flex-col justify-end overflow-hidden rounded-xl border border-line bg-bg p-5 transition hover:border-accent">
               {content.sectionImages?.[section.slug] && (
                 <>
@@ -148,17 +151,21 @@ export default function HomePage() {
                     className="object-contain transition-transform duration-300 group-hover:scale-[1.03]"
                   />
                   {/* Затемнение снизу: белое название на светлом снимке иначе не читается. */}
-                  <span className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent" />
+                  {section.caption && (
+                    <span className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent" />
+                  )}
                 </>
               )}
-              <span
-                className={cn(
-                  "relative text-lg font-semibold",
-                  content.sectionImages?.[section.slug] ? "text-white" : "group-hover:text-accent",
-                )}
-              >
-                {section.title}
-              </span>
+              {section.caption && (
+                <span
+                  className={cn(
+                    "relative text-lg font-semibold",
+                    content.sectionImages?.[section.slug] ? "text-white" : "group-hover:text-accent",
+                  )}
+                >
+                  {section.caption}
+                </span>
+              )}
             </Link>
           ))}
         </div>
