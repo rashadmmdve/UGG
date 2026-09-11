@@ -3,8 +3,9 @@ import { notFound } from "next/navigation";
 
 import { ShipmentPanel } from "@/components/admin/ShipmentPanel";
 import { SubmitButton } from "@/components/admin/ui";
-import { ORDER_STATUS_LABELS, PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS } from "@/lib/constants";
+import { ORDER_STATUS_LABELS, PAYMENT_STATUS_LABELS } from "@/lib/constants";
 import { isSelfDelivery } from "@/lib/delivery";
+import { paymentLabel } from "@/lib/payment-kind";
 import { formatPrice } from "@/lib/utils";
 import {
   updateOrderStatusAction,
@@ -144,7 +145,7 @@ export default async function AdminOrderPage(props: PageProps<"/admin/orders/[id
           <section className="rounded-lg border border-line bg-bg p-5">
             <h2 className="font-semibold">Оплата</h2>
             <p className="mt-2 text-sm">
-              {PAYMENT_METHOD_LABELS[order.paymentMethod]}
+              {paymentLabel(order)}
               {order.paymentMethod === "on_delivery" && (
                 <span className="block text-xs text-muted">Деньги собирает СДЭК при выдаче.</span>
               )}

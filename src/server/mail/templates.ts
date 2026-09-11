@@ -1,8 +1,9 @@
 import "server-only";
 
-import { PAYMENT_METHOD_LABELS, SITE_URL } from "@/lib/constants";
+import { SITE_URL } from "@/lib/constants";
 import { isSelfDelivery } from "@/lib/delivery";
 import { canPayOnline } from "@/lib/payable";
+import { paymentLabel } from "@/lib/payment-kind";
 import { formatPrice, sizeLabel } from "@/lib/utils";
 import type { Mail } from "@/server/mail/mailer";
 import type { Order } from "@/lib/types";
@@ -125,7 +126,7 @@ export function orderMail(order: Order, payUrl: string | null): Mail {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;margin:16px 0">${rows}${totals}
 <tr><td style="padding:10px 0 0;font-weight:700">Итого</td><td align="right" style="padding:10px 0 0;font-weight:700;font-size:16px">${formatPrice(order.total)}</td></tr></table>
 <p style="margin:0 0 8px"><strong>Доставка.</strong> ${delivery}</p>
-<p style="margin:0 0 8px"><strong>Оплата.</strong> ${PAYMENT_METHOD_LABELS[order.paymentMethod]}. ${payment}</p>
+<p style="margin:0 0 8px"><strong>Оплата.</strong> ${paymentLabel(order)}. ${payment}</p>
 ${payUrl ? button(payUrl, "Оплатить заказ") : ""}
 <p style="margin:16px 0 0;color:#555">${
       selfDelivery
@@ -148,7 +149,7 @@ ${payUrl ? button(payUrl, "Оплатить заказ") : ""}
     `Итого: ${formatPrice(order.total)}`,
     "",
     delivery.replace(/<[^>]+>/g, ""),
-    `Оплата: ${PAYMENT_METHOD_LABELS[order.paymentMethod]}. ${payment}`,
+    `Оплата: ${paymentLabel(order)}. ${payment}`,
     ...(payUrl ? ["", `Оплатить: ${payUrl}`] : []),
     "",
     ...(selfDelivery

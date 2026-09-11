@@ -140,6 +140,10 @@ export function applyPayment(remote: YookassaPayment): Payment | null {
     patchOrder(order.id, {
       paymentStatus: "paid",
       status: order.status === "new" ? "confirmed" : order.status,
+      // Заказ «при получении», оплаченный по ссылке, дальше живёт как
+      // оплаченный картой: иначе он выглядел бы как принятые наличные,
+      // которых не было.
+      paymentMethod: "online",
     });
     // Сюда приходят и вебхук, и сверка со страницы «заказ оформлен»,
     // но переход в «оплачен» случается один раз — письмо тоже одно.

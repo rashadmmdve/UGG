@@ -4,9 +4,10 @@ import { useEffect, useState, useTransition } from "react";
 import { CreditCard, Download, Eye, X } from "lucide-react";
 
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { ORDER_STATUS_LABELS, PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS } from "@/lib/constants";
+import { ORDER_STATUS_LABELS, PAYMENT_STATUS_LABELS } from "@/lib/constants";
 import { isSelfDelivery } from "@/lib/delivery";
 import { canPayOnline } from "@/lib/payable";
+import { paymentLabel } from "@/lib/payment-kind";
 import { cn, formatDate, formatPrice, sizeLabel } from "@/lib/utils";
 import { cancelOrderAction, payOrderAction, refreshOrderStatusAction } from "@/server/orders/actions";
 import type { Order } from "@/lib/types";
@@ -115,7 +116,7 @@ export function OrderCard({ order }: { order: Order }) {
         <div className="flex justify-between gap-4">
           <dt className="text-muted">Оплата</dt>
           <dd className={cn("text-right", order.paymentStatus === "paid" && "text-success")}>
-            {PAYMENT_METHOD_LABELS[order.paymentMethod]} · {PAYMENT_STATUS_LABELS[order.paymentStatus].toLowerCase()}
+            {paymentLabel({ ...order, cdek: shipment })} · {PAYMENT_STATUS_LABELS[order.paymentStatus].toLowerCase()}
           </dd>
         </div>
         <div className="flex justify-between gap-4">

@@ -196,7 +196,7 @@ export function setSelfDelivery(id: string): Order | null {
 
 export function patchOrder(
   id: string,
-  patch: Partial<Pick<Order, "status" | "paymentStatus" | "cdek" | "comment">>,
+  patch: Partial<Pick<Order, "status" | "paymentStatus" | "paymentMethod" | "cdek" | "comment">>,
 ): Order | null {
   const existing = getOrderById(id);
   if (!existing) return null;
@@ -206,12 +206,13 @@ export function patchOrder(
   getDb()
     .prepare(
       `UPDATE orders
-       SET status = ?, payment_status = ?, cdek = ?, comment = ?, updated_at = ?
+       SET status = ?, payment_status = ?, payment_method = ?, cdek = ?, comment = ?, updated_at = ?
        WHERE id = ?`,
     )
     .run(
       next.status,
       next.paymentStatus,
+      next.paymentMethod,
       next.cdek ? JSON.stringify(next.cdek) : null,
       next.comment,
       next.updatedAt,
