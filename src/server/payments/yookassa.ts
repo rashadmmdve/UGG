@@ -90,11 +90,19 @@ async function request<T>(
 }
 
 /**
- * Чек по 54-ФЗ. Формируется ЮKassa, если в личном кабинете магазина
- * включены чеки. Ставка НДС — из окружения: ИП на упрощёнке — «без НДС».
+ * Чек по 54-ФЗ. Формируется ЮKassa («Чеки от ЮKassa», ФФД 1.2), если в
+ * личном кабинете магазина включены чеки. Ставка НДС — из окружения:
+ * ИП на упрощёнке — «без НДС». Сумма чека сходится с суммой платежа
+ * копейка в копейку: скидку по единицам раскладывает settledLines().
+ *
+ * Признак способа расчёта — YOOKASSA_PAYMENT_MODE: full_payment (чек
+ * один, в момент оплаты) или full_prepayment (тогда при выдаче товара
+ * нужен второй чек — зачёт предоплаты). Мера количества обязательна в
+ * ФФД 1.2, для обуви и доставки — «штука».
  */
 function receipt(order: Order) {
   const vatCode = Number(process.env.YOOKASSA_VAT_CODE ?? 1);
+  const paymentMode = process.env.YOOKASSA_PAYMENT_MODE ?? "full_payment";
   const items = settledLines(order).map((line) => ({
     description: (sizeLabel(line.item.sizeEu)
       ? `${line.item.title}, размер ${line.item.sizeEu}`
@@ -104,7 +112,8 @@ function receipt(order: Order) {
     amount: money(line.unitPrice),
     vat_code: vatCode,
     payment_subject: "commodity",
-    payment_mode: "full_payment",
+    payment_mode: paymentMode,
+    measure: "piece",
   }));
 
   if (order.deliveryPrice > 0) {
@@ -114,16 +123,22 @@ function receipt(order: Order) {
       amount: money(order.deliveryPrice),
       vat_code: vatCode,
       payment_subject: "service",
-      payment_mode: "full_payment",
+      payment_mode: paymentMode,
+      measure: "piece",
     });
   }
+
+  // Телефон — в E.164 без плюса; «8 900…» приводится к «7900…».
+  const phone = order.customer.phone.replace(/\D/g, "").replace(/^8(?=\d{10}$)/, "7");
 
   return {
     customer: {
       email: order.customer.email,
-      phone: order.customer.phone.replace(/[^\d]/g, ""),
+      ...(phone.length >= 11 ? { phone } : {}),
     },
     items,
+    // Расчёт в интернете (тег 1125): чек без адреса торговой точки.
+    internet: "true",
   };
 }
 
