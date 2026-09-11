@@ -143,3 +143,24 @@ export function notifyCancelled(order: Order, by: string): void {
   safe(sendMessage("orders", text), `отмена ${order.number}`);
   if (isSelfDelivery(order.delivery)) safe(sendMessage("delivery", text), `отмена ${order.number}`);
 }
+
+/**
+ * Деньги пришли по отменённому заказу.
+ *
+ * Так бывает, когда счёт выставили, заказ отменили, а покупатель успел
+ * оплатить по старому QR: ссылка ЮKassa живёт около часа, и погасить её
+ * досрочно нельзя. Заказ при этом не воскресает — деньги нужно вернуть
+ * руками, поэтому кричим об этом в обе группы, где сидят люди с доступом
+ * к кассе.
+ */
+export function notifyStrayPayment(order: Order, amount: number): void {
+  const text = [
+    `⚠️ <b>Оплата по отменённому заказу ${escape(order.number)}</b>`,
+    `Пришло ${formatPrice(amount)}. Заказ отменён, товары вернулись в каталог.`,
+    "Деньги нужно вернуть покупателю в личном кабинете ЮKassa.",
+  ].join("\n");
+
+  for (const role of ["orders", "payments"] as const) {
+    if (chatId(role)) safe(sendMessage(role, text), `оплата отменённого ${order.number}`);
+  }
+}

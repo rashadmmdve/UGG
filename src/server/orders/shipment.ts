@@ -9,6 +9,7 @@ import {
 } from "@/server/cdek/api";
 import { restoreStock } from "@/server/repositories/catalog";
 import { getOrderById, patchOrder } from "@/server/repositories/orders";
+import { getPaymentsByOrderId, updatePaymentStatus } from "@/server/repositories/payments";
 import type { Order, OrderStatus } from "@/lib/types";
 
 /**
@@ -127,7 +128,15 @@ export async function cancelShipment(orderId: string): Promise<CancelResult> {
     })),
   );
 
-  patchOrder(orderId, { status: "cancelled", cdek: null });
+  // Оплату тоже закрываем: заказ с выставленным счётом иначе остался бы
+  // «ожидает оплаты» навсегда. Оплаченный не трогаем — деньги настоящие,
+  // их нужно вернуть, и статус об этом напоминает.
+  const paymentStatus = order.paymentStatus === "paid" ? order.paymentStatus : "canceled";
+  for (const payment of getPaymentsByOrderId(orderId)) {
+    if (payment.status === "pending") updatePaymentStatus(payment.externalId, "canceled");
+  }
+
+  patchOrder(orderId, { status: "cancelled", paymentStatus, cdek: null });
   return { ok: true };
 }
 

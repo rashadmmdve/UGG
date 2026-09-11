@@ -13,7 +13,7 @@ import {
 import { isMailEnabled, sendMail } from "@/server/mail/mailer";
 import { orderMail } from "@/server/mail/templates";
 import { getOrderById, patchOrder } from "@/server/repositories/orders";
-import { notifyPaid } from "@/server/telegram/notify";
+import { notifyPaid, notifyStrayPayment } from "@/server/telegram/notify";
 import {
   createPayment,
   getPaymentByExternalId,
@@ -128,10 +128,23 @@ export function applyPayment(remote: YookassaPayment): Payment | null {
   if (!order) return payment;
 
   if (status === "paid" && order.paymentStatus !== "paid") {
+    const paidRub = Number(remote.amount?.value ?? 0);
+
+    // Отменённый заказ деньгами не воскрешает: товары уже вернулись в
+    // каталог, и продать их второй раз нельзя. Ссылку ЮKassa после
+    // отмены не погасить — она живёт около часа, — поэтому оплату
+    // принимаем как есть, но зовём людей вернуть её.
+    if (order.status === "cancelled") {
+      console.error(
+        `Платёж ${remote.id} на ${paidRub} ₽ пришёл по отменённому заказу ${order.number}`,
+      );
+      notifyStrayPayment(order, paidRub);
+      return payment;
+    }
+
     // Оплаченный заказ считается подтверждённым: менеджеру остаётся
     // только собрать его. Сумму сверяем — платёж на другую сумму
     // заказ не закрывает.
-    const paidRub = Number(remote.amount?.value ?? 0);
     if (Math.abs(paidRub - order.total) > 0.005) {
       console.error(
         `Платёж ${remote.id} на ${paidRub} ₽ не совпадает с суммой заказа ${order.number} (${order.total} ₽)`,
