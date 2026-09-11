@@ -39,8 +39,9 @@ export default function HomePage() {
       <h1 className={cn("text-3xl font-bold leading-tight md:text-5xl", onBanner && "text-white")}>
         {content.home.heroTitle}
       </h1>
+      {/* На телефоне подзаголовок не показываем: баннер и так тесный. */}
       {content.home.heroSubtitle && (
-        <p className={cn("mt-3 md:text-lg", onBanner ? "text-white/85" : "text-muted")}>
+        <p className={cn("mt-3 hidden md:block md:text-lg", onBanner ? "text-white/85" : "text-muted")}>
           {content.home.heroSubtitle}
         </p>
       )}
