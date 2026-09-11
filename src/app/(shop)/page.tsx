@@ -172,11 +172,14 @@ export default function HomePage() {
       </section>
 
       {/* Преимущества */}
-      <section className="container-page mt-10">
+      {/* Подложка во всю ширину экрана, как у героя; сами пункты остаются
+          на прежних местах — внутренний контейнер повторяет поля страницы
+          и те же px-4, что были у полосы. */}
+      <section className="mt-10 bg-sand py-5">
         {/* Пункты отцентрованы внутри своих колонок: при выравнивании по
             левому краю третий заканчивался на середине полосы, и справа
             оставалась пустота во весь экран. */}
-        <ul className="grid grid-cols-1 gap-4 rounded-xl border border-line bg-sand px-4 py-5 text-center text-sm sm:grid-cols-3">
+        <ul className="grid grid-cols-1 gap-4 px-8 text-center text-sm sm:grid-cols-3 md:px-12 xl:px-[4.5rem]">
           <li><span className="font-semibold">Доставка по России</span><span className="block text-xs text-muted">СДЭК: пункт выдачи или курьер до двери</span></li>
           <li><span className="font-semibold">Обмен и возврат 14 дней</span><span className="block text-xs text-muted">Если не подошёл размер — поменяем</span></li>
           <li><span className="font-semibold">Натуральная овчина</span><span className="block text-xs text-muted">Тепло в мороз, не потеет в оттепель</span></li>
