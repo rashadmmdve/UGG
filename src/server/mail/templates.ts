@@ -79,7 +79,14 @@ ${input.url}
   };
 }
 
-/** Подтверждение заказа покупателю. */
+/**
+ * Письмо о заказе покупателю.
+ *
+ * При оплате на сайте уходит не в момент оформления, а когда деньги
+ * получены — тогда в нём «оплачен» и нет кнопки оплаты. Письмо с кнопкой
+ * приходит только если оплата сорвалась или покупатель ушёл со страницы
+ * ЮKassa: письмо «ожидает оплаты» сразу после оплаты сбивало с толку.
+ */
 export function orderMail(order: Order, payUrl: string | null): Mail {
   const rows = order.items
     .map(
@@ -138,30 +145,11 @@ ${payUrl ? button(payUrl, "Оплатить заказ") : ""}
     `Личный кабинет: ${SITE_URL}/account`,
   ].join("\n");
 
-  return { to: order.customer.email, subject: `Заказ ${order.number} принят — UGG`, html, text };
-}
-
-/**
- * Оплата получена. Письмо о заказе уходит в момент оформления, до
- * оплаты, и честно пишет «ожидает оплаты» — покупатель, оплативший
- * следом, без этого письма решал бы, что деньги не дошли.
- */
-export function paidMail(order: Order): Mail {
-  const html = layout(
-    `Заказ ${order.number} оплачен`,
-    `<p style="margin:0 0 12px">${order.customer.name ? `${escape(order.customer.name)}, оплата` : "Оплата"} по заказу <strong>${order.number}</strong> получена — <strong>${formatPrice(order.total)}</strong>.</p>
-<p style="margin:0 0 12px">Соберём заказ и передадим в СДЭК. Когда посылка уйдёт, трек-номер появится в личном кабинете: <a href="${SITE_URL}/account" style="color:#555">${SITE_URL.replace(/^https?:\/\//, "")}/account</a></p>
-<p style="margin:0;color:#555">Чек за покупку придёт отдельным письмом от ЮKassa.</p>`,
-  );
-
-  const text = [
-    `Оплата по заказу ${order.number} получена — ${formatPrice(order.total)}.`,
-    "",
-    "Соберём заказ и передадим в СДЭК. Трек-номер появится в личном кабинете:",
-    `${SITE_URL}/account`,
-    "",
-    "Чек за покупку придёт отдельным письмом от ЮKassa.",
-  ].join("\n");
-
-  return { to: order.customer.email, subject: `Заказ ${order.number} оплачен — UGG`, html, text };
+  const paid = order.paymentMethod === "online" && order.paymentStatus === "paid";
+  return {
+    to: order.customer.email,
+    subject: `Заказ ${order.number} ${paid ? "оплачен" : "принят"} — UGG`,
+    html,
+    text,
+  };
 }

@@ -10,7 +10,7 @@ import {
 import { decreaseStock, getProductById } from "@/server/repositories/catalog";
 import { isMailEnabled, sendMail } from "@/server/mail/mailer";
 import { orderMail } from "@/server/mail/templates";
-import { startPayment } from "@/server/payments/flow";
+import { paymentReturnUrl, startPayment } from "@/server/payments/flow";
 import { isYookassaEnabled } from "@/server/payments/yookassa";
 import { createOrder, getOrderById, patchOrder } from "@/server/repositories/orders";
 import {
@@ -254,10 +254,17 @@ export async function submitOrder(input: unknown): Promise<CheckoutResult> {
 
   // Письмо покупателю — не критично: заказ уже есть, а сбой почты не
   // должен показывать покупателю ошибку оформления.
-  if (isMailEnabled()) {
+  //
+  // При оплате на сайте письмо здесь не уходит: покупатель сейчас на
+  // странице ЮKassa и через минуту получит «оплачен» (см. applyPayment).
+  // Письмо «ожидает оплаты» с кнопкой придёт, только если оплата
+  // сорвётся. Исключение — ЮKassa не ответила и платёж не создан: тогда
+  // пишем сразу, чтобы покупатель знал, что заказ есть и его можно
+  // оплатить из кабинета.
+  if (isMailEnabled() && (data.paymentMethod !== "online" || !paymentUrl)) {
     const fresh = getOrderById(order.id) ?? order;
-    sendMail(orderMail(fresh, paymentUrl)).catch((error) =>
-      console.error(`Не удалось отправить письмо о заказе ${order.number}:`, error),
+    sendMail(orderMail(fresh, paymentUrl ?? (data.paymentMethod === "online" ? paymentReturnUrl(order) : null))).catch(
+      (error) => console.error(`Не удалось отправить письмо о заказе ${order.number}:`, error),
     );
   }
 

@@ -11,7 +11,7 @@ import {
   type YookassaPayment,
 } from "@/server/payments/yookassa";
 import { isMailEnabled, sendMail } from "@/server/mail/mailer";
-import { paidMail } from "@/server/mail/templates";
+import { orderMail } from "@/server/mail/templates";
 import { getOrderById, patchOrder } from "@/server/repositories/orders";
 import {
   createPayment,
@@ -105,6 +105,16 @@ export async function startPayment(order: Order): Promise<StartPaymentResult> {
  * Неизвестный платёж игнорируется — мы принимаем только те, что заводили
  * сами, а не всё, что пришло на вебхук.
  */
+/** Письмо о заказе по свежему состоянию из базы; сбой почты не критичен. */
+function mailOrder(orderId: string, payUrl: string | null): void {
+  if (!isMailEnabled()) return;
+  const order = getOrderById(orderId);
+  if (!order) return;
+  sendMail(orderMail(order, payUrl)).catch((error) =>
+    console.error(`Не удалось отправить письмо о заказе ${order.number}:`, error),
+  );
+}
+
 export function applyPayment(remote: YookassaPayment): Payment | null {
   const existing = getPaymentByExternalId(remote.id);
   if (!existing) return null;
@@ -133,20 +143,20 @@ export function applyPayment(remote: YookassaPayment): Payment | null {
     });
     // Сюда приходят и вебхук, и сверка со страницы «заказ оформлен»,
     // но переход в «оплачен» случается один раз — письмо тоже одно.
-    if (isMailEnabled()) {
-      const paid = getOrderById(order.id);
-      if (paid) {
-        sendMail(paidMail(paid)).catch((error) =>
-          console.error(`Не удалось отправить письмо об оплате ${order.number}:`, error),
-        );
-      }
-    }
+    // Это первое письмо о заказе: при оформлении оно не отправлялось.
+    mailOrder(order.id, null);
   } else if (status === "canceled" && order.paymentStatus === "pending") {
     // Попытка не удалась — заказ снова «не оплачен», и его можно оплатить заново.
     const stillPending = getPaymentsByOrderId(order.id).some(
       (p) => p.status === "pending" && p.externalId !== remote.id,
     );
-    if (!stillPending) patchOrder(order.id, { paymentStatus: "unpaid" });
+    if (!stillPending) {
+      patchOrder(order.id, { paymentStatus: "unpaid" });
+      // Первое письмо о заказе — с кнопкой оплаты: покупатель ушёл со
+      // страницы ЮKassa или оплата не прошла. Ссылка ведёт на страницу
+      // заказа на сайте, а не на старую форму — та уже погашена.
+      mailOrder(order.id, paymentReturnUrl(order));
+    }
   }
 
   return payment;
