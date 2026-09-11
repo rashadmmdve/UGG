@@ -80,6 +80,19 @@ export function Header({ menu }: { menu: MenuSection[] }) {
       <div className="container-page relative flex h-16 items-center gap-6">
         <BurgerButton open={drawerOpen} onClick={() => setDrawerOpen((v) => !v)} />
 
+        {/* Вход в админку стоит слева, у бургера: справа значки покупателя,
+            и хозяйская кнопка среди них читается как ещё один из них. */}
+        {isAdmin && (
+          <Link
+            href="/admin"
+            aria-label="Админ-панель"
+            title="Админ-панель"
+            className="-ml-1 flex h-10 w-9 items-center justify-center transition-colors hover:text-accent lg:-ml-2 lg:w-10"
+          >
+            <LayoutDashboard className="h-5 w-5" strokeWidth={1.6} />
+          </Link>
+        )}
+
         <div className="absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0">
           <Logo width={88} eager />
         </div>
@@ -133,16 +146,6 @@ export function Header({ menu }: { menu: MenuSection[] }) {
           18 px от края, что и полоски бургера (поле 16 − 6 + 8 внутри ячейки).
         */}
         <div className="-mr-1.5 ml-auto flex items-center gap-1 lg:mr-0">
-          {isAdmin && (
-            <Link
-              href="/admin"
-              aria-label="Админ-панель"
-              title="Админ-панель"
-              className="flex h-10 w-9 items-center justify-center transition-colors hover:text-accent lg:w-10"
-            >
-              <LayoutDashboard className="h-5 w-5" strokeWidth={1.6} />
-            </Link>
-          )}
           <Link
             href="/favorites"
             aria-label={`Избранное${favoritesCount ? `, ${favoritesCount}` : ""}`}
