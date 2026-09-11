@@ -27,6 +27,22 @@ export default function HomePage() {
   const arrivals = getNewArrivals(8);
 
   const tiles = homeTiles();
+  const hasBanner = content.home.heroImages.length > 0;
+
+  // Заголовок, подзаголовок и кнопка героя: на телефоне с баннером
+  // они рисуются под фото, на широком экране — поверх. Один узел на
+  // оба места, чтобы тексты не разъехались.
+  const heroText = (
+    <>
+      <h1 className="text-3xl font-bold leading-tight md:text-5xl">{content.home.heroTitle}</h1>
+      {content.home.heroSubtitle && (
+        <p className="mt-3 text-muted md:text-lg">{content.home.heroSubtitle}</p>
+      )}
+      <Link href="/catalog/zhenskie" className="mt-6 inline-flex h-12 items-center rounded-md bg-accent px-6 text-sm font-semibold text-white hover:bg-accent-hover">
+        Смотреть коллекцию
+      </Link>
+    </>
+  );
 
   return (
     <>
@@ -34,9 +50,23 @@ export default function HomePage() {
 
       {/* Герой во всю ширину */}
       <section className="container-page pt-6">
-        <div className="relative flex min-h-[440px] flex-col justify-end overflow-hidden rounded-xl bg-sand p-8 md:min-h-[620px] md:p-12">
-          {/* Фото вписывается целиком и центрируется — см. пояснение в ProductCard. */}
-          {content.home.heroImages.length > 0 ? (
+        {/*
+          С баннером блок держит ровно 2:1 — тот формат, который обещает
+          админка: кадр 2:1 заполняет его без полей по бокам, а другой
+          вписывается целиком по центру, не обрезаясь (см. ProductCard).
+          На телефоне такой блок низкий, и заголовок с кнопкой уходят под
+          него; поверх фото они ложатся только с планшета. Без баннера —
+          прежняя подложка с логотипом и фиксированной высотой.
+        */}
+        <div
+          className={cn(
+            "relative overflow-hidden rounded-xl bg-sand",
+            hasBanner
+              ? "aspect-[2/1]"
+              : "flex min-h-[440px] flex-col justify-end p-8 md:min-h-[620px] md:p-12",
+          )}
+        >
+          {hasBanner ? (
             <HeroCarousel images={content.home.heroImages} rotate={content.home.heroRotate} />
           ) : (
             // Подложка занимает весь герой и оказывается самым крупным
@@ -46,16 +76,16 @@ export default function HomePage() {
               <Logo width={1000} href={null} eager />
             </div>
           )}
-          <div className="relative max-w-xl">
-            <h1 className="text-3xl font-bold leading-tight md:text-5xl">{content.home.heroTitle}</h1>
-            {content.home.heroSubtitle && (
-              <p className="mt-3 text-muted md:text-lg">{content.home.heroSubtitle}</p>
+          <div
+            className={cn(
+              "relative max-w-xl",
+              hasBanner && "hidden md:absolute md:bottom-12 md:left-12 md:block",
             )}
-            <Link href="/catalog/zhenskie" className="mt-6 inline-flex h-12 items-center rounded-md bg-accent px-6 text-sm font-semibold text-white hover:bg-accent-hover">
-              Смотреть коллекцию
-            </Link>
+          >
+            {heroText}
           </div>
         </div>
+        {hasBanner && <div className="mt-6 max-w-xl md:hidden">{heroText}</div>}
 
         {/* Разделы — рядом под героем */}
         {/* Сетка всегда на четыре колонки: без распродажи четвёртое место
