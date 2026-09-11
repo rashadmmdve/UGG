@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { assertAdmin } from "@/server/admin/guard";
 import { completeOrder } from "@/server/orders/lifecycle";
+import { restoreOrder } from "@/server/orders/restore";
 import { selfDelivery } from "@/server/orders/self-delivery";
 import {
   cancelShipment,
@@ -17,7 +18,7 @@ import {
   updateOrderPaymentStatus,
   updateOrderStatus,
 } from "@/server/repositories/orders";
-import { notifyCancelled, notifyDelivery } from "@/server/telegram/notify";
+import { notifyCancelled, notifyDelivery, notifyRestored } from "@/server/telegram/notify";
 import { revalidateProduct } from "@/server/seo/revalidate";
 import { orderStatusSchema } from "@/server/validation/schemas";
 import type { Order, PaymentStatus } from "@/lib/types";
@@ -108,6 +109,27 @@ export async function registerShipmentAction(
   const result = await registerShipment(orderId);
   if (!result.ok) return result;
 
+  refreshOrderPages(orderId);
+  return { ok: true };
+}
+
+/**
+ * Вернуть отменённый заказ в работу.
+ *
+ * Только из админки и с подтверждением: отмена вернула товары в каталог,
+ * и восстановление снова их списывает — если их успели раскупить,
+ * действие честно откажет.
+ */
+export async function restoreOrderAction(
+  orderId: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!(await assertAdmin())) return { ok: false, error: "Нет доступа" };
+
+  const result = restoreOrder(orderId);
+  if (!result.ok) return result;
+
+  revalidateOrderProducts(result.order);
+  notifyRestored(result.order, "админка");
   refreshOrderPages(orderId);
   return { ok: true };
 }

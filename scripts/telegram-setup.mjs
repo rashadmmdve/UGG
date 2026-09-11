@@ -5,6 +5,8 @@
  *     боты уже состоят: их id нужно вписать в .env.local
  *   node scripts/telegram-setup.mjs webhook  — подписать ботов на нажатия
  *     кнопок; адрес и секрет берутся из окружения
+ *   node scripts/telegram-setup.mjs pin      — закрепить в группе доставки
+ *     сообщение с кнопкой «Меню»
  *   node scripts/telegram-setup.mjs check    — что сейчас настроено
  *
  * Идентификаторы групп руками искать не нужно: добавьте бота в группу и
@@ -95,6 +97,31 @@ if (command === "chats") {
       commands: item.role === "delivery" ? [{ command: "menu", description: "Меню" }] : [],
     });
     console.log(`${item.title}: ${url}`);
+  }
+} else if (command === "pin") {
+  // Кнопка меню в шапке группы: закреплённое сообщение с inline-кнопкой.
+  // Нажатие не пишет ничего в чат и работает при включённой приватности.
+  const item = configured.find((role) => role.role === "delivery");
+  const chat = item && process.env[item.chat];
+  if (!item || !chat) {
+    console.error("Нужны TELEGRAM_BOT_DELIVERY и TELEGRAM_CHAT_DELIVERY");
+    process.exit(1);
+  }
+  const sent = await api(process.env[item.token], "sendMessage", {
+    chat_id: chat,
+    text: "Меню курьера — заказы, вручение, запрос QR.",
+    reply_markup: { inline_keyboard: [[{ text: "📋 Меню", callback_data: "open" }]] },
+  });
+  try {
+    await api(process.env[item.token], "pinChatMessage", {
+      chat_id: chat,
+      message_id: sent.message_id,
+      disable_notification: true,
+    });
+    console.log("Сообщение с кнопкой отправлено и закреплено");
+  } catch (error) {
+    console.log(`Сообщение отправлено, но закрепить не вышло: ${error.message}`);
+    console.log("Сделайте бота администратором группы с правом закреплять сообщения и повторите.");
   }
 } else if (command === "unhook") {
   for (const item of configured) {

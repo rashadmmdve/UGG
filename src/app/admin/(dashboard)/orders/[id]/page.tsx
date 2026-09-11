@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { RestoreOrderButton } from "@/components/admin/RestoreOrderButton";
 import { ShipmentPanel } from "@/components/admin/ShipmentPanel";
 import { SubmitButton } from "@/components/admin/ui";
 import { ORDER_STATUS_LABELS, PAYMENT_STATUS_LABELS } from "@/lib/constants";
@@ -193,9 +194,12 @@ export default async function AdminOrderPage(props: PageProps<"/admin/orders/[id
           <section className="rounded-lg border border-line bg-bg p-5">
             <h2 className="font-semibold">Статус заказа</h2>
             {isCancelled ? (
-              <p className="mt-3 text-sm text-muted">
-                Заказ отменён: остатки возвращены в каталог, обратно не переводится.
-              </p>
+              <>
+                <p className="mt-3 text-sm text-muted">
+                  Заказ отменён: остатки возвращены в каталог.
+                </p>
+                <RestoreOrderButton orderId={order.id} orderNumber={order.number} />
+              </>
             ) : (
               <form action={updateOrderStatusAction} className="mt-3 flex gap-2">
                 <input type="hidden" name="id" value={order.id} />

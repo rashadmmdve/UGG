@@ -48,7 +48,7 @@ import { notifyCancelled, notifyDelivery, notifyPayments } from "@/server/telegr
  */
 
 const ACTIONS: Record<ChatRole, string[]> = {
-  delivery: ["menu", "list", "show", "done", "cancel", "askqr"],
+  delivery: ["open", "menu", "list", "show", "done", "cancel", "askqr"],
   payments: ["qr"],
   orders: ["self"],
 };
@@ -152,6 +152,15 @@ export async function POST(
     : (callback.from?.first_name ?? "кто-то");
 
   try {
+    // Кнопка из закреплённого сообщения: его переписывать нельзя, оно
+    // висит в шапке группы, — поэтому меню открывается новым сообщением.
+    if (action === "open") {
+      const menu = rootMenu();
+      await sendMessage(role, menu.text, menu.buttons);
+      await answerCallback(role, callback.id, "");
+      return ok();
+    }
+
     // Меню и список ничего не меняют — просто переписывают сообщение.
     if (action === "menu" || action === "list") {
       const card = action === "menu" ? rootMenu() : orderList();

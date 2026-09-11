@@ -3,6 +3,7 @@ import "server-only";
 import { isSelfDelivery } from "@/lib/delivery";
 import { paymentLabel } from "@/lib/payment-kind";
 import { formatPrice } from "@/lib/utils";
+import { getPaymentsByOrderId } from "@/server/repositories/payments";
 import { chatId, sendMessage, type InlineButton } from "@/server/telegram/client";
 import {
   adminLink,
@@ -93,11 +94,26 @@ export function notifyPaid(order: Order): void {
   }
 }
 
-/** Отмена — то же самое, но с причиной, если её знают. */
+/**
+ * Отмена заказа.
+ *
+ * В оплату уходит всегда, даже если счёт по заказу не выставляли: там
+ * сидят те, кто может получить деньги по старой ссылке. Если счёт всё же
+ * выставлен, предупреждаем отдельно — ссылку ЮKassa досрочно не погасить,
+ * она живёт около часа, и покупатель ещё может по ней заплатить.
+ */
 export function notifyCancelled(order: Order, by: string): void {
   const text = `✖️ <b>Заказ ${escape(order.number)}</b> отменён (${escape(by)})`;
+  const issued = getPaymentsByOrderId(order.id).some((payment) => payment.confirmationUrl);
+
   safe(sendMessage("orders", text), `отмена ${order.number}`);
   if (isSelfDelivery(order.delivery)) safe(sendMessage("delivery", text), `отмена ${order.number}`);
+
+  const forPayments = issued
+    ? `${text}
+⚠️ По заказу выставляли счёт: ссылка может ещё работать около часа. Если деньги придут — их нужно вернуть.`
+    : text;
+  safe(sendMessage("payments", forPayments), `отмена ${order.number}`);
 }
 
 /**
@@ -118,5 +134,15 @@ export function notifyStrayPayment(order: Order, amount: number): void {
 
   for (const role of ["orders", "payments"] as const) {
     if (chatId(role)) safe(sendMessage(role, text), `оплата отменённого ${order.number}`);
+  }
+}
+
+/** Заказ вернули в работу из отменённых. */
+export function notifyRestored(order: Order, by: string): void {
+  const text = `↩️ <b>Заказ ${escape(order.number)}</b> восстановлен (${escape(by)})`;
+  safe(sendMessage("orders", text), `восстановление ${order.number}`);
+  if (isSelfDelivery(order.delivery)) {
+    const card = deliveryCard(order);
+    safe(sendMessage("delivery", card.text, card.buttons), `восстановление ${order.number}`);
   }
 }
