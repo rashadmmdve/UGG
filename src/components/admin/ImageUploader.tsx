@@ -26,12 +26,14 @@ type UploadResponse = {
  * витрине, поэтому ещё до сохранения видно, подошёл ли кадр или
  * останется с полями по бокам.
  */
-export type UploaderAspect = "square" | "wide" | "tall";
+export type UploaderAspect = "square" | "wide" | "tall" | "portrait";
 
 const CELL: Record<UploaderAspect, { box: string; sizes: string }> = {
   square: { box: "h-28 w-28", sizes: "112px" },
   wide: { box: "h-28 w-56", sizes: "224px" },
   tall: { box: "h-28 w-21", sizes: "84px" },
+  /** 4:5 — баннер для телефона. */
+  portrait: { box: "h-28 w-[5.6rem]", sizes: "90px" },
 };
 
 export function ImageUploader({

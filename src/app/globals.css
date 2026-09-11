@@ -189,3 +189,15 @@
 html {
   overflow-x: clip;
 }
+
+/* Поля ввода на телефоне — 16px. При меньшем кегле iOS Safari и Samsung
+   Internet приближают страницу при фокусе, и вёрстка «уезжает» по ширине
+   (страница оформления заказа). Правило вне слоёв: иначе утилита text-sm
+   на самом поле его перебьёт. */
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}

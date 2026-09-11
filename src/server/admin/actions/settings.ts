@@ -76,6 +76,7 @@ export async function saveContentAction(
   if (Object.keys(fieldErrors).length > 0) return { fieldErrors };
 
   const heroImages = jsonField<string[]>(formData, "heroImages", []).filter(Boolean);
+  const heroMobileImages = jsonField<string[]>(formData, "heroMobileImages", []).filter(Boolean);
   const current = getContent();
 
   const content: SiteContent = {
@@ -83,6 +84,7 @@ export async function saveContentAction(
       heroTitle: text(formData, "heroTitle") || current.home.heroTitle,
       heroSubtitle: text(formData, "heroSubtitle"),
       heroImages,
+      heroMobileImages,
       heroRotate: formData.get("heroRotate") === "on",
     },
     sectionImages: Object.fromEntries(

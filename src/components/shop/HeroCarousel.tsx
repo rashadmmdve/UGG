@@ -20,7 +20,21 @@ const INTERVAL_MS = 6000;
  * При включённом в системе «уменьшении движения» автопрокрутка не
  * запускается: листать можно точками.
  */
-export function HeroCarousel({ images, rotate }: { images: string[]; rotate: boolean }) {
+/**
+ * @param sizes Подсказка браузеру о ширине картинки. Главная держит две
+ * карусели — для телефона и для широкого экрана — и прячет одну из них
+ * CSS; скрытой через sizes достаётся самая маленькая версия, чтобы не
+ * качать зря второй баннер.
+ */
+export function HeroCarousel({
+  images,
+  rotate,
+  sizes = "100vw",
+}: {
+  images: string[];
+  rotate: boolean;
+  sizes?: string;
+}) {
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
@@ -39,7 +53,7 @@ export function HeroCarousel({ images, rotate }: { images: string[]; rotate: boo
           src={src}
           alt=""
           fill
-          sizes="100vw"
+          sizes={sizes}
           className={cn(
             "object-contain transition-opacity duration-700",
             i === index ? "opacity-100" : "opacity-0",

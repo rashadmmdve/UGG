@@ -17,6 +17,7 @@ export function ContentForm({ content }: { content: SiteContent }) {
   const errors = state.fieldErrors ?? {};
 
   const [hero, setHero] = useState<string[]>(content.home.heroImages);
+  const [heroMobile, setHeroMobile] = useState<string[]>(content.home.heroMobileImages);
   const [sectionImages, setSectionImages] = useState<Record<string, string>>(() =>
     Object.fromEntries(
       CATALOG_TILES.map((section) => [section.slug, content.sectionImages?.[section.slug] ?? ""]),
@@ -33,6 +34,7 @@ export function ContentForm({ content }: { content: SiteContent }) {
   return (
     <form action={action} className="space-y-8" noValidate>
       <input type="hidden" name="heroImages" value={JSON.stringify(hero)} />
+      <input type="hidden" name="heroMobileImages" value={JSON.stringify(heroMobile)} />
       {CATALOG_TILES.map((section) => (
         <input
           key={section.slug}
@@ -68,7 +70,20 @@ export function ContentForm({ content }: { content: SiteContent }) {
             <div className="mt-2">
               <ImageUploader value={hero} onChange={setHero} aspect="wide" />
             </div>
-            {hero.length > 1 && (
+          </div>
+
+          <div>
+            <p className="text-xs font-medium text-muted">Баннеры для телефона</p>
+            <p className="mt-1 text-xs text-muted">
+              Вертикальные, 4:5 — например 1200×1500. Показываются только на
+              телефоне, заголовок и кнопка ложатся поверх фото, поэтому низ
+              кадра лучше оставить спокойным. Без них на телефоне идёт обычный
+              баннер, а текст — под ним.
+            </p>
+            <div className="mt-2">
+              <ImageUploader value={heroMobile} onChange={setHeroMobile} aspect="portrait" />
+            </div>
+            {(hero.length > 1 || heroMobile.length > 1) && (
               <div className="mt-3">
                 <ACheckbox id="heroRotate" name="heroRotate" label="Листать баннеры автоматически"
                   defaultChecked={content.home.heroRotate} />

@@ -85,6 +85,12 @@ export type SiteContent = {
     heroSubtitle: string;
     /** Баннеры в шапке главной. Пусто — под текстом лежит бледный логотип. */
     heroImages: string[];
+    /**
+     * Баннеры для телефона, вертикальные. Горизонтальный кадр на узком
+     * экране слишком низкий, чтобы уместить на нём заголовок и кнопку;
+     * пусто — на телефоне показывается обычный баннер, а текст под ним.
+     */
+    heroMobileImages: string[];
     /** Листать баннеры автоматически. При одном баннере ни на что не влияет. */
     heroRotate: boolean;
   };
@@ -128,6 +134,7 @@ const DEFAULT_CONTENT: SiteContent = {
     heroTitle: "Новая зимняя коллекция",
     heroSubtitle: "Женские, мужские и детские модели с доставкой по России",
     heroImages: [],
+    heroMobileImages: [],
     heroRotate: true,
   },
   sectionImages: {},

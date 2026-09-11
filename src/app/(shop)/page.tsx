@@ -28,6 +28,7 @@ export default function HomePage() {
 
   const tiles = homeTiles();
   const hasBanner = content.home.heroImages.length > 0;
+  const hasMobileBanner = content.home.heroMobileImages.length > 0;
 
   // Заголовок, подзаголовок и кнопка героя: на телефоне с баннером
   // они рисуются под фото, на широком экране — поверх. Одна функция на
@@ -49,48 +50,76 @@ export default function HomePage() {
     </>
   );
 
+  // Без баннера: бледный логотип на подложке и обычный текст. Подложка
+  // занимает весь герой и оказывается самым крупным элементом первого
+  // экрана — грузим её сразу, иначе она портит LCP.
+  const heroPlaceholder = (
+    <div className="relative flex min-h-[440px] flex-col justify-end overflow-hidden rounded-b-xl bg-sand p-8 md:min-h-[620px] md:p-12">
+      <div className="absolute inset-0 flex items-center justify-center opacity-[0.07]">
+        <Logo width={1000} href={null} eager />
+      </div>
+      <div className="relative max-w-xl">{heroText(false)}</div>
+    </div>
+  );
+
   return (
     <>
       {content.faq.length > 0 && <JsonLd data={faqLd(content.faq)} />}
 
-      {/* Герой во всю ширину */}
+      {/*
+        Герой. Телефон и широкий экран — два разных блока, виден один.
+        На широком экране блок 2:1 под горизонтальный баннер, текст поверх.
+        На телефоне 2:1 слишком низкий, чтобы уместить заголовок с кнопкой,
+        поэтому там свой вертикальный кадр 4:5 с текстом поверх; если его
+        не загрузили — обычный баннер и текст под ним. Кадр вписывается
+        целиком и не обрезается (см. ProductCard). Скрытой карусели через
+        sizes достаётся самая маленькая версия картинки.
+      */}
       <section className="container-page">
-        {/*
-          С баннером блок держит ровно 2:1 — тот формат, который обещает
-          админка: кадр 2:1 заполняет его без полей по бокам, а другой
-          вписывается целиком по центру, не обрезаясь (см. ProductCard).
-          На телефоне такой блок низкий, и заголовок с кнопкой уходят под
-          него; поверх фото они ложатся только с планшета. Без баннера —
-          прежняя подложка с логотипом и фиксированной высотой.
-        */}
-        <div
-          className={cn(
-            "relative overflow-hidden rounded-b-xl bg-sand",
-            hasBanner
-              ? "aspect-[2/1]"
-              : "flex min-h-[440px] flex-col justify-end p-8 md:min-h-[620px] md:p-12",
-          )}
-        >
-          {hasBanner ? (
-            <HeroCarousel images={content.home.heroImages} rotate={content.home.heroRotate} />
-          ) : (
-            // Подложка занимает весь герой и оказывается самым крупным
-            // элементом первого экрана — грузим её сразу, иначе она
-            // портит LCP, а он учитывается в оценке скорости.
-            <div className="absolute inset-0 flex items-center justify-center opacity-[0.07]">
-              <Logo width={1000} href={null} eager />
+        {/* Телефон */}
+        <div className="md:hidden">
+          {hasMobileBanner ? (
+            <div className="relative aspect-[4/5] overflow-hidden rounded-b-xl bg-sand">
+              <HeroCarousel
+                images={content.home.heroMobileImages}
+                rotate={content.home.heroRotate}
+                sizes="(min-width: 768px) 16px, 100vw"
+              />
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 via-black/25 to-transparent px-6 pb-8 pt-20">
+                {heroText(true)}
+              </div>
             </div>
+          ) : hasBanner ? (
+            <>
+              <div className="relative aspect-[2/1] overflow-hidden rounded-b-xl bg-sand">
+                <HeroCarousel
+                  images={content.home.heroImages}
+                  rotate={content.home.heroRotate}
+                  sizes="(min-width: 768px) 16px, 100vw"
+                />
+              </div>
+              <div className="mt-6 max-w-xl">{heroText(false)}</div>
+            </>
+          ) : (
+            heroPlaceholder
           )}
-          <div
-            className={cn(
-              "relative max-w-xl",
-              hasBanner && "hidden md:absolute md:bottom-12 md:left-12 md:block",
-            )}
-          >
-            {heroText(hasBanner)}
-          </div>
         </div>
-        {hasBanner && <div className="mt-6 max-w-xl md:hidden">{heroText(false)}</div>}
+
+        {/* Широкий экран */}
+        <div className="hidden md:block">
+          {hasBanner ? (
+            <div className="relative aspect-[2/1] overflow-hidden rounded-b-xl bg-sand">
+              <HeroCarousel
+                images={content.home.heroImages}
+                rotate={content.home.heroRotate}
+                sizes="(max-width: 767px) 16px, 100vw"
+              />
+              <div className="absolute bottom-12 left-12 max-w-xl">{heroText(true)}</div>
+            </div>
+          ) : (
+            heroPlaceholder
+          )}
+        </div>
 
         {/* Разделы — рядом под героем */}
         {/* Сетка всегда на четыре колонки: без распродажи четвёртое место
