@@ -126,10 +126,11 @@ export function Header({ menu }: { menu: MenuSection[] }) {
 
         {/*
           На телефоне иконки стоят плотнее: ячейки 36 px без зазора, значки
-          в них — через 16 px. Сдвиг за поле на 10 px оставляет крайний
-          значок на тех же 18 px от края, что и полоски бургера.
+          в них — через 16 px. Сдвиг за поле на 6 px оставляет крайний
+          значок на тех же 18 px от края, что и полоски бургера
+          (поле 16 − 6 + 8 внутри ячейки).
         */}
-        <div className="-mr-2.5 ml-auto flex items-center gap-0 lg:mr-0 lg:gap-1">
+        <div className="-mr-1.5 ml-auto flex items-center gap-0 lg:mr-0 lg:gap-1">
           <Link
             href="/favorites"
             aria-label={`Избранное${favoritesCount ? `, ${favoritesCount}` : ""}`}
