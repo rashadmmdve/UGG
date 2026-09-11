@@ -10,6 +10,7 @@ import {
 import { decreaseStock, getProductById } from "@/server/repositories/catalog";
 import { isMailEnabled, sendMail } from "@/server/mail/mailer";
 import { isSelfDelivery } from "@/lib/delivery";
+import { notifyNewOrder } from "@/server/telegram/notify";
 import { orderMail } from "@/server/mail/templates";
 import { paymentReturnUrl, startPayment } from "@/server/payments/flow";
 import { isYookassaEnabled } from "@/server/payments/yookassa";
@@ -278,6 +279,10 @@ export async function submitOrder(input: unknown): Promise<CheckoutResult> {
       (error) => console.error(`Не удалось отправить письмо о заказе ${order.number}:`, error),
     );
   }
+
+  // Уведомления в группы — последним делом: заказ уже создан, и сбой
+  // Телеграма на оформление не влияет.
+  notifyNewOrder(getOrderById(order.id) ?? order);
 
   return { ok: true, orderId: order.id, orderNumber: order.number, paymentUrl };
 }

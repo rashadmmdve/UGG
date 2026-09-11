@@ -2,13 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 
-import { isSelfDelivery } from "@/lib/delivery";
 import { assertAdmin } from "@/server/admin/guard";
-import { deleteCdekOrder } from "@/server/cdek/api";
-import { isMailEnabled, sendMail } from "@/server/mail/mailer";
-import { deliveryChangedMail } from "@/server/mail/templates";
+import { completeOrder } from "@/server/orders/lifecycle";
+import { selfDelivery } from "@/server/orders/self-delivery";
 import {
-  canCancel,
   cancelShipment,
   registerShipment,
   syncShipment,
@@ -17,11 +14,10 @@ import {
 import { getProductById } from "@/server/repositories/catalog";
 import {
   getOrderById,
-  patchOrder,
-  setSelfDelivery,
   updateOrderPaymentStatus,
   updateOrderStatus,
 } from "@/server/repositories/orders";
+import { notifyCancelled, notifyDelivery } from "@/server/telegram/notify";
 import { revalidateProduct } from "@/server/seo/revalidate";
 import { orderStatusSchema } from "@/server/validation/schemas";
 import type { Order, PaymentStatus } from "@/lib/types";
@@ -67,20 +63,10 @@ export async function updateOrderStatusAction(formData: FormData): Promise<void>
   const order = getOrderById(id);
   if (!order || order.status === "cancelled") return;
 
-  updateOrderStatus(id, parsed.data);
-
-  // Заказ «при получении» оплачивается в момент вручения: наш курьер
-  // берёт наличные, курьер СДЭК — наложенный платёж. Поэтому отметка
-  // «выполнен» и есть отметка об оплате; ставить её отдельно менеджеру
-  // незачем, а забыть — легко. Если денег всё же не взяли, статус
-  // оплаты можно вернуть селектом рядом.
-  if (
-    parsed.data === "completed" &&
-    order.paymentMethod === "on_delivery" &&
-    order.paymentStatus !== "paid"
-  ) {
-    patchOrder(id, { paymentStatus: "paid" });
-  }
+  // «Выполнен» — это вручение, а вручение закрывает оплату при
+  // получении: см. completeOrder, им же пользуется кнопка у курьеров.
+  if (parsed.data === "completed") completeOrder(id);
+  else updateOrderStatus(id, parsed.data);
 
   refreshOrderPages(id);
 }
@@ -102,10 +88,13 @@ export async function updatePaymentStatusAction(formData: FormData): Promise<voi
 export async function cancelOrderAction(orderId: string): Promise<CancelResult> {
   if (!(await assertAdmin())) return { ok: false, error: "Нет доступа" };
 
+  const order = getOrderById(orderId);
   const result = await cancelShipment(orderId);
   if (result.ok) {
-    const order = getOrderById(orderId);
-    if (order) revalidateOrderProducts(order);
+    if (order) {
+      revalidateOrderProducts(order);
+      notifyCancelled(order, "админка");
+    }
     refreshOrderPages(orderId);
   }
   return result;
@@ -123,54 +112,16 @@ export async function registerShipmentAction(
   return { ok: true };
 }
 
-/**
- * Взять доставку на себя.
- *
- * Для городов рядом со своим складом дешевле отвезти самим, чем платить
- * СДЭК. Отправление при этом удаляется, доставка из заказа уходит, а
- * сумма уменьшается — при наложенном платеже покупатель отдаст курьеру
- * меньше, чем ожидал, поэтому ему сразу уходит письмо.
- *
- * Оплаченный картой заказ так переключать нельзя: деньги за доставку уже
- * взяты, и их пришлось бы возвращать через ЮKassa.
- */
+/** Взять доставку на себя — то же делает кнопка в группе Телеграма. */
 export async function selfDeliveryAction(
   orderId: string,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   if (!(await assertAdmin())) return { ok: false, error: "Нет доступа" };
 
-  const order = getOrderById(orderId);
-  if (!order) return { ok: false, error: "Заказ не найден" };
-  if (order.status === "cancelled") return { ok: false, error: "Заказ отменён" };
-  if (isSelfDelivery(order.delivery)) {
-    return { ok: false, error: "Этот заказ и так везём сами" };
-  }
-  if (order.paymentStatus === "paid") {
-    return {
-      ok: false,
-      error: "Заказ оплачен — доставка уже в платеже. Сначала верните её стоимость в ЮKassa.",
-    };
-  }
+  const result = await selfDelivery(orderId);
+  if (!result.ok) return result;
 
-  if (order.cdek) {
-    if (!canCancel(order)) {
-      return { ok: false, error: "Посылка уже принята в СДЭК — отменить её можно только через поддержку." };
-    }
-    if (!(await deleteCdekOrder(order.cdek.uuid))) {
-      return { ok: false, error: "СДЭК не дал удалить отправление. Попробуйте позже." };
-    }
-  }
-
-  const deliveryWas = order.deliveryPrice;
-  const updated = setSelfDelivery(orderId);
-  if (!updated) return { ok: false, error: "Не удалось сохранить заказ" };
-
-  if (isMailEnabled() && deliveryWas > 0) {
-    sendMail(deliveryChangedMail(updated, deliveryWas)).catch((error) =>
-      console.error(`Не удалось сообщить об изменении доставки ${updated.number}:`, error),
-    );
-  }
-
+  notifyDelivery(result.order);
   refreshOrderPages(orderId);
   return { ok: true };
 }

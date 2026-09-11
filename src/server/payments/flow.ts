@@ -13,6 +13,7 @@ import {
 import { isMailEnabled, sendMail } from "@/server/mail/mailer";
 import { orderMail } from "@/server/mail/templates";
 import { getOrderById, patchOrder } from "@/server/repositories/orders";
+import { notifyPaid } from "@/server/telegram/notify";
 import {
   createPayment,
   getPaymentByExternalId,
@@ -149,6 +150,9 @@ export function applyPayment(remote: YookassaPayment): Payment | null {
     // но переход в «оплачен» случается один раз — письмо тоже одно.
     // Это первое письмо о заказе: при оформлении оно не отправлялось.
     mailOrder(order.id, null);
+
+    const paid = getOrderById(order.id);
+    if (paid) notifyPaid(paid);
   } else if (status === "canceled" && order.paymentStatus === "pending") {
     // Попытка не удалась — заказ снова «не оплачен», и его можно оплатить заново.
     const stillPending = getPaymentsByOrderId(order.id).some(
