@@ -10,6 +10,8 @@ import {
   toPaymentStatus,
   type YookassaPayment,
 } from "@/server/payments/yookassa";
+import { isMailEnabled, sendMail } from "@/server/mail/mailer";
+import { paidMail } from "@/server/mail/templates";
 import { getOrderById, patchOrder } from "@/server/repositories/orders";
 import {
   createPayment,
@@ -129,6 +131,16 @@ export function applyPayment(remote: YookassaPayment): Payment | null {
       paymentStatus: "paid",
       status: order.status === "new" ? "confirmed" : order.status,
     });
+    // Сюда приходят и вебхук, и сверка со страницы «заказ оформлен»,
+    // но переход в «оплачен» случается один раз — письмо тоже одно.
+    if (isMailEnabled()) {
+      const paid = getOrderById(order.id);
+      if (paid) {
+        sendMail(paidMail(paid)).catch((error) =>
+          console.error(`Не удалось отправить письмо об оплате ${order.number}:`, error),
+        );
+      }
+    }
   } else if (status === "canceled" && order.paymentStatus === "pending") {
     // Попытка не удалась — заказ снова «не оплачен», и его можно оплатить заново.
     const stillPending = getPaymentsByOrderId(order.id).some(

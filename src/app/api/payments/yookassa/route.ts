@@ -39,7 +39,10 @@ export async function POST(request: Request) {
   try {
     if (event.startsWith("payment.")) {
       const remote = await getYookassaPayment(objectId);
-      applyPayment(remote);
+      const payment = applyPayment(remote);
+      // Одна строка в журнал: по ней видно, что уведомления доходят,
+      // и какой заказ они закрыли.
+      console.log(`Вебхук ЮKassa: ${event} ${objectId} → ${payment ? `платёж ${payment.id}, ${payment.status}` : "не наш"}`);
     } else if (event === "refund.succeeded" && body?.object?.payment_id) {
       applyRefund(body.object.payment_id);
     }
