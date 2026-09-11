@@ -1,10 +1,18 @@
 import "server-only";
 
-import { SITE_URL } from "@/lib/constants";
 import { isSelfDelivery } from "@/lib/delivery";
 import { paymentLabel } from "@/lib/payment-kind";
-import { formatPrice, sizeLabel } from "@/lib/utils";
+import { formatPrice } from "@/lib/utils";
 import { chatId, sendMessage, type InlineButton } from "@/server/telegram/client";
+import {
+  adminLink,
+  composition,
+  deliveryCard,
+  escape,
+  paymentCard,
+  phoneLink,
+  where,
+} from "@/server/telegram/cards";
 import type { Order } from "@/lib/types";
 
 /**
@@ -17,32 +25,6 @@ import type { Order } from "@/lib/types";
  * Сбой Телеграма никогда не роняет то, ради чего его позвали: заказ
  * важнее уведомления о нём, поэтому все вызовы гасят свои ошибки в лог.
  */
-
-const escape = (s: string) =>
-  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
-/** Телефон как ссылка: в Телеграме по ней сразу звонят. */
-const phoneLink = (phone: string) => `<a href="tel:${escape(phone.replace(/[^\d+]/g, ""))}">${escape(phone)}</a>`;
-
-function composition(order: Order): string {
-  return order.items
-    .map(
-      (item) =>
-        `• ${escape(item.title)}${sizeLabel(item.sizeEu) ? `, ${item.sizeEu}` : ""}` +
-        `${item.quantity > 1 ? ` × ${item.quantity}` : ""} — ${formatPrice(item.price * item.quantity)}`,
-    )
-    .join("\n");
-}
-
-function where(order: Order): string {
-  const kind = order.delivery.mode === "pvz" ? "ПВЗ" : "курьером";
-  return `${escape(order.delivery.city)}, ${escape(order.delivery.address)} (${kind})`;
-}
-
-const adminLink = (order: Order): InlineButton => ({
-  text: "Открыть в админке",
-  url: `${SITE_URL}/admin/orders/${order.id}`,
-});
 
 function safe(promise: Promise<unknown>, what: string): void {
   promise.catch((error) => console.error(`Телеграм: ${what}:`, error));
@@ -82,50 +64,22 @@ export function notifyNewOrder(order: Order): void {
   if (!paid && order.paymentMethod === "on_delivery") notifyPayments(order);
 }
 
-/** Заказ курьерам: адрес, телефон, сумма к получению и две кнопки. */
+/** Заказ курьерам: адрес, телефон, сумма к получению и кнопки. */
 export function notifyDelivery(order: Order): void {
-  const due = order.paymentStatus === "paid" ? "Оплачен — брать деньги не нужно" : `К получению: <b>${formatPrice(order.total)}</b> наличными`;
-
-  safe(
-    sendMessage(
-      "delivery",
-      [
-        `🚚 <b>Заказ ${escape(order.number)}</b>`,
-        where(order),
-        `${escape(order.customer.name)} · ${phoneLink(order.customer.phone)}`,
-        due,
-        "",
-        composition(order),
-        order.comment ? `\n💬 ${escape(order.comment)}` : "",
-      ]
-        .filter(Boolean)
-        .join("\n"),
-      [
-        [
-          { text: "✅ Доставлен", callback_data: `done:${order.id}` },
-          { text: "✖️ Отменён", callback_data: `cancel:${order.id}` },
-        ],
-      ],
-    ),
-    `заказ курьерам ${order.number}`,
-  );
+  const card = deliveryCard(order);
+  safe(sendMessage("delivery", card.text, card.buttons), `заказ курьерам ${order.number}`);
 }
 
-/** Заказ в группу оплаты: там администратор выставляет QR. */
-export function notifyPayments(order: Order): void {
-  safe(
-    sendMessage(
-      "payments",
-      [
-        `💳 <b>Заказ ${escape(order.number)}</b> — ${formatPrice(order.total)}`,
-        `${paymentLabel(order)}`,
-        where(order),
-        `${escape(order.customer.name)} · ${phoneLink(order.customer.phone)}`,
-      ].join("\n"),
-      [[{ text: "Выставить QR на оплату", callback_data: `qr:${order.id}` }, adminLink(order)]],
-    ),
-    `заказ в оплату ${order.number}`,
-  );
+/**
+ * Заказ в группу оплаты: там администратор выставляет QR.
+ *
+ * @param asked Просьба пришла от курьера — покупатель на месте решил
+ * платить картой. Такое сообщение отличается от обычного: по нему видно,
+ * что человек ждёт прямо сейчас.
+ */
+export function notifyPayments(order: Order, asked = false): void {
+  const card = paymentCard(order, asked);
+  safe(sendMessage("payments", card.text, card.buttons), `заказ в оплату ${order.number}`);
 }
 
 /** Деньги пришли — знать об этом полезно всем трём группам. */

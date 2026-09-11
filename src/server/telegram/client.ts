@@ -147,3 +147,29 @@ export async function clearButtons(
     reply_markup: { inline_keyboard: [] },
   }).catch(() => undefined);
 }
+
+/**
+ * Переписать сообщение на месте — так меню не плодит новые сообщения:
+ * список заказов и карточка живут в одном и том же.
+ */
+export async function editMessage(
+  role: ChatRole,
+  chat: string | number,
+  messageId: number,
+  text: string,
+  buttons: InlineButton[][] = [],
+): Promise<void> {
+  if (!botToken(role)) return;
+  await call(role, "editMessageText", {
+    chat_id: chat,
+    message_id: messageId,
+    text,
+    parse_mode: "HTML",
+    disable_web_page_preview: true,
+    reply_markup: { inline_keyboard: buttons },
+  }).catch((error) => {
+    // «Ничего не изменилось» — не ошибка: так Телеграм отвечает на
+    // повторное нажатие той же кнопки.
+    if (!String(error).includes("message is not modified")) throw error;
+  });
+}

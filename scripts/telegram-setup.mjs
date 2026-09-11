@@ -86,8 +86,13 @@ if (command === "chats") {
     await api(process.env[item.token], "setWebhook", {
       url,
       secret_token: secret,
-      allowed_updates: ["callback_query"],
+      // Команды нужны только доставке — там меню; остальным хватает кнопок.
+      allowed_updates: item.role === "delivery" ? ["callback_query", "message"] : ["callback_query"],
       drop_pending_updates: true,
+    });
+    // Кнопка «Меню» рядом с полем ввода — чтобы курьеру не печатать команду.
+    await api(process.env[item.token], "setMyCommands", {
+      commands: item.role === "delivery" ? [{ command: "menu", description: "Меню" }] : [],
     });
     console.log(`${item.title}: ${url}`);
   }
