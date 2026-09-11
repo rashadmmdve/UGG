@@ -147,7 +147,11 @@ export default async function AdminOrderPage(props: PageProps<"/admin/orders/[id
             <p className="mt-2 text-sm">
               {paymentLabel(order)}
               {order.paymentMethod === "on_delivery" && (
-                <span className="block text-xs text-muted">Деньги собирает СДЭК при выдаче.</span>
+                <span className="block text-xs text-muted">
+                  {order.cdek
+                    ? "Деньги собирает СДЭК при выдаче — отметка об оплате появится сама, когда посылку вручат."
+                    : "Деньги берёт наш курьер при вручении. Отметка об оплате ставится сама, когда переводите заказ в «Выполнен»."}
+                </span>
               )}
             </p>
             {payments.length > 0 && (

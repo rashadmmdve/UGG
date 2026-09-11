@@ -17,6 +17,7 @@ import {
 import { getProductById } from "@/server/repositories/catalog";
 import {
   getOrderById,
+  patchOrder,
   setSelfDelivery,
   updateOrderPaymentStatus,
   updateOrderStatus,
@@ -67,6 +68,20 @@ export async function updateOrderStatusAction(formData: FormData): Promise<void>
   if (!order || order.status === "cancelled") return;
 
   updateOrderStatus(id, parsed.data);
+
+  // Заказ «при получении» оплачивается в момент вручения: наш курьер
+  // берёт наличные, курьер СДЭК — наложенный платёж. Поэтому отметка
+  // «выполнен» и есть отметка об оплате; ставить её отдельно менеджеру
+  // незачем, а забыть — легко. Если денег всё же не взяли, статус
+  // оплаты можно вернуть селектом рядом.
+  if (
+    parsed.data === "completed" &&
+    order.paymentMethod === "on_delivery" &&
+    order.paymentStatus !== "paid"
+  ) {
+    patchOrder(id, { paymentStatus: "paid" });
+  }
+
   refreshOrderPages(id);
 }
 

@@ -60,7 +60,7 @@ export async function syncShipment(orderId: string): Promise<Order | null> {
   const status = await getCdekOrderStatus(order.cdek.uuid).catch(() => null);
   if (!status) return order;
 
-  const patch: Partial<Pick<Order, "status" | "cdek">> = {
+  const patch: Partial<Pick<Order, "status" | "paymentStatus" | "cdek">> = {
     cdek: {
       ...order.cdek,
       cdekNumber: status.cdekNumber ?? order.cdek.cdekNumber,
@@ -76,6 +76,16 @@ export async function syncShipment(orderId: string): Promise<Order | null> {
     if (status.statusCode === DELIVERED_CODE) next = "completed";
     else if (HANDED_OVER_CODES.has(status.statusCode)) next = "shipped";
     if (next !== order.status) patch.status = next;
+
+    // Вручили — значит наложенный платёж собран: СДЭК не отдаёт посылку,
+    // не получив денег. Отметка об оплате не ждёт менеджера.
+    if (
+      status.statusCode === DELIVERED_CODE &&
+      order.paymentMethod === "on_delivery" &&
+      order.paymentStatus !== "paid"
+    ) {
+      patch.paymentStatus = "paid";
+    }
   }
 
   return patchOrder(orderId, patch);
