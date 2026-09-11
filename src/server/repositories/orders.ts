@@ -7,7 +7,12 @@ import { mapOrder, nowIso, type OrderRow } from "@/server/db/mappers";
 import type { Order, OrderStatus, PaymentStatus } from "@/lib/types";
 
 /** Префикс номера заказа, который видит покупатель. */
-const ORDER_PREFIX = "UG";
+/**
+ * Префикс номера заказа. Латинские буквы, а не кириллица: СДЭК
+ * принимает номер заказа только в ASCII («может содержать только цифры,
+ * буквы латинского алфавита или спецсимволы»), и «ИМ» он отклонил бы.
+ */
+const ORDER_PREFIX = "IM";
 
 /**
  * Следующий номер заказа.
@@ -29,7 +34,7 @@ function nextOrderNumber(): string {
     const row = db
       .prepare("SELECT value FROM counters WHERE name = 'order'")
       .get() as { value: number };
-    return `${ORDER_PREFIX}-${String(row.value).padStart(5, "0")}`;
+    return `${ORDER_PREFIX}-${String(row.value).padStart(4, "0")}`;
   });
 }
 

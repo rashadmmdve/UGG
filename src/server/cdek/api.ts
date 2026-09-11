@@ -1,8 +1,8 @@
 import "server-only";
 
 import { cdekRequest } from "@/server/cdek/client";
-import { sizeLabel } from "@/lib/utils";
 import { settledLines } from "@/server/orders/pricing";
+import { receiptItemName } from "@/server/orders/receipt";
 import { getLogistics } from "@/server/repositories/settings";
 import type {
   CdekCity,
@@ -280,9 +280,10 @@ export async function createCdekOrder(
           number: order.number,
           weight: Math.max(order.packageWeight ?? 1, 1),
           items: settledLines(order).map((line) => ({
-            name: sizeLabel(line.item.sizeEu)
-              ? `${line.item.title}, размер ${line.item.sizeEu}`
-              : line.item.title,
+            // Из этих позиций СДЭК пробивает чек при наложенном платеже —
+            // наименование общее с чеком ЮKassa. Размер виден в админке
+            // и в письме, на сборку заказа это не влияет.
+            name: receiptItemName(line.item.title),
             // Разбитая скидкой позиция даёт две строки на один артикул —
             // ключи должны отличаться.
             ware_key: line.part > 1 ? `${line.item.variantId}-${line.part}` : line.item.variantId,
