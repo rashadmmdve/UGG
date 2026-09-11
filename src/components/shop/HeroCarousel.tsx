@@ -30,10 +30,17 @@ export function HeroCarousel({
   images,
   rotate,
   sizes = "100vw",
+  fit = "contain",
 }: {
   images: string[];
   rotate: boolean;
   sizes?: string;
+  /**
+   * contain — кадр целиком, по центру; cover — заполняет блок, лишнее по
+   * краям срезается. Второе нужно на телефоне, когда горизонтальный
+   * баннер должен занять высокий блок под заголовок и кнопку.
+   */
+  fit?: "contain" | "cover";
 }) {
   const [index, setIndex] = useState(0);
 
@@ -55,7 +62,8 @@ export function HeroCarousel({
           fill
           sizes={sizes}
           className={cn(
-            "object-contain transition-opacity duration-700",
+            fit === "cover" ? "object-cover" : "object-contain",
+            "transition-opacity duration-700",
             i === index ? "opacity-100" : "opacity-0",
           )}
           loading={i === 0 ? "eager" : "lazy"}

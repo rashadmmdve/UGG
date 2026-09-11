@@ -54,7 +54,7 @@ export default function HomePage() {
   // занимает весь герой и оказывается самым крупным элементом первого
   // экрана — грузим её сразу, иначе она портит LCP.
   const heroPlaceholder = (
-    <div className="relative flex min-h-[440px] flex-col justify-end overflow-hidden rounded-b-xl bg-sand p-8 md:min-h-[620px] md:p-12">
+    <div className="relative flex min-h-[440px] flex-col justify-end overflow-hidden bg-sand p-8 md:min-h-[620px] md:p-12">
       <div className="absolute inset-0 flex items-center justify-center opacity-[0.07]">
         <Logo width={1000} href={null} eager />
       </div>
@@ -67,19 +67,21 @@ export default function HomePage() {
       {content.faq.length > 0 && <JsonLd data={faqLd(content.faq)} />}
 
       {/*
-        Герой. Телефон и широкий экран — два разных блока, виден один.
-        На широком экране блок 2:1 под горизонтальный баннер, текст поверх.
-        На телефоне 2:1 слишком низкий, чтобы уместить заголовок с кнопкой,
-        поэтому там свой вертикальный кадр 4:5 с текстом поверх; если его
-        не загрузили — обычный баннер и текст под ним. Кадр вписывается
-        целиком и не обрезается (см. ProductCard). Скрытой карусели через
-        sizes достаётся самая маленькая версия картинки.
+        Герой — во всю ширину экрана, без полей и скруглений: он единственный
+        блок, который выходит за container-page. Телефон и широкий экран —
+        два разных блока, виден один. На широком экране блок 2:1 под
+        горизонтальный баннер, кадр целиком, текст поверх. На телефоне
+        блок тянется до плиток разделов, и текст с кнопкой тоже поверх:
+        свой вертикальный кадр 4:5 показывается целиком, а если его не
+        загрузили — горизонтальный заполняет высоту, и края у него срезаются
+        (иначе на 2:1 при ширине телефона высоты хватит на две строки).
+        Скрытой карусели через sizes достаётся самая маленькая картинка.
       */}
-      <section className="container-page">
+      <section>
         {/* Телефон */}
         <div className="md:hidden">
           {hasMobileBanner ? (
-            <div className="relative aspect-[4/5] overflow-hidden rounded-b-xl bg-sand">
+            <div className="relative aspect-[4/5] overflow-hidden bg-sand">
               <HeroCarousel
                 images={content.home.heroMobileImages}
                 rotate={content.home.heroRotate}
@@ -90,16 +92,17 @@ export default function HomePage() {
               </div>
             </div>
           ) : hasBanner ? (
-            <>
-              <div className="relative aspect-[2/1] overflow-hidden rounded-b-xl bg-sand">
-                <HeroCarousel
-                  images={content.home.heroImages}
-                  rotate={content.home.heroRotate}
-                  sizes="(min-width: 768px) 16px, 100vw"
-                />
+            <div className="relative min-h-[440px] overflow-hidden bg-sand">
+              <HeroCarousel
+                images={content.home.heroImages}
+                rotate={content.home.heroRotate}
+                sizes="(min-width: 768px) 16px, 100vw"
+                fit="cover"
+              />
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 via-black/25 to-transparent px-6 pb-8 pt-20">
+                {heroText(true)}
               </div>
-              <div className="mt-6 max-w-xl">{heroText(false)}</div>
-            </>
+            </div>
           ) : (
             heroPlaceholder
           )}
@@ -108,19 +111,23 @@ export default function HomePage() {
         {/* Широкий экран */}
         <div className="hidden md:block">
           {hasBanner ? (
-            <div className="relative aspect-[2/1] overflow-hidden rounded-b-xl bg-sand">
+            <div className="relative aspect-[2/1] overflow-hidden bg-sand">
               <HeroCarousel
                 images={content.home.heroImages}
                 rotate={content.home.heroRotate}
                 sizes="(max-width: 767px) 16px, 100vw"
               />
-              <div className="absolute bottom-12 left-12 max-w-xl">{heroText(true)}</div>
+              {/* Отступ слева — как у container-page, чтобы текст стоял в линию с плитками. */}
+              <div className="absolute bottom-12 left-8 max-w-xl xl:left-14">{heroText(true)}</div>
             </div>
           ) : (
             heroPlaceholder
           )}
         </div>
 
+      </section>
+
+      <section className="container-page">
         {/* Разделы — рядом под героем */}
         {/* Сетка всегда на четыре колонки: без распродажи четвёртое место
             пустует, зато плитки не растягиваются и фото не теряют резкость. */}
