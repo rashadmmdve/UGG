@@ -19,13 +19,31 @@ type UploadResponse = {
   error?: string;
 };
 
+/**
+ * Форма ячейки повторяет формат, в котором фото покажется на сайте:
+ * баннер в шапке — горизонтальный 2:1, плитка раздела — вертикальная
+ * 3:4, остальное — квадрат. Снимок вписывается в ячейку так же, как на
+ * витрине, поэтому ещё до сохранения видно, подошёл ли кадр или
+ * останется с полями по бокам.
+ */
+export type UploaderAspect = "square" | "wide" | "tall";
+
+const CELL: Record<UploaderAspect, { box: string; sizes: string }> = {
+  square: { box: "h-28 w-28", sizes: "112px" },
+  wide: { box: "h-28 w-56", sizes: "224px" },
+  tall: { box: "h-28 w-21", sizes: "84px" },
+};
+
 export function ImageUploader({
   value,
   onChange,
+  aspect = "square",
 }: {
   value: string[];
   onChange: (urls: string[]) => void;
+  aspect?: UploaderAspect;
 }) {
+  const cell = CELL[aspect];
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
@@ -83,9 +101,9 @@ export function ImageUploader({
         {value.map((url, index) => (
           <figure
             key={url}
-            className="group relative h-28 w-28 overflow-hidden rounded border border-line bg-elevated"
+            className={`group relative ${cell.box} overflow-hidden rounded border border-line bg-elevated`}
           >
-            <Image src={url} alt="" fill sizes="112px" className="object-contain" />
+            <Image src={url} alt="" fill sizes={cell.sizes} className="object-contain" />
             {index === 0 && (
               <figcaption className="absolute top-1 left-1 rounded bg-accent px-1.5 py-0.5 text-[10px] font-medium text-white">
                 Главное
@@ -106,7 +124,7 @@ export function ImageUploader({
         ))}
 
         <label
-          className={`flex h-28 w-28 cursor-pointer flex-col items-center justify-center rounded border border-dashed text-center text-xs transition ${
+          className={`flex ${cell.box} cursor-pointer flex-col items-center justify-center rounded border border-dashed text-center text-xs transition ${
             busy ? "border-line text-muted" : "border-line-strong text-muted hover:border-accent hover:text-accent"
           }`}
         >

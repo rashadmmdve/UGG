@@ -66,7 +66,7 @@ export function ContentForm({ content }: { content: SiteContent }) {
               остаётся бледный логотип.
             </p>
             <div className="mt-2">
-              <ImageUploader value={hero} onChange={setHero} />
+              <ImageUploader value={hero} onChange={setHero} aspect="wide" />
             </div>
             {hero.length > 1 && (
               <div className="mt-3">
@@ -97,6 +97,7 @@ export function ContentForm({ content }: { content: SiteContent }) {
                   />
                   <div className="mt-3">
                     <ImageUploader
+                      aspect="tall"
                       value={sectionImages[section.slug] ? [sectionImages[section.slug]] : []}
                       onChange={(urls) =>
                         setSectionImages((current) => ({ ...current, [section.slug]: urls.at(-1) ?? "" }))
