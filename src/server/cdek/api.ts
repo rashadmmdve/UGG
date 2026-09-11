@@ -31,13 +31,29 @@ export const FALLBACK_WEIGHT = 500;
 
 /* ─────────────────────────── Города ─────────────────────────── */
 
-type CityResponse = {
+type SuggestResponse = {
   code: number;
-  city: string;
-  region?: string;
-  sub_region?: string;
+  /** «Москва, Россия» или «Сара, Кувандыкский округ, Оренбургская область, Россия». */
+  full_name: string;
+  city_uuid?: string;
   country_code?: string;
 };
+
+/**
+ * Разбор полного названия на город и область.
+ *
+ * Последняя часть — всегда страна, она в подсказке не нужна. Область
+ * берём предпоследней: между городом и областью может стоять район или
+ * округ, и в списке он только мешает — «Оренбургская область» говорит
+ * покупателю больше, чем «Кувандыкский городской округ».
+ */
+function splitFullName(fullName: string): { city: string; region: string } {
+  const parts = fullName.split(",").map((part) => part.trim()).filter(Boolean);
+  return {
+    city: parts[0] ?? fullName,
+    region: parts.length > 2 ? (parts[parts.length - 2] ?? "") : "",
+  };
+}
 
 /**
  * Подбор города по началу названия — для подсказок в форме заказа.
@@ -50,17 +66,19 @@ export async function searchCities(
   const trimmed = query.trim();
   if (trimmed.length < 2) return [];
 
-  const cities = await cdekRequest<CityResponse[]>("/v2/location/cities", {
-    query: { city: trimmed, country_codes: "RU", size: 100, page: 0 },
+  // Метод подсказок, а не /v2/location/cities: тот ищет по точному
+  // названию — «Мос» и «Моск» не находят ничего, и список появлялся
+  // только когда город дописан целиком. Этот ищет по началу слова.
+  const found = await cdekRequest<SuggestResponse[]>("/v2/location/suggest/cities", {
+    query: { name: trimmed, country_code: "RU" },
     // Список городов меняется редко — держим сутки, чтобы не дёргать API
     // на каждую букву в поле поиска.
     revalidate: 60 * 60 * 24,
   });
 
-  return cities.slice(0, limit).map((city) => ({
-    code: city.code,
-    city: city.city,
-    region: city.region ?? "",
+  return found.slice(0, limit).map((item) => ({
+    code: item.code,
+    ...splitFullName(item.full_name),
   }));
 }
 
