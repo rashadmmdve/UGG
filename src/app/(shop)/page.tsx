@@ -30,13 +30,18 @@ export default function HomePage() {
   const hasBanner = content.home.heroImages.length > 0;
 
   // Заголовок, подзаголовок и кнопка героя: на телефоне с баннером
-  // они рисуются под фото, на широком экране — поверх. Один узел на
-  // оба места, чтобы тексты не разъехались.
-  const heroText = (
+  // они рисуются под фото, на широком экране — поверх. Одна функция на
+  // оба места, чтобы тексты не разъехались. Поверх фото текст белый:
+  // на снимке тёмный не читается; под фото и на подложке — обычный.
+  const heroText = (onBanner: boolean) => (
     <>
-      <h1 className="text-3xl font-bold leading-tight md:text-5xl">{content.home.heroTitle}</h1>
+      <h1 className={cn("text-3xl font-bold leading-tight md:text-5xl", onBanner && "text-white")}>
+        {content.home.heroTitle}
+      </h1>
       {content.home.heroSubtitle && (
-        <p className="mt-3 text-muted md:text-lg">{content.home.heroSubtitle}</p>
+        <p className={cn("mt-3 md:text-lg", onBanner ? "text-white/85" : "text-muted")}>
+          {content.home.heroSubtitle}
+        </p>
       )}
       <Link href="/catalog/zhenskie" className="mt-6 inline-flex h-12 items-center rounded-md bg-accent px-6 text-sm font-semibold text-white hover:bg-accent-hover">
         Смотреть коллекцию
@@ -82,10 +87,10 @@ export default function HomePage() {
               hasBanner && "hidden md:absolute md:bottom-12 md:left-12 md:block",
             )}
           >
-            {heroText}
+            {heroText(hasBanner)}
           </div>
         </div>
-        {hasBanner && <div className="mt-6 max-w-xl md:hidden">{heroText}</div>}
+        {hasBanner && <div className="mt-6 max-w-xl md:hidden">{heroText(false)}</div>}
 
         {/* Разделы — рядом под героем */}
         {/* Сетка всегда на четыре колонки: без распродажи четвёртое место
