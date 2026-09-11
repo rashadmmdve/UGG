@@ -124,11 +124,16 @@ export function Header({ menu }: { menu: MenuSection[] }) {
           ))}
         </nav>
 
-        <div className="-mr-2 ml-auto flex items-center gap-1 lg:mr-0">
+        {/*
+          На телефоне иконки стоят плотнее: ячейки 36 px без зазора, значки
+          в них — через 16 px. Сдвиг за поле на 10 px оставляет крайний
+          значок на тех же 18 px от края, что и полоски бургера.
+        */}
+        <div className="-mr-2.5 ml-auto flex items-center gap-0 lg:mr-0 lg:gap-1">
           <Link
             href="/favorites"
             aria-label={`Избранное${favoritesCount ? `, ${favoritesCount}` : ""}`}
-            className="relative flex h-10 w-10 items-center justify-center transition-colors hover:text-accent"
+            className="relative flex h-10 w-9 items-center justify-center lg:w-10 transition-colors hover:text-accent"
           >
             <Heart className="h-5 w-5" strokeWidth={1.6} />
             {favoritesCount > 0 && <Indicator value={favoritesCount} />}
@@ -137,7 +142,7 @@ export function Header({ menu }: { menu: MenuSection[] }) {
             type="button"
             onClick={openCart}
             aria-label={`Корзина${count ? `, ${count}` : ", пусто"}`}
-            className="relative flex h-10 w-10 items-center justify-center transition-colors hover:text-accent"
+            className="relative flex h-10 w-9 items-center justify-center lg:w-10 transition-colors hover:text-accent"
           >
             <ShoppingBag className="h-5 w-5" strokeWidth={1.6} />
             {count > 0 && <Indicator value={count} />}
@@ -145,7 +150,7 @@ export function Header({ menu }: { menu: MenuSection[] }) {
           <Link
             href="/account"
             aria-label="Личный кабинет"
-            className="flex h-10 w-10 items-center justify-center transition-colors hover:text-accent"
+            className="flex h-10 w-9 items-center justify-center transition-colors hover:text-accent lg:w-10"
           >
             <User className="h-5 w-5" strokeWidth={1.6} />
           </Link>
