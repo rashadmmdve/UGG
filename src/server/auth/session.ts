@@ -21,6 +21,20 @@ const SESSION_COOKIE = "ugg_session";
 /** Кука прежней, отдельной сессии админки — осталась, чтобы её стереть. */
 const LEGACY_ADMIN_COOKIE = "ugg_admin";
 
+/**
+ * Метка «этот посетитель — администратор», видимая из браузера.
+ *
+ * Сама сессия лежит в httpOnly-куке, до которой скриптам не добраться, —
+ * и это правильно. Но витрина отдаётся из кэша одинаковой всем, и если
+ * читать сессию при её сборке, восемьсот страниц каталога перестанут
+ * кэшироваться ради одной кнопки в шапке. Поэтому кнопку показывает
+ * браузер по этой метке.
+ *
+ * Правами она не управляет: подделавший её увидит кнопку, но админка
+ * всё равно проверит настоящую сессию и отправит его на главную.
+ */
+const ROLE_COOKIE = "ugg_role";
+
 // «Запомнить меня» — кука на 30 дней, переживает закрытие браузера.
 // Без галочки — обычная сессионная кука, а сам токен живёт сутки: если
 // браузер куку всё же не стёр (бывает при восстановлении вкладок),
@@ -71,19 +85,25 @@ export async function createSession(userId: string, remember: boolean): Promise<
   const token = await signSession(userId, maxAge);
   const store = await cookies();
 
-  store.set(SESSION_COOKIE, token, {
-    httpOnly: true,
-    sameSite: "lax",
+  const options = {
+    sameSite: "lax" as const,
     secure: process.env.NODE_ENV === "production",
     path: "/",
     ...(remember ? { maxAge } : {}),
-  });
+  };
+
+  store.set(SESSION_COOKIE, token, { httpOnly: true, ...options });
+
+  const user = getUserById(userId);
+  if (user?.role === "admin") store.set(ROLE_COOKIE, "admin", options);
+  else store.delete(ROLE_COOKIE);
 }
 
 export async function destroySession(): Promise<void> {
   const store = await cookies();
   store.delete(SESSION_COOKIE);
   store.delete(LEGACY_ADMIN_COOKIE);
+  store.delete(ROLE_COOKIE);
 }
 
 /** Кто вошёл на сайт; null — никто. */

@@ -4,10 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { ChevronDown, Heart, ShoppingBag, User } from "lucide-react";
+import { ChevronDown, Heart, LayoutDashboard, ShoppingBag, User } from "lucide-react";
 
 import { Logo } from "@/components/Logo";
 import { useHydrated } from "@/lib/hooks/useHydrated";
+import { useIsAdmin } from "@/lib/hooks/useIsAdmin";
 import { cartCount, useCartStore } from "@/lib/store/cart";
 import { useFavoritesStore } from "@/lib/store/favorites";
 import type { MenuSection } from "@/lib/types";
@@ -31,6 +32,8 @@ export function Header({ menu }: { menu: MenuSection[] }) {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [openSection, setOpenSection] = useState<string | null>(null);
+  // Кнопка админки — только вошедшему администратору, см. useIsAdmin.
+  const isAdmin = useIsAdmin();
 
   const hydrated = useHydrated();
   const items = useCartStore((state) => state.items);
@@ -130,6 +133,16 @@ export function Header({ menu }: { menu: MenuSection[] }) {
           18 px от края, что и полоски бургера (поле 16 − 6 + 8 внутри ячейки).
         */}
         <div className="-mr-1.5 ml-auto flex items-center gap-1 lg:mr-0">
+          {isAdmin && (
+            <Link
+              href="/admin"
+              aria-label="Админ-панель"
+              title="Админ-панель"
+              className="flex h-10 w-9 items-center justify-center transition-colors hover:text-accent lg:w-10"
+            >
+              <LayoutDashboard className="h-5 w-5" strokeWidth={1.6} />
+            </Link>
+          )}
           <Link
             href="/favorites"
             aria-label={`Избранное${favoritesCount ? `, ${favoritesCount}` : ""}`}
