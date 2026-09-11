@@ -4,6 +4,7 @@ import {
   createCdekOrder,
   deleteCdekOrder,
   getCdekBarcodeUrl,
+  type CdekLabelResult,
   getCdekOrderStatus,
 } from "@/server/cdek/api";
 import { restoreStock } from "@/server/repositories/catalog";
@@ -151,8 +152,12 @@ export async function registerShipment(orderId: string): Promise<RegisterResult>
 }
 
 /** Ссылка на PDF с этикеткой. */
-export async function getShipmentLabel(orderId: string): Promise<string | null> {
+export type ShipmentLabel = CdekLabelResult | { ok: false; reason: "no-shipment" };
+
+export async function getShipmentLabel(orderId: string): Promise<ShipmentLabel> {
   const order = getOrderById(orderId);
-  if (!order?.cdek) return null;
-  return getCdekBarcodeUrl(order.cdek.uuid).catch(() => null);
+  if (!order?.cdek) return { ok: false, reason: "no-shipment" };
+  return getCdekBarcodeUrl(order.cdek.uuid).catch(
+    (): ShipmentLabel => ({ ok: false, reason: "pending" }),
+  );
 }

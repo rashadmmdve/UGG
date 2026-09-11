@@ -34,15 +34,21 @@ export async function GET(
     return NextResponse.json({ error: "Недостаточно прав" }, { status: 403 });
   }
 
-  const cdekUrl = await getShipmentLabel(id);
-  if (!cdekUrl) {
-    return NextResponse.json(
-      { error: "Этикетка ещё не готова. Попробуйте через минуту." },
-      { status: 404 },
-    );
+  const label = await getShipmentLabel(id);
+  if (!label.ok) {
+    // Причина важнее вежливости: «попробуйте через минуту» на заказе,
+    // который СДЭК ещё не зарегистрировал, отправляло бы по кругу.
+    const message = {
+      "no-shipment": "Заказ ещё не передан в СДЭК — этикетки пока нет.",
+      invalid:
+        "СДЭК не выдаёт этикетку: заказ у них ещё в статусе «Принят», а не «Создан». " +
+        "На боевом контуре статус меняется за несколько минут; на тестовом (api.edu.cdek.ru) — никогда.",
+      pending: "Этикетка ещё формируется. Попробуйте через минуту.",
+    }[label.reason];
+    return NextResponse.json({ error: message }, { status: label.reason === "pending" ? 404 : 409 });
   }
 
-  const pdf = await cdekFetchBinary(cdekUrl);
+  const pdf = await cdekFetchBinary(label.url);
   const download = new URL(request.url).searchParams.get("download") === "1";
 
   return new NextResponse(pdf, {

@@ -359,7 +359,17 @@ export async function deleteCdekOrder(uuid: string): Promise<boolean> {
 
 type BarcodeResponse = {
   entity?: { uuid?: string; url?: string; statuses?: { code: string }[] };
+  requests?: { state?: string; errors?: { code: string; message: string }[] }[];
 };
+
+/**
+ * Результат запроса этикетки. «invalid» — СДЭК отказал: так бывает, пока
+ * заказ у них в статусе «Принят», а не «Создан» (на тестовом контуре он
+ * из «Принят» не выходит никогда). «pending» — файл ещё формируется.
+ */
+export type CdekLabelResult =
+  | { ok: true; url: string }
+  | { ok: false; reason: "invalid" | "pending" };
 
 /**
  * Ссылка на PDF с этикеткой-штрихкодом.
@@ -374,13 +384,13 @@ type BarcodeResponse = {
  */
 export async function getCdekBarcodeUrl(
   orderUuid: string,
-): Promise<string | null> {
+): Promise<CdekLabelResult> {
   const created = await cdekRequest<BarcodeResponse>("/v2/print/barcodes", {
     body: { orders: [{ order_uuid: orderUuid }], format: "A6" },
   });
 
   const printUuid = created.entity?.uuid;
-  if (!printUuid) return null;
+  if (!printUuid) return { ok: false, reason: "invalid" };
 
   for (let attempt = 0; attempt < 5; attempt++) {
     await new Promise((resolve) => setTimeout(resolve, 700));
@@ -389,11 +399,15 @@ export async function getCdekBarcodeUrl(
       `/v2/print/barcodes/${printUuid}`,
     );
 
-    const ready = status.entity?.statuses?.some(
-      (item) => item.code === "READY",
-    );
-    if (ready && status.entity?.url) return status.entity.url;
+    const codes = status.entity?.statuses?.map((item) => item.code) ?? [];
+    if (codes.includes("READY") && status.entity?.url) {
+      return { ok: true, url: status.entity.url };
+    }
+    // Отказ приходит окончательным — ждать дальше нечего.
+    if (codes.includes("INVALID") || status.requests?.some((r) => r.state === "INVALID")) {
+      return { ok: false, reason: "invalid" };
+    }
   }
 
-  return null;
+  return { ok: false, reason: "pending" };
 }
