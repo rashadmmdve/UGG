@@ -34,9 +34,26 @@ export function composition(order: Order): string {
     .join("\n");
 }
 
+/**
+ * Куда везти.
+ *
+ * Заказ, который везём сами, к СДЭК отношения не имеет — и упоминать
+ * его не нужно. Пункт выдачи в таком заказе тем более: покупатель
+ * выбирал его у СДЭК, а поедет к нему наш курьер, и адрес с человеком
+ * ещё предстоит согласовать. Остаётся город, а при доставке до двери —
+ * настоящий адрес, он и так верный.
+ */
 export function where(order: Order): string {
-  const kind = order.delivery.mode === "pvz" ? "ПВЗ" : "курьером";
-  return `${escape(order.delivery.city)}, ${escape(order.delivery.address)} (${kind})`;
+  const city = escape(order.delivery.city);
+  const address = escape(order.delivery.address);
+
+  if (isSelfDelivery(order.delivery)) {
+    return order.delivery.mode === "courier"
+      ? `${city}, ${address}`
+      : `${city} — адрес согласовать с покупателем`;
+  }
+
+  return `${city}, ${address} (${order.delivery.mode === "pvz" ? "ПВЗ СДЭК" : "курьером СДЭК"})`;
 }
 
 export const adminLink = (order: Order): InlineButton => ({

@@ -41,6 +41,7 @@ export function notifyNewOrder(order: Order): void {
       [
         `🧾 <b>Заказ ${escape(order.number)}</b> — ${formatPrice(order.total)}`,
         `${paymentLabel(order)} · ${paid ? "оплачен" : "не оплачен"}`,
+        isSelfDelivery(order.delivery) ? "Везём сами" : "Доставка СДЭК",
         where(order),
         `${escape(order.customer.name)} · ${phoneLink(order.customer.phone)}`,
         "",
