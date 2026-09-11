@@ -65,7 +65,7 @@ export default function HomePage() {
         */}
         <div
           className={cn(
-            "relative overflow-hidden rounded-xl bg-sand",
+            "relative overflow-hidden rounded-b-xl bg-sand",
             hasBanner
               ? "aspect-[2/1]"
               : "flex min-h-[440px] flex-col justify-end p-8 md:min-h-[620px] md:p-12",
