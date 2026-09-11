@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ShipmentPanel } from "@/components/admin/ShipmentPanel";
 import { SubmitButton } from "@/components/admin/ui";
 import { ORDER_STATUS_LABELS, PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS } from "@/lib/constants";
+import { isSelfDelivery } from "@/lib/delivery";
 import { formatPrice } from "@/lib/utils";
 import {
   updateOrderStatusAction,
@@ -97,6 +98,7 @@ export default async function AdminOrderPage(props: PageProps<"/admin/orders/[id
             orderId={order.id}
             orderNumber={order.number}
             shipment={order.cdek}
+            selfDelivery={isSelfDelivery(order.delivery)}
             canCancel={canCancel(order)}
             isCancelled={isCancelled}
           />

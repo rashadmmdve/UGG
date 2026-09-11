@@ -3,6 +3,8 @@ import Link from "next/link";
 import { CheckCircle2, Clock } from "lucide-react";
 
 import { PayOrderButton } from "@/components/shop/PayOrderButton";
+import { SelfDeliveryDialog } from "@/components/shop/SelfDeliveryDialog";
+import { isSelfDelivery } from "@/lib/delivery";
 import { getCurrentCustomer } from "@/server/auth/session";
 import { syncOrderPayments } from "@/server/payments/flow";
 import { getOrderById } from "@/server/repositories/orders";
@@ -34,12 +36,16 @@ export default async function CheckoutSuccessPage(props: PageProps<"/checkout/su
   const online = order?.paymentMethod === "online";
   const paid = order?.paymentStatus === "paid";
   const awaitingPayment = online && !paid && order?.status !== "cancelled";
+  // Окно показываем, когда с заказом уже всё решено: висеть поверх
+  // страницы «оплатите заказ» ему незачем.
+  const selfDelivery = Boolean(order && isSelfDelivery(order.delivery)) && !awaitingPayment;
 
   const button =
     "inline-flex h-11 items-center rounded-md px-6 text-sm font-semibold";
 
   return (
     <div className="container-page flex flex-col items-center py-20 text-center">
+      {selfDelivery && <SelfDeliveryDialog />}
       {awaitingPayment ? (
         <Clock className="h-12 w-12 text-muted" strokeWidth={1.4} />
       ) : (
@@ -59,9 +65,11 @@ export default async function CheckoutSuccessPage(props: PageProps<"/checkout/su
       <p className="mt-4 max-w-md text-sm text-muted">
         {awaitingPayment
           ? "Платёж не завершён. Товары зарезервированы — оплатите заказ, и мы сразу передадим его в доставку."
-          : paid
-            ? "Чек отправлен на почту. Соберём заказ и передадим в СДЭК — трек-номер появится в личном кабинете."
-            : "Мы отправили подтверждение на почту. Оплатить заказ можно при получении — наличными или картой."}
+          : selfDelivery
+            ? "Мы отправили подтверждение на почту. Заказ по вашему городу везём сами — свяжемся и согласуем доставку."
+            : paid
+              ? "Чек отправлен на почту. Соберём заказ и передадим в СДЭК — трек-номер появится в личном кабинете."
+              : "Мы отправили подтверждение на почту. Оплатить заказ можно при получении — наличными или картой."}
       </p>
 
       <div className="mt-8 flex flex-wrap justify-center gap-3">

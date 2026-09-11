@@ -24,12 +24,15 @@ export function ShipmentPanel({
   shipment,
   canCancel,
   isCancelled,
+  selfDelivery,
 }: {
   orderId: string;
   orderNumber: string;
   shipment: CdekShipment | null;
   canCancel: boolean;
   isCancelled: boolean;
+  /** Город, куда возим сами: в СДЭК такой заказ автоматически не уходит. */
+  selfDelivery: boolean;
 }) {
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<{ error?: string; success?: string }>({});
@@ -80,7 +83,9 @@ export function ShipmentPanel({
         <p className="mt-3 text-sm text-muted">
           {isCancelled
             ? "Заказ отменён, отправления нет."
-            : "Заказ не передан в СДЭК. Передайте вручную, когда будет готов к отправке."}
+            : selfDelivery
+              ? "Доставка своими силами: в СДЭК заказ не передавался, трек-номера у него нет. Свяжитесь с покупателем и согласуйте доставку. Передать в СДЭК всё равно можно — кнопкой ниже."
+              : "Заказ не передан в СДЭК. Передайте вручную, когда будет готов к отправке."}
         </p>
       )}
 

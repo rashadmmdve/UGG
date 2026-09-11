@@ -1,6 +1,7 @@
 import "server-only";
 
 import { PAYMENT_METHOD_LABELS, SITE_URL } from "@/lib/constants";
+import { isSelfDelivery } from "@/lib/delivery";
 import { formatPrice, sizeLabel } from "@/lib/utils";
 import type { Mail } from "@/server/mail/mailer";
 import type { Order } from "@/lib/types";
@@ -107,6 +108,9 @@ export function orderMail(order: Order, payUrl: string | null): Mail {
       ? `Пункт выдачи СДЭК: ${escape(order.delivery.city)}, ${escape(order.delivery.address)}`
       : `Курьером СДЭК: ${escape(order.delivery.city)}, ${escape(order.delivery.address)}`;
 
+  // В свой город возим сами: обещать трек-номер нельзя, его не будет.
+  const selfDelivery = isSelfDelivery(order.delivery);
+
   const payment =
     order.paymentMethod === "online"
       ? order.paymentStatus === "paid"
@@ -122,7 +126,11 @@ export function orderMail(order: Order, payUrl: string | null): Mail {
 <p style="margin:0 0 8px"><strong>Доставка.</strong> ${delivery}</p>
 <p style="margin:0 0 8px"><strong>Оплата.</strong> ${PAYMENT_METHOD_LABELS[order.paymentMethod]}. ${payment}</p>
 ${payUrl ? button(payUrl, "Оплатить заказ") : ""}
-<p style="margin:16px 0 0;color:#555">Когда посылка уйдёт в СДЭК, трек-номер появится в личном кабинете: <a href="${SITE_URL}/account" style="color:#555">${SITE_URL.replace(/^https?:\/\//, "")}/account</a></p>`,
+<p style="margin:16px 0 0;color:#555">${
+      selfDelivery
+        ? "Заказ уже готовится — свяжемся с вами и согласуем доставку. Трек-номера по такому заказу не будет."
+        : `Когда посылка уйдёт в СДЭК, трек-номер появится в личном кабинете: <a href="${SITE_URL}/account" style="color:#555">${SITE_URL.replace(/^https?:\/\//, "")}/account</a>`
+    }</p>`,
   );
 
   const text = [
@@ -142,7 +150,9 @@ ${payUrl ? button(payUrl, "Оплатить заказ") : ""}
     `Оплата: ${PAYMENT_METHOD_LABELS[order.paymentMethod]}. ${payment}`,
     ...(payUrl ? ["", `Оплатить: ${payUrl}`] : []),
     "",
-    `Личный кабинет: ${SITE_URL}/account`,
+    ...(selfDelivery
+      ? ["Заказ уже готовится — свяжемся с вами и согласуем доставку."]
+      : [`Личный кабинет: ${SITE_URL}/account`]),
   ].join("\n");
 
   const paid = order.paymentMethod === "online" && order.paymentStatus === "paid";

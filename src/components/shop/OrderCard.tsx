@@ -5,6 +5,7 @@ import { CreditCard, Download, Eye, X } from "lucide-react";
 
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ORDER_STATUS_LABELS, PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS } from "@/lib/constants";
+import { isSelfDelivery } from "@/lib/delivery";
 import { cn, formatDate, formatPrice, sizeLabel } from "@/lib/utils";
 import { cancelOrderAction, payOrderAction, refreshOrderStatusAction } from "@/server/orders/actions";
 import type { Order } from "@/lib/types";
@@ -25,6 +26,9 @@ export function OrderCard({ order }: { order: Order }) {
   const [paying, startPay] = useTransition();
 
   const settled = status === "cancelled" || status === "completed";
+  // В свой город возим сами: отправления в СДЭК у такого заказа нет и
+  // не появится, поэтому и трек-номера ждать неоткуда.
+  const selfDelivery = isSelfDelivery(order.delivery);
 
   useEffect(() => {
     if (settled || !shipment) return;
@@ -116,7 +120,10 @@ export function OrderCard({ order }: { order: Order }) {
         </div>
         <div className="flex justify-between gap-4">
           <dt className="text-muted">Статус доставки</dt>
-          <dd className="text-right">{shipment?.statusName ?? "Готовится к отправке"}</dd>
+          <dd className="text-right">
+            {shipment?.statusName ??
+              (selfDelivery ? "Готовится, свяжемся с вами" : "Готовится к отправке")}
+          </dd>
         </div>
         <div className="flex justify-between gap-4">
           <dt className="text-muted">{order.delivery.mode === "pvz" ? "Пункт выдачи" : "Адрес"}</dt>

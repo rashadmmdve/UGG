@@ -9,6 +9,7 @@ import {
 } from "@/server/cdek/api";
 import { decreaseStock, getProductById } from "@/server/repositories/catalog";
 import { isMailEnabled, sendMail } from "@/server/mail/mailer";
+import { isSelfDelivery } from "@/lib/delivery";
 import { orderMail } from "@/server/mail/templates";
 import { paymentReturnUrl, startPayment } from "@/server/payments/flow";
 import { isYookassaEnabled } from "@/server/payments/yookassa";
@@ -216,29 +217,35 @@ export async function submitOrder(input: unknown): Promise<CheckoutResult> {
   // этикетка в личном кабинете. Списания у СДЭК в этот момент нет —
   // тарификация начинается при физической приёмке посылки.
   //
+  // Свой город — исключение: такие заказы возим сами, в СДЭК они не
+  // уходят и трек-номера не получают. Покупателю об этом говорит окно
+  // после оформления и письмо.
+  //
   // Сбой регистрации не роняет оформление: заказ уже создан, а передать
   // его в СДЭК менеджер сможет вручную из админки.
-  try {
-    const created = await createCdekOrder(order);
-    if (created.ok) {
-      const status = await getCdekOrderStatus(created.uuid).catch(() => null);
-      patchOrder(order.id, {
-        cdek: {
-          uuid: created.uuid,
-          cdekNumber: status?.cdekNumber ?? null,
-          statusCode: status?.statusCode ?? "CREATED",
-          statusName: status?.statusName ?? "Создан",
-          syncedAt: new Date().toISOString(),
-        },
-      });
-    } else {
-      // Причину пишем в лог: заказ в этом случае выглядит обычным, и без
-      // записи непонятно, почему у него нет отправления.
-      console.error(`СДЭК отклонил заказ ${order.number}: ${created.error}`);
+  if (!isSelfDelivery(order.delivery)) {
+    try {
+      const created = await createCdekOrder(order);
+      if (created.ok) {
+        const status = await getCdekOrderStatus(created.uuid).catch(() => null);
+        patchOrder(order.id, {
+          cdek: {
+            uuid: created.uuid,
+            cdekNumber: status?.cdekNumber ?? null,
+            statusCode: status?.statusCode ?? "CREATED",
+            statusName: status?.statusName ?? "Создан",
+            syncedAt: new Date().toISOString(),
+          },
+        });
+      } else {
+        // Причину пишем в лог: заказ в этом случае выглядит обычным, и без
+        // записи непонятно, почему у него нет отправления.
+        console.error(`СДЭК отклонил заказ ${order.number}: ${created.error}`);
+      }
+    } catch (error) {
+      console.error(`Не удалось передать заказ ${order.number} в СДЭК:`, error);
+      // cdek остаётся null — в админке появится кнопка «Передать в СДЭК».
     }
-  } catch (error) {
-    console.error(`Не удалось передать заказ ${order.number} в СДЭК:`, error);
-    // cdek остаётся null — в админке появится кнопка «Передать в СДЭК».
   }
 
   // Остатки изменились — наличие в карточках и на посадочных тоже.
