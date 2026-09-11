@@ -29,12 +29,16 @@ import type { OrderItem, Product } from "@/lib/types";
 export async function previewPromocode(
   code: string,
   subtotal: number,
-): Promise<{ ok: true; discount: number } | { ok: false; error: string }> {
+): Promise<
+  | { ok: true; discount: number; /** Процент — для процентного промокода, иначе null. */ percent: number | null }
+  | { ok: false; error: string }
+> {
   if (!code.trim()) return { ok: false, error: "Введите промокод" };
 
-  const check = checkPromocode(getPromocodeByCode(code), subtotal);
+  const promocode = getPromocodeByCode(code);
+  const check = checkPromocode(promocode, subtotal);
   return check.ok
-    ? { ok: true, discount: check.discount }
+    ? { ok: true, discount: check.discount, percent: promocode?.type === "percent" ? promocode.value : null }
     : { ok: false, error: check.error };
 }
 

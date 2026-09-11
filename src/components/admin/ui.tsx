@@ -77,9 +77,52 @@ function RevealButton({ revealed, onToggle }: { revealed: boolean; onToggle: () 
   );
 }
 
+/**
+ * Телефон в виде «+7 900 000-00-00» по мере ввода.
+ *
+ * Российский номер узнаётся по первой цифре: 7 — как есть, 8 — старый
+ * междугородний префикс, 9 — набрали без кода страны. Другие коды стран
+ * не трогаем: оставляем «+» и цифры. Разделители добавляются только за
+ * уже набранными цифрами, поэтому Backspace не упирается в них.
+ */
+export function formatPhone(raw: string): string {
+  const digits = raw.replace(/\D/g, "");
+  if (!digits) return "";
+  const first = digits[0];
+  if (first !== "7" && first !== "8" && first !== "9") return `+${digits.slice(0, 15)}`;
+
+  const d = (first === "9" ? `7${digits}` : `7${digits.slice(1)}`).slice(0, 11);
+  let out = "+7";
+  if (d.length > 1) out += ` ${d.slice(1, 4)}`;
+  if (d.length > 4) out += ` ${d.slice(4, 7)}`;
+  if (d.length > 7) out += `-${d.slice(7, 9)}`;
+  if (d.length > 9) out += `-${d.slice(9, 11)}`;
+  return out;
+}
+
 export function AField({ label, error, hint, id, className, type, ...props }: FieldProps) {
   const [revealed, setRevealed] = useState(false);
   const isPassword = type === "password";
+  const isTel = type === "tel";
+
+  // Телефон — управляемое поле: значение форматируется на каждом
+  // символе, а при фокусе в пустое поле подставляется «+7 ». Пустой
+  // остаток «+7 » при уходе снимается, чтобы не уйти на сервер как номер.
+  const { defaultValue: telDefault, ...rest } = props;
+  const [tel, setTel] = useState(() => (isTel ? formatPhone(String(telDefault ?? "")) : ""));
+  const telProps = isTel
+    ? {
+        value: tel,
+        onChange: (event: React.ChangeEvent<HTMLInputElement>) => setTel(formatPhone(event.target.value)),
+        onFocus: () => {
+          if (tel === "") setTel("+7 ");
+        },
+        onBlur: () => {
+          if (tel.replace(/\D/g, "") === "7") setTel("");
+        },
+        inputMode: "tel" as const,
+      }
+    : { defaultValue: telDefault };
 
   return (
     <div className={className}>
@@ -91,7 +134,8 @@ export function AField({ label, error, hint, id, className, type, ...props }: Fi
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? `${id}-error` : undefined}
           className={cn(CONTROL, error ? "border-danger" : "border-line", isPassword && "pr-10")}
-          {...props}
+          {...rest}
+          {...telProps}
         />
         {isPassword && (
           <RevealButton revealed={revealed} onToggle={() => setRevealed((v) => !v)} />

@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 
 import { AField, FormMessage, SubmitButton } from "@/components/admin/ui";
+import { useStickyAction } from "@/lib/hooks/useStickyAction";
 import {
   changePasswordAction,
   logoutAction,
@@ -15,15 +16,15 @@ export function ProfileForm({ user }: { user: PublicUser }) {
   // Идентификатор привязывается к действию заранее: сервер всё равно
   // проверит сессию, но форме не нужно носить его в скрытом поле.
   const bound = updateProfileAction.bind(null, user.id);
-  const [state, action] = useActionState(bound, {} as FormState);
+  const { state, action, values } = useStickyAction(bound, {} as FormState);
 
   return (
     <div className="max-w-md">
       <form action={action} noValidate className="flex flex-col gap-4">
         <FormMessage error={state.error} success={state.fieldErrors ? undefined : state.success} />
         <AField id="profile-email" label="Почта" value={user.email} disabled hint="Почта используется для входа и не меняется" />
-        <AField id="profile-name" name="name" label="Имя" autoComplete="name" defaultValue={user.name} error={state.fieldErrors?.name} />
-        <AField id="profile-phone" name="phone" type="tel" label="Телефон" autoComplete="tel" defaultValue={user.phone} error={state.fieldErrors?.phone} />
+        <AField id="profile-name" name="name" label="Имя" autoComplete="name" defaultValue={values.name ?? user.name} error={state.fieldErrors?.name} />
+        <AField id="profile-phone" name="phone" type="tel" label="Телефон" autoComplete="tel" defaultValue={values.phone ?? user.phone} error={state.fieldErrors?.phone} />
         <SubmitButton className="h-11 w-fit">Сохранить</SubmitButton>
       </form>
 

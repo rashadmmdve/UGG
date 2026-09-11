@@ -1,15 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
-
 import { ACheckbox, AField, FormMessage, SubmitButton } from "@/components/admin/ui";
+import { useStickyAction } from "@/lib/hooks/useStickyAction";
 import { loginAction, registerAction, type FormState } from "@/server/auth/actions";
 
 const EMPTY: FormState = {};
 
 export function LoginForm() {
-  const [state, action] = useActionState(loginAction, EMPTY);
+  const { state, action, values } = useStickyAction(loginAction, EMPTY);
 
   return (
     <form action={action} noValidate className="flex flex-col gap-4">
@@ -19,7 +18,7 @@ export function LoginForm() {
           {state.action.label}
         </Link>
       )}
-      <AField id="login-email" name="email" type="email" label="Почта" autoComplete="email" error={state.fieldErrors?.email} />
+      <AField id="login-email" name="email" type="email" label="Почта" autoComplete="email" defaultValue={values.email ?? ""} error={state.fieldErrors?.email} />
       <div>
         <AField id="login-password" name="password" type="password" label="Пароль" autoComplete="current-password" error={state.fieldErrors?.password} />
         <Link href="/account/forgot" className="mt-1.5 inline-block text-sm text-muted underline underline-offset-4 hover:text-accent">
@@ -37,7 +36,7 @@ export function LoginForm() {
 }
 
 export function RegisterForm() {
-  const [state, action] = useActionState(registerAction, EMPTY);
+  const { state, action, values } = useStickyAction(registerAction, EMPTY);
 
   return (
     <form action={action} noValidate className="flex flex-col gap-4">
@@ -47,9 +46,9 @@ export function RegisterForm() {
           {state.action.label}
         </Link>
       )}
-      <AField id="reg-name" name="name" label="Имя" autoComplete="name" error={state.fieldErrors?.name} />
-      <AField id="reg-email" name="email" type="email" label="Почта" autoComplete="email" error={state.fieldErrors?.email} />
-      <AField id="reg-phone" name="phone" type="tel" label="Телефон" autoComplete="tel" placeholder="+7 900 000-00-00" error={state.fieldErrors?.phone} />
+      <AField id="reg-name" name="name" label="Имя" autoComplete="name" defaultValue={values.name ?? ""} error={state.fieldErrors?.name} />
+      <AField id="reg-email" name="email" type="email" label="Почта" autoComplete="email" defaultValue={values.email ?? ""} error={state.fieldErrors?.email} />
+      <AField id="reg-phone" name="phone" type="tel" label="Телефон" autoComplete="tel" placeholder="+7 900 000-00-00" defaultValue={values.phone ?? ""} error={state.fieldErrors?.phone} />
       <AField id="reg-password" name="password" type="password" label="Пароль" autoComplete="new-password" hint="Минимум 8 символов" error={state.fieldErrors?.password} />
       <SubmitButton className="h-11">Создать аккаунт</SubmitButton>
       <p className="text-sm text-muted">

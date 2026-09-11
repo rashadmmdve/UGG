@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 
 import { AField, FormMessage, SubmitButton } from "@/components/admin/ui";
+import { useStickyAction } from "@/lib/hooks/useStickyAction";
 import {
   requestPasswordResetAction,
   resetPasswordAction,
@@ -14,14 +15,14 @@ const EMPTY: FormState = {};
 
 /** «Забыли пароль?» — просим почту, отвечаем одинаково для любой. */
 export function ForgotPasswordForm() {
-  const [state, action] = useActionState(requestPasswordResetAction, EMPTY);
+  const { state, action, values } = useStickyAction(requestPasswordResetAction, EMPTY);
 
   return (
     <form action={action} noValidate className="flex flex-col gap-4">
       <FormMessage error={state.error} success={state.success} />
       {!state.success && (
         <>
-          <AField id="forgot-email" name="email" type="email" label="Почта" autoComplete="email" error={state.fieldErrors?.email} />
+          <AField id="forgot-email" name="email" type="email" label="Почта" autoComplete="email" defaultValue={values.email ?? ""} error={state.fieldErrors?.email} />
           <SubmitButton className="h-11">Отправить ссылку</SubmitButton>
         </>
       )}

@@ -52,6 +52,7 @@ export function CheckoutForm({
 
   const [promocode, setPromocode] = useState("");
   const [discount, setDiscount] = useState(0);
+  const [discountPercent, setDiscountPercent] = useState<number | null>(null);
   const [promoMessage, setPromoMessage] = useState<string | null>(null);
   const [promoChecking, setPromoChecking] = useState(false);
 
@@ -133,13 +134,22 @@ export function CheckoutForm({
     setPromoChecking(false);
     if (result.ok) {
       setDiscount(result.discount);
-      setPromoMessage(`Скидка ${formatPrice(result.discount)}`);
+      setDiscountPercent(result.percent);
+      setPromoMessage(
+        result.percent
+          ? `Скидка ${result.percent} % — минус ${formatPrice(result.discount)}`
+          : `Скидка ${formatPrice(result.discount)}`,
+      );
     } else {
       setDiscount(0);
+      setDiscountPercent(null);
       setPromoMessage(result.error);
     }
   }
 
+  // Через onSubmit, а не action={…}: форму с action React очищает после
+  // каждой отправки, и покупатель, забывший телефон, заново вводил бы имя
+  // и почту. Здесь поля живут, пока страница открыта.
   function handleSubmit(formData: FormData) {
     setError(null);
     setFieldErrors({});
@@ -177,7 +187,14 @@ export function CheckoutForm({
   }
 
   return (
-    <form action={handleSubmit} noValidate className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-12">
+    <form
+      onSubmit={(event) => {
+        event.preventDefault();
+        handleSubmit(new FormData(event.currentTarget));
+      }}
+      noValidate
+      className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-12"
+    >
       <div className="flex flex-col gap-10 lg:col-span-7">
         <fieldset>
           <legend className="mb-4 text-lg font-semibold">Контакты</legend>
@@ -267,6 +284,7 @@ export function CheckoutForm({
                 setPromocode(event.target.value);
                 setPromoMessage(null);
                 setDiscount(0);
+                setDiscountPercent(null);
               }}
               placeholder="Промокод"
               aria-label="Промокод"
@@ -284,7 +302,10 @@ export function CheckoutForm({
           <dl className="flex flex-col gap-1.5 py-4 text-sm">
             <div className="flex justify-between"><dt className="text-muted">Товары</dt><dd className="tabular-nums">{formatPrice(subtotal)}</dd></div>
             {discount > 0 && (
-              <div className="flex justify-between"><dt className="text-muted">Скидка</dt><dd className="tabular-nums text-success">−{formatPrice(discount)}</dd></div>
+              <div className="flex justify-between">
+                <dt className="text-muted">Скидка{discountPercent ? ` ${discountPercent} %` : ""}</dt>
+                <dd className="tabular-nums text-success">−{formatPrice(discount)}</dd>
+              </div>
             )}
             <div className="flex justify-between">
               <dt className="text-muted">Доставка</dt>
