@@ -35,7 +35,7 @@ if (!fs.existsSync(SOURCE)) {
 }
 
 const root = process.cwd();
-const uploadsDir = path.join(root, "public", "uploads");
+const uploadsDir = process.env.UPLOADS_DIR ?? path.join(root, "public", "uploads");
 const db = new Database(path.join(process.env.DATA_DIR ?? path.join(root, "data"), "shop.db"));
 db.pragma("journal_mode = WAL");
 

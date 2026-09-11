@@ -5,6 +5,7 @@ import { nanoid } from "nanoid";
 import sharp, { type Metadata } from "sharp";
 
 import { assertAdmin } from "@/server/admin/guard";
+import { UPLOADS_DIR } from "@/server/uploads/dir";
 
 /**
  * Загрузка фотографий товаров.
@@ -19,7 +20,6 @@ import { assertAdmin } from "@/server/admin/guard";
  * написано в его расширении или заголовке Content-Type.
  */
 
-const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
 const MAX_FILES = 12;
 const MAX_BYTES = 12 * 1024 * 1024;
 /** Длинная сторона после сжатия. Для карточки товара больше не нужно. */
@@ -73,8 +73,8 @@ async function processFile(file: File): Promise<UploadResult> {
       .webp({ quality: WEBP_QUALITY })
       .toBuffer({ resolveWithObject: true });
 
-    await fs.mkdir(UPLOAD_DIR, { recursive: true });
-    await fs.writeFile(path.join(UPLOAD_DIR, fileName), output.data);
+    await fs.mkdir(UPLOADS_DIR, { recursive: true });
+    await fs.writeFile(path.join(UPLOADS_DIR, fileName), output.data);
 
     return {
       name,

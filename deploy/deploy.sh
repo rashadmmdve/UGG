@@ -77,11 +77,6 @@ fi
 
 previous=$(readlink -f "$ROOT/current" 2>/dev/null || true)
 
-# Фото — общие для всех версий и обязаны лежать под public/, иначе Next их
-# не отдаст. Ссылка ставится только теперь, после сборки: в клоне папка
-# уже есть (в git лежит .gitkeep), и ln без rm положил бы ссылку внутрь неё.
-rm -rf "$release/public/uploads"
-ln -sfn "$ROOT/shared/uploads" "$release/public/uploads"
 
 echo "── Переключение ──"
 ln -sfn "$release" "$ROOT/current.new" && mv -Tf "$ROOT/current.new" "$ROOT/current"

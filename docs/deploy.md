@@ -61,6 +61,7 @@ nano /srv/ugg/shared/.env.local      # образец — /srv/ugg/current/.env.
 | Переменная | Значение |
 |---|---|
 | `DATA_DIR` | `/srv/ugg/shared/data` — база вне папки версии. Ссылка на неё внутри проекта роняет сборку (Turbopack не ходит за корень), поэтому только переменная. Та же переменная экспортирована в `.profile` пользователя `ugg`, чтобы `npm run seed` и прочие скрипты видели ту же базу |
+| `UPLOADS_DIR` | `/srv/ugg/shared/uploads` — фото вне папки версии. Отдаёт их сам сайт (маршрут `/uploads/[file]`), а не `public`: `next start` читает список `public` один раз при запуске, и загруженное после отвечало бы 404 до перезапуска |
 | `AUTH_SECRET` | `node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"` |
 | `NEXT_PUBLIC_SITE_URL` | `https://uggrussia.shop` — без слэша; в продакшене без неё сборка падает |
 | `CDEK_API_URL` | `https://api.cdek.ru` — боевой, не тестовый |

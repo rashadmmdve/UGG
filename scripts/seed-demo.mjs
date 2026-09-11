@@ -44,7 +44,7 @@ if (clear) {
 // ─── Картинки-заглушки ───────────────────────────────────────────────────────
 // Настоящие фотографии загрузит владелец магазина. Здесь просто однотонные
 // прямоугольники, чтобы проверить работу оптимизатора изображений.
-const uploadsDir = path.join(root, "public", "uploads");
+const uploadsDir = process.env.UPLOADS_DIR ?? path.join(root, "public", "uploads");
 fs.mkdirSync(uploadsDir, { recursive: true });
 
 async function placeholder(name, hex) {
