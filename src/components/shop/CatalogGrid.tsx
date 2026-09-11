@@ -320,7 +320,7 @@ export function CatalogGrid({
       всей страницей: так товары начинаются на уровне заголовка, а не
       уходят под него на высоту h1 и подборок.
     */
-    <div className="mt-4 grid gap-8 lg:grid-cols-[240px_1fr]">
+    <div className="mt-4 grid grid-cols-1 gap-8 lg:grid-cols-[240px_minmax(0,1fr)]">
       <div>
         {header}
         <aside className={cn("hidden lg:block", header && "mt-8")}>{panel}</aside>

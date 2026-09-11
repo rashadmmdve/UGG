@@ -27,7 +27,7 @@ export function AccountTabs({ user, orders }: { user: PublicUser; orders: Order[
   const counts: Record<Tab, number | null> = { orders: active.length, purchases: purchases.length, profile: null };
 
   return (
-    <div className="mt-8 grid gap-8 md:grid-cols-12">
+    <div className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-12">
       <nav className="md:col-span-3">
         <ul className="flex gap-2 overflow-x-auto md:flex-col md:gap-1">
           {TABS.map((item) => {

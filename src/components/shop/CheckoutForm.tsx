@@ -177,11 +177,11 @@ export function CheckoutForm({
   }
 
   return (
-    <form action={handleSubmit} noValidate className="mt-8 grid gap-10 lg:grid-cols-12">
+    <form action={handleSubmit} noValidate className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-12">
       <div className="flex flex-col gap-10 lg:col-span-7">
         <fieldset>
           <legend className="mb-4 text-lg font-semibold">Контакты</legend>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <AField id="co-name" name="name" label="Имя" autoComplete="name" defaultValue={user?.name ?? ""} error={fieldErrors.name} className="sm:col-span-2" />
             <AField id="co-email" name="email" type="email" label="Почта" autoComplete="email" defaultValue={user?.email ?? ""} error={fieldErrors.email} />
             <AField id="co-phone" name="phone" type="tel" label="Телефон" autoComplete="tel" placeholder="+7 900 000-00-00" defaultValue={user?.phone ?? ""} error={fieldErrors.phone} />
@@ -190,7 +190,7 @@ export function CheckoutForm({
 
         <fieldset>
           <legend className="mb-4 text-lg font-semibold">Оплата</legend>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {PAYMENT_OPTIONS.map((option) => {
               const disabled = option.value === "online" && !onlinePayment;
               const checked = paymentMethod === option.value;
