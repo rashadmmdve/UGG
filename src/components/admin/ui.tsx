@@ -18,9 +18,9 @@ const CONTROL =
   "w-full rounded border bg-bg px-3 py-2 text-sm text-fg outline-none transition-colors " +
   "placeholder:text-line-strong focus:border-accent disabled:bg-elevated disabled:text-muted";
 
-function Label({ htmlFor, children }: { htmlFor?: string; children: React.ReactNode }) {
+function Label({ htmlFor, hidden, children }: { htmlFor?: string; hidden?: boolean; children: React.ReactNode }) {
   return (
-    <label htmlFor={htmlFor} className="block text-xs font-medium text-muted">
+    <label htmlFor={htmlFor} className={hidden ? "sr-only" : "block text-xs font-medium text-muted"}>
       {children}
     </label>
   );
@@ -39,6 +39,14 @@ type FieldProps = React.InputHTMLAttributes<HTMLInputElement> & {
   label: string;
   error?: string;
   hint?: string;
+  /**
+   * Подпись только для читалок, подсказка — внутри поля (placeholder).
+   * Так выглядит оформление заказа: короткая форма, где подписи над
+   * полями лишь удлиняют её.
+   */
+  labelHidden?: boolean;
+  /** Классы самого поля — размер и отступы поверх стандартных. */
+  inputClassName?: string;
 };
 
 /**
@@ -100,7 +108,7 @@ export function formatPhone(raw: string): string {
   return out;
 }
 
-export function AField({ label, error, hint, id, className, type, ...props }: FieldProps) {
+export function AField({ label, error, hint, id, className, type, labelHidden, inputClassName, ...props }: FieldProps) {
   const [revealed, setRevealed] = useState(false);
   const isPassword = type === "password";
   const isTel = type === "tel";
@@ -126,14 +134,14 @@ export function AField({ label, error, hint, id, className, type, ...props }: Fi
 
   return (
     <div className={className}>
-      <Label htmlFor={id}>{label}</Label>
-      <div className="relative mt-1">
+      <Label htmlFor={id} hidden={labelHidden}>{label}</Label>
+      <div className={cn("relative", !labelHidden && "mt-1")}>
         <input
           id={id}
           type={isPassword && revealed ? "text" : type}
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? `${id}-error` : undefined}
-          className={cn(CONTROL, error ? "border-danger" : "border-line", isPassword && "pr-10")}
+          className={cn(CONTROL, error ? "border-danger" : "border-line", isPassword && "pr-10", inputClassName)}
           {...rest}
           {...telProps}
         />
@@ -151,6 +159,8 @@ type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
   label: string;
   error?: string;
   hint?: string;
+  labelHidden?: boolean;
+  inputClassName?: string;
 };
 
 export function ATextarea({
@@ -160,11 +170,13 @@ export function ATextarea({
   id,
   className,
   rows = 4,
+  labelHidden,
+  inputClassName,
   ...props
 }: TextareaProps) {
   return (
     <div className={className}>
-      <Label htmlFor={id}>{label}</Label>
+      <Label htmlFor={id} hidden={labelHidden}>{label}</Label>
       <textarea
         id={id}
         rows={rows}
@@ -172,8 +184,10 @@ export function ATextarea({
         aria-describedby={error ? `${id}-error` : undefined}
         className={cn(
           CONTROL,
-          "mt-1 resize-y",
+          "resize-y",
+          !labelHidden && "mt-1",
           error ? "border-danger" : "border-line",
+          inputClassName,
         )}
         {...props}
       />

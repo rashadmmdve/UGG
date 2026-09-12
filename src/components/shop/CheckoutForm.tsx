@@ -12,6 +12,7 @@ import { cartSubtotal, useCartStore } from "@/lib/store/cart";
 import { cn, formatPrice, plural, sizeLabel } from "@/lib/utils";
 import { quoteDeliveryAction } from "@/server/cdek/actions";
 import { previewPromocode, submitOrder } from "@/server/orders/createOrder";
+import { CHECKOUT_INPUT } from "@/components/shop/checkout-styles";
 import type {
   CdekCity,
   CdekDeliveryPoint,
@@ -203,16 +204,16 @@ export function CheckoutForm({
     >
       <div className="flex flex-col gap-10 lg:col-span-7">
         <fieldset>
-          <legend className="mb-4 text-lg font-semibold">Контакты</legend>
+          <legend className="mb-4 text-lg font-semibold">1. Контактные данные</legend>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <AField id="co-name" name="name" label="Имя" autoComplete="name" defaultValue={user?.name ?? ""} error={fieldErrors.name} className="sm:col-span-2" />
-            <AField id="co-email" name="email" type="email" label="Почта" autoComplete="email" defaultValue={user?.email ?? ""} error={fieldErrors.email} />
-            <AField id="co-phone" name="phone" type="tel" label="Телефон" autoComplete="tel" placeholder="+7 900 000-00-00" defaultValue={user?.phone ?? ""} error={fieldErrors.phone} />
+            <AField id="co-name" name="name" label="Имя" placeholder="Ваше имя *" labelHidden inputClassName={CHECKOUT_INPUT} autoComplete="name" defaultValue={user?.name ?? ""} error={fieldErrors.name} />
+            <AField id="co-phone" name="phone" type="tel" label="Телефон" placeholder="Контактный телефон *" labelHidden inputClassName={CHECKOUT_INPUT} autoComplete="tel" defaultValue={user?.phone ?? ""} error={fieldErrors.phone} />
+            <AField id="co-email" name="email" type="email" label="Почта" placeholder="Ваш e-mail *" labelHidden inputClassName={CHECKOUT_INPUT} autoComplete="email" defaultValue={user?.email ?? ""} error={fieldErrors.email} className="sm:col-span-2" />
           </div>
         </fieldset>
 
         <fieldset>
-          <legend className="mb-4 text-lg font-semibold">Оплата</legend>
+          <legend className="mb-4 text-lg font-semibold">2. Способ оплаты</legend>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {PAYMENT_OPTIONS.map((option) => {
               const disabled = option.value === "online" && !onlinePayment;
@@ -251,7 +252,7 @@ export function CheckoutForm({
         </fieldset>
 
         <fieldset>
-          <legend className="mb-4 text-lg font-semibold">Доставка</legend>
+          <legend className="mb-4 text-lg font-semibold">3. Доставка</legend>
           <DeliveryPicker
             items={cartLines}
             mode={mode} onModeChange={setMode}
@@ -262,7 +263,7 @@ export function CheckoutForm({
           />
           {quoteError && <p role="alert" className="mt-3 text-sm text-danger">{quoteError}</p>}
           <div className="mt-5">
-            <ATextarea id="co-comment" name="comment" label="Комментарий к заказу" placeholder="Необязательно" rows={3} />
+            <ATextarea id="co-comment" name="comment" label="Комментарий к заказу" placeholder="Комментарий к заказу (необязательно)" labelHidden inputClassName={CHECKOUT_INPUT} rows={3} />
           </div>
         </fieldset>
       </div>

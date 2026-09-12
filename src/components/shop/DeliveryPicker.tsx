@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Loader2, MapPin, Truck } from "lucide-react";
 
 import { AField } from "@/components/admin/ui";
+import { CHECKOUT_INPUT } from "@/components/shop/checkout-styles";
 import { isSelfDelivery } from "@/lib/delivery";
 import { cn } from "@/lib/utils";
 import {
@@ -151,11 +152,13 @@ export function DeliveryPicker({
             }
           }}
           autoComplete="off"
-          placeholder="Начните вводить название"
-          hint={city ? undefined : "Выберите город из списка"}
+          placeholder="Город *"
+          labelHidden
+          inputClassName={CHECKOUT_INPUT}
+          hint={city ? undefined : "Начните вводить название и выберите город из списка"}
           error={fieldErrors.cityCode || fieldErrors.city}
         />
-        {searching && <Loader2 className="absolute top-8 right-3 h-4 w-4 animate-spin text-muted" />}
+        {searching && <Loader2 className="absolute top-4 right-3 h-4 w-4 animate-spin text-muted" />}
         {suggestions.length > 0 && (
           <ul className={dropdown}>
             {suggestions.map((item) => (
@@ -187,7 +190,9 @@ export function DeliveryPicker({
           value={address}
           onChange={(event) => onAddressChange(event.target.value)}
           autoComplete="street-address"
-          placeholder="Улица, дом, квартира"
+          placeholder="Ваш адрес: улица, дом, квартира *"
+          labelHidden
+          inputClassName={CHECKOUT_INPUT}
           hint="Доставим сами и бесплатно — курьер позвонит и согласует время"
           error={fieldErrors.address}
         />
@@ -201,7 +206,9 @@ export function DeliveryPicker({
             onFocus={(event) => event.currentTarget.select()}
             autoComplete="off"
             disabled={!city}
-            placeholder={city ? "Начните вводить адрес" : "Сначала выберите город"}
+            placeholder={city ? "Пункт выдачи: начните вводить адрес *" : "Сначала выберите город"}
+            labelHidden
+            inputClassName={CHECKOUT_INPUT}
             hint={pointHint}
             error={fieldErrors.pointCode}
           />
@@ -235,7 +242,9 @@ export function DeliveryPicker({
           value={address}
           onChange={(event) => onAddressChange(event.target.value)}
           autoComplete="street-address"
-          placeholder="Улица, дом, квартира"
+          placeholder="Ваш адрес: улица, дом, квартира *"
+          labelHidden
+          inputClassName={CHECKOUT_INPUT}
           error={fieldErrors.address}
         />
       )}
