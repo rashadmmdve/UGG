@@ -101,7 +101,7 @@ export function ProductPurchase({ product }: { product: Product }) {
                 }}
                 className={cn(
                   // Фиксированная ширина: все кнопки одинаковые, подпись по центру.
-                  "min-h-12 w-[104px] rounded-md border px-1 py-2 text-center text-sm font-medium transition-colors",
+                  "min-h-12 w-[92px] rounded-md border px-1 py-2 text-center text-sm font-medium transition-colors",
                   selected
                     ? "border-accent bg-accent text-white"
                     : "border-line text-fg hover:border-accent",
