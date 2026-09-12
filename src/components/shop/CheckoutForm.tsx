@@ -271,12 +271,15 @@ export function CheckoutForm({
       </div>
 
       <aside className="lg:col-span-5">
-        <div className="rounded-lg border border-line p-6 lg:sticky lg:top-24">
+        {/* На широком экране блок прилипает и не выше окна: длинный
+            состав прокручивается внутри, а итог и кнопка оплаты видны
+            всегда, сколько бы товаров ни было. */}
+        <div className="rounded-lg border border-line p-6 lg:sticky lg:top-24 lg:flex lg:max-h-[calc(100vh-7.5rem)] lg:flex-col">
           <h2 className="label-caps text-fg">Ваш заказ</h2>
           {/* Состав с фото и крестиком: передумать можно и здесь, не
               возвращаясь в корзину. Последний товар убрал — форма сменится
               на «корзина пуста». */}
-          <ul className="mt-4 flex flex-col divide-y divide-line border-b border-line">
+          <ul className="mt-4 flex flex-col divide-y divide-line border-b border-line lg:min-h-0 lg:overflow-y-auto">
             {items.map((item) => (
               <li key={`${item.productId}-${item.variantId}`} className="flex items-center gap-3 py-3 text-sm">
                 <Link href={`/product/${item.slug}`} className="relative block h-16 w-16 shrink-0 overflow-hidden rounded bg-elevated">
