@@ -6,6 +6,7 @@ import {
   quoteDelivery,
   searchCities,
 } from "@/server/cdek/api";
+import { isSelfDelivery } from "@/lib/delivery";
 import { assertAdmin } from "@/server/admin/guard";
 import { getProductById } from "@/server/repositories/catalog";
 import type { CdekCity, CdekDeliveryPoint, CdekQuote } from "@/lib/types";
@@ -97,6 +98,12 @@ export async function quoteDeliveryAction(input: {
   pointCode?: string | null;
   items: CartLine[];
 }): Promise<QuoteResult> {
+  // Свой город возим сами и денег за это не берём: у СДЭК тут ничего не
+  // спрашиваем — ни тарифа, ни сроков, их назовёт человек при звонке.
+  if (isSelfDelivery({ cityCode: input.cityCode })) {
+    return { ok: true, quote: { price: 0, periodMin: null, periodMax: null } };
+  }
+
   try {
     const { weight, dimensions } = await measureCart(input.items);
 

@@ -152,13 +152,17 @@ export async function submitOrder(input: unknown): Promise<CheckoutResult> {
     box.height += (product?.height ?? 0) * item.quantity;
   }
 
-  const quote = await quoteDelivery({
-    cityCode: data.cityCode,
-    mode: data.deliveryMode,
-    deliveryPoint: data.pointCode ?? undefined,
-    weightGrams: Math.max(weight, 1),
-    dimensions: box.length && box.width && box.height ? box : undefined,
-  }).catch(() => null);
+  // Свой город — доставка бесплатная и без СДЭК; цену считаем здесь же,
+  // а не доверяем клиенту: он присылает только город и адрес.
+  const quote = isSelfDelivery({ cityCode: data.cityCode })
+    ? { price: 0, periodMin: null, periodMax: null }
+    : await quoteDelivery({
+        cityCode: data.cityCode,
+        mode: data.deliveryMode,
+        deliveryPoint: data.pointCode ?? undefined,
+        weightGrams: Math.max(weight, 1),
+        dimensions: box.length && box.width && box.height ? box : undefined,
+      }).catch(() => null);
 
   if (!quote) {
     return {

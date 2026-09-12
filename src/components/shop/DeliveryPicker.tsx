@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Loader2, MapPin, Truck } from "lucide-react";
 
 import { AField } from "@/components/admin/ui";
+import { isSelfDelivery } from "@/lib/delivery";
 import { cn } from "@/lib/utils";
 import {
   getDeliveryPointsAction,
@@ -13,7 +14,6 @@ import {
 import type { CdekCity, CdekDeliveryPoint, DeliveryMode } from "@/lib/types";
 
 const SEARCH_DEBOUNCE_MS = 400;
-const MIN_POINT_SEARCH = 2;
 
 /**
  * Выбор способа доставки: пункт выдачи СДЭК или курьер до двери.
@@ -113,29 +113,27 @@ export function DeliveryPicker({
     if (point) onPointChange(null);
   }
 
-  // В Москве полторы сотни пунктов — список открывается только после ввода
-  // и ищет строго по адресу, который покупатель видит в списке.
+  // Список открывается сразу, как выбран город: искать его руками не
+  // нужно, а ввод в поле сужает выдачу по адресу.
   const search = pointQuery.trim().toLowerCase();
   const matched = points.filter((item) => item.address.toLowerCase().includes(search));
-  const showPoints = Boolean(city) && !point && search.length >= MIN_POINT_SEARCH;
+  const showPoints = Boolean(city) && !point;
 
   const pointHint = !city
     ? "Сначала выберите город"
     : point
       ? [point.workTime, point.hasDressingRoom && "есть примерочная"].filter(Boolean).join(" · ")
-      : "Введите улицу или номер дома — покажем подходящие пункты";
+      : "Выберите из списка или введите улицу, чтобы сузить";
 
   const dropdown = "absolute z-20 mt-1 max-h-72 w-full overflow-y-auto rounded-md border border-line bg-bg shadow-lg";
 
+  // Свой город: способ выбирать не из чего — привезём по адресу и
+  // бесплатно. Поэтому карточки способов появляются только там, где
+  // работает СДЭК, и уже после города: сначала «куда», потом «как».
+  const self = city ? isSelfDelivery({ cityCode: city.code }) : false;
+
   return (
     <div className="flex flex-col gap-5">
-      <div className="grid gap-3 sm:grid-cols-2">
-        <ModeCard active={mode === "pvz"} icon={<MapPin className="h-4 w-4" strokeWidth={1.6} />}
-          title="Пункт выдачи СДЭК" hint="Заберёте сами, дешевле" onClick={() => onModeChange("pvz")} />
-        <ModeCard active={mode === "courier"} icon={<Truck className="h-4 w-4" strokeWidth={1.6} />}
-          title="Курьером до двери" hint="Привезут по адресу" onClick={() => onModeChange("courier")} />
-      </div>
-
       <div className="relative">
         <AField
           id="co-city"
@@ -169,7 +167,27 @@ export function DeliveryPicker({
         )}
       </div>
 
-      {mode === "pvz" ? (
+      {city && !self && (
+        <div className="grid gap-3 sm:grid-cols-2">
+          <ModeCard active={mode === "pvz"} icon={<MapPin className="h-4 w-4" strokeWidth={1.6} />}
+            title="Пункт выдачи СДЭК" hint="Заберёте сами, дешевле" onClick={() => onModeChange("pvz")} />
+          <ModeCard active={mode === "courier"} icon={<Truck className="h-4 w-4" strokeWidth={1.6} />}
+            title="Курьером до двери" hint="Привезут по адресу" onClick={() => onModeChange("courier")} />
+        </div>
+      )}
+
+      {!city ? null : self ? (
+        <AField
+          id="co-address"
+          label="Адрес доставки"
+          value={address}
+          onChange={(event) => onAddressChange(event.target.value)}
+          autoComplete="street-address"
+          placeholder="Улица, дом, квартира"
+          hint="Доставим сами и бесплатно — курьер позвонит и согласует время"
+          error={fieldErrors.address}
+        />
+      ) : mode === "pvz" ? (
         <div className="relative">
           <AField
             id="co-point"

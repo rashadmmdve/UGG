@@ -7,6 +7,7 @@ import { useEffect, useState, useTransition } from "react";
 import { AField, ATextarea } from "@/components/admin/ui";
 import { DeliveryPicker } from "@/components/shop/DeliveryPicker";
 import { useHydrated } from "@/lib/hooks/useHydrated";
+import { isSelfDelivery } from "@/lib/delivery";
 import { cartSubtotal, useCartStore } from "@/lib/store/cart";
 import { cn, formatPrice, plural, sizeLabel } from "@/lib/utils";
 import { quoteDeliveryAction } from "@/server/cdek/actions";
@@ -76,7 +77,12 @@ export function CheckoutForm({
   // Строковый ключ вместо массива в зависимостях: новый массив создаётся
   // на каждый рендер и запускал бы эффект бесконечно.
   const cartKey = JSON.stringify(cartLines.map((line) => [line.productId, line.quantity]));
-  const ready = Boolean(city) && (mode === "pvz" ? Boolean(point) : address.trim().length > 4);
+
+  // Свой город: пункта выдачи нет, нужен адрес — везём по нему сами.
+  const self = city ? isSelfDelivery({ cityCode: city.code }) : false;
+  const ready =
+    Boolean(city) &&
+    (self || mode === "courier" ? address.trim().length > 4 : Boolean(point));
 
   useEffect(() => {
     let cancelled = false;
@@ -91,7 +97,7 @@ export function CheckoutForm({
       setQuoting(true);
       const result = await quoteDeliveryAction({
         cityCode: city.code,
-        mode,
+        mode: self ? "courier" : mode,
         pointCode: point?.code ?? null,
         items: (JSON.parse(cartKey) as [string, number][]).map(([productId, quantity]) => ({ productId, quantity })),
       });
@@ -109,7 +115,7 @@ export function CheckoutForm({
       cancelled = true;
       clearTimeout(id);
     };
-  }, [city, mode, point, ready, address, cartKey]);
+  }, [city, mode, self, point, ready, address, cartKey]);
 
   if (!hydrated) return <div className="py-24" aria-hidden />;
 
@@ -158,12 +164,12 @@ export function CheckoutForm({
         name: formData.get("name"),
         email: formData.get("email"),
         phone: formData.get("phone"),
-        deliveryMode: mode,
+        deliveryMode: self ? "courier" : mode,
         cityCode: city?.code ?? 0,
         city: city?.city ?? "",
         // Для пункта выдачи адресом становится его собственный адрес.
-        address: mode === "pvz" ? (point?.address ?? "") : address,
-        pointCode: mode === "pvz" ? (point?.code ?? null) : null,
+        address: !self && mode === "pvz" ? (point?.address ?? "") : address,
+        pointCode: !self && mode === "pvz" ? (point?.code ?? null) : null,
         comment: formData.get("comment") ?? "",
         promocode,
         paymentMethod,
@@ -309,7 +315,9 @@ export function CheckoutForm({
             )}
             <div className="flex justify-between">
               <dt className="text-muted">Доставка</dt>
-              <dd className="tabular-nums">{quoting ? "Считаем…" : quote ? formatPrice(quote.price) : "—"}</dd>
+              <dd className="tabular-nums">
+                {quoting ? "Считаем…" : quote ? (quote.price === 0 ? "Бесплатно" : formatPrice(quote.price)) : "—"}
+              </dd>
             </div>
             {quote?.periodMax != null && (
               <div className="flex justify-between">
@@ -338,7 +346,9 @@ export function CheckoutForm({
 
           {!quote && !quoting && (
             <p className="mt-3 text-xs text-muted">
-              Выберите город и {mode === "pvz" ? "пункт выдачи" : "укажите адрес"} — рассчитаем доставку
+              {self
+                ? "Укажите адрес — доставим бесплатно"
+                : `Выберите город и ${mode === "pvz" ? "пункт выдачи" : "укажите адрес"} — рассчитаем доставку`}
             </p>
           )}
           <p className="mt-3 text-xs text-muted">
