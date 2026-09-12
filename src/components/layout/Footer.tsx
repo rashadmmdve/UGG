@@ -63,7 +63,7 @@ export function Footer({
           </div>
 
           <div>
-            <p className="label-caps">Каталог</p>
+            <p className="label-caps text-[0.8125rem] text-fg">Каталог</p>
             <ul className="mt-3 space-y-1.5 text-sm">
               {menu.map((section) => (
                 <li key={section.slug}>
@@ -77,7 +77,7 @@ export function Footer({
           </div>
 
           <div>
-            <p className="label-caps">Покупателям</p>
+            <p className="label-caps text-[0.8125rem] text-fg">Покупателям</p>
             <ul className="mt-3 space-y-1.5 text-sm">
               {INFO_LINKS.map((link) => (
                 <li key={link.href}>
@@ -88,7 +88,7 @@ export function Footer({
           </div>
 
           <div>
-            <p className="label-caps">Магазин</p>
+            <p className="label-caps text-[0.8125rem] text-fg">Магазин</p>
             <ul className="mt-3 space-y-1.5 text-sm">
               {COMPANY_LINKS.map((link) => (
                 <li key={link.href}>

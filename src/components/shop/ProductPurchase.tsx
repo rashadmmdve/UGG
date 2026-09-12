@@ -53,14 +53,16 @@ export function ProductPurchase({ product }: { product: Product }) {
       maxQuantity: variant.stock,
     });
 
+    // Две секунды кнопка зелёная и не нажимается: видно, что добавилось,
+    // и второй тап сгоряча не удвоит количество.
     setAdded(true);
     if (addedTimer.current) clearTimeout(addedTimer.current);
-    addedTimer.current = setTimeout(() => setAdded(false), 3000);
+    addedTimer.current = setTimeout(() => setAdded(false), 2000);
   }
 
   const buttonClass = cn(
-    "inline-flex h-12 w-full items-center justify-center gap-2 rounded-md text-sm font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:bg-line-strong",
-    added ? "bg-success hover:bg-success" : "bg-accent hover:bg-accent-hover",
+    "inline-flex h-12 w-full items-center justify-center gap-2 rounded-md text-sm font-semibold text-white transition-colors disabled:cursor-not-allowed",
+    added ? "bg-success disabled:bg-success" : "bg-accent hover:bg-accent-hover disabled:bg-line-strong",
   );
 
   const label = !inStock ? (
@@ -133,14 +135,14 @@ export function ProductPurchase({ product }: { product: Product }) {
       {/* На широком экране кнопка занимает треть колонки: во всю ширину
           она перетягивала на себя весь блок покупки. */}
       <div className="hidden md:block md:w-1/3">
-        <button type="button" className={buttonClass} disabled={!inStock} onClick={handleAdd}>
+        <button type="button" className={buttonClass} disabled={!inStock || added} onClick={handleAdd}>
           {label}
         </button>
       </div>
 
       {/* Залипающая панель покупки на мобильном */}
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-bg/95 p-3 backdrop-blur-sm md:hidden">
-        <button type="button" className={buttonClass} disabled={!inStock} onClick={handleAdd}>
+        <button type="button" className={buttonClass} disabled={!inStock || added} onClick={handleAdd}>
           {label}
         </button>
       </div>
