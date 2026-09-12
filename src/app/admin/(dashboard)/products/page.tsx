@@ -1,8 +1,11 @@
 import Link from "next/link";
-import { Fragment } from "react";
 
-import { BulkCheckbox, BulkPublishBar } from "@/components/admin/BulkPublish";
-import { formatPrice } from "@/lib/utils";
+import {
+  AdminProductTable,
+  type AdminProductGroup,
+  type AdminProductRow,
+} from "@/components/admin/AdminProductTable";
+import { BulkPublishBar } from "@/components/admin/BulkPublish";
 import { getCategoryById, getProducts } from "@/server/repositories/catalog";
 import type { Product } from "@/lib/types";
 
@@ -13,23 +16,45 @@ const GENDER_ORDER = ["women", "men", "kids"];
  * Группы «пол → категория» в порядке разделов; внутри категории — как
  * пришли из базы (новые первыми). Без категории — в конец раздела.
  */
-function groupProducts(products: Product[]) {
-  const byGender = new Map<string, Map<string, Product[]>>();
+function groupProducts(products: Product[]): AdminProductGroup[] {
+  const byGender = new Map<string, Map<string, AdminProductRow[]>>();
+
   for (const product of products) {
-    const gender = product.gender;
-    const category = product.primaryCategoryId ? getCategoryById(product.primaryCategoryId)?.title ?? "Без категории" : "Без категории";
-    const categories = byGender.get(gender) ?? new Map<string, Product[]>();
-    categories.set(category, [...(categories.get(category) ?? []), product]);
-    byGender.set(gender, categories);
+    const category = product.primaryCategoryId
+      ? (getCategoryById(product.primaryCategoryId)?.title ?? "Без категории")
+      : "Без категории";
+    const categories = byGender.get(product.gender) ?? new Map<string, AdminProductRow[]>();
+    categories.set(category, [
+      ...(categories.get(category) ?? []),
+      {
+        id: product.id,
+        title: product.title,
+        slug: product.slug,
+        sku: product.sku ?? null,
+        price: product.price,
+        stock: product.variants.reduce((sum, variant) => sum + variant.stock, 0),
+        published: product.isPublished,
+      },
+    ]);
+    byGender.set(product.gender, categories);
   }
-  const genders = [...byGender.keys()].sort((a, b) => (GENDER_ORDER.indexOf(a) + 99) % 99 - (GENDER_ORDER.indexOf(b) + 99) % 99);
-  return genders.map((gender) => ({
-    gender,
-    title: GENDER_TITLE[gender] ?? gender,
-    categories: [...byGender.get(gender)!.entries()]
-      .sort((a, b) => (a[0] === "Без категории" ? 1 : b[0] === "Без категории" ? -1 : a[0].localeCompare(b[0], "ru")))
-      .map(([title, items]) => ({ title, items })),
-  }));
+
+  const rank = (gender: string) => {
+    const index = GENDER_ORDER.indexOf(gender);
+    return index === -1 ? GENDER_ORDER.length : index;
+  };
+
+  return [...byGender.keys()]
+    .sort((a, b) => rank(a) - rank(b))
+    .map((gender) => ({
+      key: `gender-${gender}`,
+      title: GENDER_TITLE[gender] ?? gender,
+      categories: [...byGender.get(gender)!.entries()]
+        .sort((a, b) =>
+          a[0] === "Без категории" ? 1 : b[0] === "Без категории" ? -1 : a[0].localeCompare(b[0], "ru"),
+        )
+        .map(([title, items]) => ({ key: `cat-${gender}-${title}`, title, items })),
+    }));
 }
 
 export default async function AdminProductsPage(
@@ -77,74 +102,7 @@ export default async function AdminProductsPage(
           {query ? "Ничего не найдено." : "Товаров пока нет — создайте первый."}
         </p>
       ) : (
-        <div className="mt-6 overflow-x-auto rounded-lg border border-line bg-bg">
-          <table className="w-full text-sm">
-            <thead className="bg-elevated text-left text-xs text-muted">
-              <tr>
-                <th className="w-8 px-3 py-2" />
-                <th className="px-4 py-2 font-normal">Название</th>
-                <th className="px-4 py-2 font-normal">Артикул</th>
-                <th className="px-4 py-2 font-normal text-right">Цена</th>
-                <th className="px-4 py-2 font-normal text-right">Остаток</th>
-                <th className="px-4 py-2 font-normal">Статус</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line">
-              {groupProducts(products).map((group) => group.categories.map((category, index) => (
-                <Fragment key={`${group.gender}-${category.title}`}>
-                  {/* Заголовок раздела — перед первой категорией, категория — перед своими товарами. */}
-                  {index === 0 && (
-                    <tr className="bg-sand">
-                      <td colSpan={6} className="px-4 py-2 text-sm font-bold">
-                        {group.title}{" "}
-                        <span className="font-normal text-muted">{group.categories.reduce((n, c) => n + c.items.length, 0)}</span>
-                      </td>
-                    </tr>
-                  )}
-                  <tr className="bg-elevated">
-                    <td colSpan={6} className="px-4 py-1.5 text-xs font-semibold tracking-wide text-muted uppercase">
-                      {category.title} <span className="font-normal">{category.items.length}</span>
-                    </td>
-                  </tr>
-                  {category.items.map((product) => {
-                const stock = product.variants.reduce((sum, v) => sum + v.stock, 0);
-
-                return (
-                  <tr key={product.id} className="hover:bg-sand">
-                    <td className="px-3 py-2"><BulkCheckbox id={product.id} /></td>
-                    <td className="px-4 py-2">
-                      <Link
-                        href={`/admin/products/${product.id}`}
-                        className="font-medium hover:text-accent"
-                      >
-                        {product.title}
-                      </Link>
-                      <span className="block text-xs text-muted">/product/{product.slug}</span>
-                    </td>
-                    <td className="px-4 py-2 text-muted">{product.sku ?? "—"}</td>
-                    <td className="px-4 py-2 text-right">{formatPrice(product.price)}</td>
-                    <td className={`px-4 py-2 text-right ${stock === 0 ? "text-danger" : ""}`}>
-                      {stock}
-                    </td>
-                    <td className="px-4 py-2">
-                      {product.isPublished ? (
-                        <span className="rounded bg-success/10 px-2 py-0.5 text-xs text-success">
-                          Опубликован
-                        </span>
-                      ) : (
-                        <span className="rounded bg-elevated px-2 py-0.5 text-xs text-muted">
-                          Черновик
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-                </Fragment>
-              )))}
-            </tbody>
-          </table>
-        </div>
+        <AdminProductTable groups={groupProducts(products)} />
       )}
     </div>
   );
