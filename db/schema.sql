@@ -124,6 +124,7 @@ CREATE TABLE IF NOT EXISTS product_variants (
   product_id   TEXT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
   size_eu      REAL NOT NULL,
   insole_cm    REAL,
+  size_us      TEXT,
   stock        INTEGER NOT NULL DEFAULT 0,
   barcode      TEXT,
   marking_code TEXT,

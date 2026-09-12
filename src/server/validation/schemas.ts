@@ -160,6 +160,7 @@ export const productVariantSchema = z.object({
     .max(50, "Слишком большой размер"),
   // Длина стельки в сантиметрах — главный ориентир покупателя при выборе.
   insoleCm: z.coerce.number().min(5).max(40).nullable().default(null),
+  sizeUs: z.string().trim().max(10).nullable().default(null),
   stock: z.coerce.number().int().min(0).max(9999),
   barcode: z.string().trim().max(40).default(""),
   markingCode: z.string().trim().max(200).default(""),

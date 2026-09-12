@@ -69,6 +69,7 @@ type VariantDraft = {
   id?: string;
   sizeEu: string | number;
   insoleCm?: string | number | null;
+  sizeUs?: string | null;
   stock: string | number;
   barcode?: string;
   markingCode?: string;
@@ -93,6 +94,7 @@ export async function saveProductAction(
         variant.insoleCm === "" || variant.insoleCm == null
           ? null
           : variant.insoleCm,
+      sizeUs: variant.sizeUs?.trim() || null,
       stock: variant.stock,
       barcode: variant.barcode ?? "",
       markingCode: variant.markingCode ?? "",

@@ -123,10 +123,10 @@ export function saveProduct(input: ProductInput): Product {
     const keep = new Set<string>();
 
     const upsert = db.prepare(
-      `INSERT INTO product_variants (id, product_id, size_eu, insole_cm, stock, barcode, marking_code)
-       VALUES (?, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO product_variants (id, product_id, size_eu, insole_cm, size_us, stock, barcode, marking_code)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(id) DO UPDATE SET
-         size_eu = excluded.size_eu, insole_cm = excluded.insole_cm,
+         size_eu = excluded.size_eu, insole_cm = excluded.insole_cm, size_us = excluded.size_us,
          stock = excluded.stock, barcode = excluded.barcode,
          marking_code = excluded.marking_code`,
     );
@@ -139,6 +139,7 @@ export function saveProduct(input: ProductInput): Product {
         id,
         variant.sizeEu,
         variant.insoleCm,
+        variant.sizeUs || null,
         variant.stock,
         variant.barcode || null,
         variant.markingCode || null,
@@ -204,6 +205,7 @@ export function cloneProduct(sourceId: string): Product | null {
     variants: source.variants.map((variant) => ({
       sizeEu: variant.sizeEu,
       insoleCm: variant.insoleCm,
+      sizeUs: variant.sizeUs,
       stock: 0,
     })),
     weight: source.weight,

@@ -137,6 +137,8 @@ export type ProductVariant = {
   sizeEu: number;
   /** Длина стельки в см для этого размера. */
   insoleCm: number | null;
+  /** Американский размер — подпись к EU, как пишет производитель. */
+  sizeUs: string | null;
   stock: number;
   barcode?: string;
   /**

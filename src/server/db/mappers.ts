@@ -185,6 +185,7 @@ export type VariantRow = {
   product_id: string;
   size_eu: number;
   insole_cm: number | null;
+  size_us: string | null;
   stock: number;
   barcode: string | null;
   marking_code: string | null;
@@ -195,6 +196,7 @@ export function mapVariant(row: VariantRow): ProductVariant {
     id: row.id,
     sizeEu: row.size_eu,
     insoleCm: row.insole_cm,
+    sizeUs: row.size_us,
     stock: row.stock,
     barcode: row.barcode ?? undefined,
     markingCode: row.marking_code ?? undefined,

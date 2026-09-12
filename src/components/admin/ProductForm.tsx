@@ -63,6 +63,7 @@ type VariantRow = {
   id?: string;
   sizeEu: string;
   insoleCm: string;
+  sizeUs: string;
   stock: string;
   barcode: string;
   markingCode: string;
@@ -115,6 +116,7 @@ export function ProductForm({
       id: variant.id,
       sizeEu: String(variant.sizeEu),
       insoleCm: variant.insoleCm === null ? "" : String(variant.insoleCm),
+      sizeUs: variant.sizeUs ?? "",
       stock: String(variant.stock),
       barcode: variant.barcode ?? "",
       markingCode: variant.markingCode ?? "",
@@ -167,7 +169,7 @@ export function ProductForm({
   function addVariant() {
     setVariants((current) => [
       ...current,
-      { key: nextKey(), sizeEu: "", insoleCm: "", stock: "0", barcode: "", markingCode: "" },
+      { key: nextKey(), sizeEu: "", insoleCm: "", sizeUs: "", stock: "0", barcode: "", markingCode: "" },
     ]);
   }
 
@@ -187,6 +189,7 @@ export function ProductForm({
         key: nextKey(),
         sizeEu: String(row.sizeEu),
         insoleCm: String(row.insoleCm),
+        sizeUs: row.sizeUs ?? "",
         stock: "0",
         barcode: "",
         markingCode: "",
@@ -215,10 +218,11 @@ export function ProductForm({
         name="variants"
         value={JSON.stringify(
           // Локальный ключ строки на сервер не уходит — он нужен только React.
-          variants.map(({ id, sizeEu, insoleCm, stock, barcode, markingCode }) => ({
+          variants.map(({ id, sizeEu, insoleCm, sizeUs, stock, barcode, markingCode }) => ({
             id,
             sizeEu,
             insoleCm,
+            sizeUs,
             stock,
             barcode,
             markingCode,
@@ -491,6 +495,7 @@ export function ProductForm({
                 <tr>
                   <th className="pb-2 pr-3 font-normal">EU</th>
                   <th className="pb-2 pr-3 font-normal">Стелька, см</th>
+                  <th className="pb-2 pr-3 font-normal">US</th>
                   <th className="pb-2 pr-3 font-normal">Остаток</th>
                   <th className="pb-2 pr-3 font-normal">Штрихкод</th>
                   <th className="pb-2 pr-3 font-normal">Код маркировки</th>
@@ -518,6 +523,15 @@ export function ProductForm({
                         onChange={(e) => updateVariant(row.key, { insoleCm: e.target.value })}
                         className="w-24 rounded border border-line px-2 py-1"
                         aria-label="Длина стельки"
+                      />
+                    </td>
+                    <td className="py-1.5 pr-3">
+                      <input
+                        value={row.sizeUs}
+                        onChange={(e) => updateVariant(row.key, { sizeUs: e.target.value })}
+                        className="w-16 rounded border border-line px-2 py-1"
+                        aria-label="Размер US"
+                        placeholder="5"
                       />
                     </td>
                     <td className="py-1.5 pr-3">

@@ -81,6 +81,11 @@ export function ProductPurchase({ product }: { product: Product }) {
           {product.variants.map((item) => {
             const disabled = item.stock === 0;
             const selected = item.id === variantId;
+            // Под европейским размером — US и стелька, как у производителя:
+            // «36 (US 5 — 22 см)». Покупатель сверяет со своей парой.
+            const note = [item.sizeUs && `US ${item.sizeUs}`, item.insoleCm && `${item.insoleCm} см`]
+              .filter(Boolean)
+              .join(" · ");
             return (
               <button
                 key={item.id}
@@ -93,14 +98,19 @@ export function ProductPurchase({ product }: { product: Product }) {
                   setError(false);
                 }}
                 className={cn(
-                  "min-h-11 min-w-12 rounded-md border px-3 text-sm font-medium transition-colors",
+                  "min-h-11 min-w-12 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors",
                   selected
                     ? "border-accent bg-accent text-white"
                     : "border-line text-fg hover:border-accent",
                   disabled && "cursor-not-allowed border-line/60 text-line-strong line-through hover:border-line/60",
                 )}
               >
-                {item.sizeEu}
+                <span className="block leading-tight">{item.sizeEu}</span>
+                {note && (
+                  <span className={cn("block text-[10px] font-normal leading-tight", selected ? "text-white/80" : "text-muted")}>
+                    {note}
+                  </span>
+                )}
               </button>
             );
           })}
