@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight, Heart, LayoutDashboard, Search, ShoppingBag, User } from "lucide-react";
 
@@ -78,14 +78,29 @@ export function Header({ menu }: { menu: MenuSection[] }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [openSection]);
 
-  // Escape закрывает поиск.
+  // Полоска поиска прячется сама: Escape, прокрутка страницы или тап
+  // мимо неё — покупатель пошёл дальше, поле ему уже не нужно.
+  const searchBar = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!searchOpen) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") setSearchOpen(false);
     };
+    const onScroll = () => setSearchOpen(false);
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (searchBar.current?.contains(target)) return;
+      if ((target as Element).closest?.('button[aria-label="Поиск"]')) return;
+      setSearchOpen(false);
+    };
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("scroll", onScroll);
+      document.removeEventListener("pointerdown", onPointerDown);
+    };
   }, [searchOpen]);
 
   const active = menu.find((section) => section.slug === openSection) ?? null;
@@ -251,6 +266,7 @@ export function Header({ menu }: { menu: MenuSection[] }) {
       {/* Полоска поиска на телефоне: лежит поверх страницы и ничего не
           сдвигает — absolute под шапкой, а не в потоке. */}
       <div
+        ref={searchBar}
         inert={!searchOpen}
         className={cn(
           "absolute inset-x-0 top-full border-b border-line bg-bg shadow-[0_18px_40px_-24px_rgba(0,0,0,0.35)] transition-all duration-300 lg:hidden",
