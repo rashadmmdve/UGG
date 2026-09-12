@@ -102,7 +102,7 @@ export function CartDrawer() {
             <ul className="flex-1 divide-y divide-line overflow-y-auto px-5">
               {items.map((item) => (
                 <li key={`${item.productId}-${item.variantId}`} className="flex gap-4 py-4">
-                  <Link href={`/product/${item.slug}`} onClick={close} className="relative block h-24 w-24 shrink-0 overflow-hidden rounded bg-elevated">
+                  <Link href={`/product/${item.slug}`} onClick={close} className="relative block h-24 w-24 shrink-0 overflow-hidden rounded bg-white">
                     {item.image && <Image src={item.image} alt={item.title} fill sizes="96px" className="object-contain" />}
                   </Link>
                   <div className="flex flex-1 flex-col justify-between">

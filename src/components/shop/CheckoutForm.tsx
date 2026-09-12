@@ -279,7 +279,7 @@ export function CheckoutForm({
           <ul className="mt-4 flex flex-col divide-y divide-line border-b border-line">
             {items.map((item) => (
               <li key={`${item.productId}-${item.variantId}`} className="flex items-center gap-3 py-3 text-sm">
-                <Link href={`/product/${item.slug}`} className="relative block h-16 w-16 shrink-0 overflow-hidden rounded bg-elevated">
+                <Link href={`/product/${item.slug}`} className="relative block h-16 w-16 shrink-0 overflow-hidden rounded bg-white">
                   {item.image && <Image src={item.image} alt={item.title} fill sizes="64px" className="object-contain" />}
                 </Link>
                 <div className="min-w-0 flex-1">

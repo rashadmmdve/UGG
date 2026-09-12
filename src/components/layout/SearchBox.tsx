@@ -140,7 +140,7 @@ export function SearchBox({
                     }}
                     className="flex items-center gap-3 px-3 py-2 hover:bg-sand"
                   >
-                    <span className="relative block h-12 w-12 shrink-0 overflow-hidden rounded bg-elevated">
+                    <span className="relative block h-12 w-12 shrink-0 overflow-hidden rounded bg-white">
                       {hit.image && <Image src={hit.image} alt="" fill sizes="48px" className="object-contain" />}
                     </span>
                     <span className="min-w-0 flex-1 truncate text-sm">{hit.title}</span>
