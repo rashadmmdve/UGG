@@ -9,7 +9,6 @@ import { SALE_SECTION, SITE_NAME } from "@/lib/constants";
 import {
   getCategoriesBySection,
   getColors,
-  getSaleProducts,
   getPublishedProducts,
 } from "@/server/repositories/catalog";
 import { catalogTiles } from "@/server/catalog/sections";
@@ -26,13 +25,14 @@ export const metadata: Metadata = {
   alternates: { canonical: "/catalog" },
 };
 
+/** Кнопка раздела: форма как у «Фильтров», но чёрная с белой надписью. */
+const SECTION_CHIP =
+  "inline-flex h-9 w-full items-center justify-center rounded bg-accent px-3 text-sm font-medium text-white transition-colors hover:bg-accent-hover";
+
 export default function CatalogPage() {
   const products = getPublishedProducts();
-  const saleCount = getSaleProducts().length;
-  // Распродажа идёт отдельным чипом ниже: у неё нет категорий, и счёт
-  // ведётся по товарам.
+  // Распродажа из ряда разделов убрана: вместо неё «Новинки».
   const tiles = catalogTiles().filter((tile) => tile.slug !== SALE_SECTION.slug);
-  const saleTitle = catalogTiles().find((tile) => tile.slug === SALE_SECTION.slug)!.title;
   const crumbs = catalogCrumbs();
 
   return (
@@ -47,28 +47,20 @@ export default function CatalogPage() {
           header={
             <>
               <h1 className="heading-section">Каталог</h1>
-              <nav aria-label="Разделы" className="mt-5 flex flex-wrap gap-2">
+              {/* Кнопки одной ширины: сетка в равные колонки, а не поток. */}
+              <nav aria-label="Разделы" className="mt-5 grid max-w-2xl grid-cols-2 gap-2 sm:grid-cols-4">
                 {tiles.map((section) => {
                   const count = getCategoriesBySection(section.slug).length;
                   return (
-                    <Link
-                      key={section.slug}
-                      href={`/catalog/${section.slug}`}
-                      className="rounded-full border border-line px-3 py-1 text-sm hover:border-accent"
-                    >
-                      {section.title} <span className="text-muted">· {count}</span>
+                    <Link key={section.slug} href={`/catalog/${section.slug}`} className={SECTION_CHIP}>
+                      {section.title}
+                      <span className="ml-1 text-white/60">· {count}</span>
                     </Link>
                   );
                 })}
-                {/* Распродажа считается товарами, а не категориями: их у неё нет. */}
-                {saleCount > 0 && (
-                  <Link
-                    href={`/catalog/${SALE_SECTION.slug}`}
-                    className="rounded-full border border-line px-3 py-1 text-sm hover:border-accent"
-                  >
-                    {saleTitle} <span className="text-muted">· {saleCount}</span>
-                  </Link>
-                )}
+                <Link href="/catalog?sort=new" className={SECTION_CHIP}>
+                  Новинки
+                </Link>
               </nav>
             </>
           }
