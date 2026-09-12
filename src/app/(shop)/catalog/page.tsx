@@ -7,7 +7,6 @@ import { JsonLd } from "@/components/JsonLd";
 import { CatalogGrid } from "@/components/shop/CatalogGrid";
 import { SALE_SECTION, SITE_NAME } from "@/lib/constants";
 import {
-  getCategoriesBySection,
   getColors,
   getPublishedProducts,
 } from "@/server/repositories/catalog";
@@ -49,15 +48,11 @@ export default function CatalogPage() {
               <h1 className="heading-section">Каталог</h1>
               {/* Кнопки одной ширины: сетка в равные колонки, а не поток. */}
               <nav aria-label="Разделы" className="mt-5 grid max-w-2xl grid-cols-2 gap-2 sm:grid-cols-4">
-                {tiles.map((section) => {
-                  const count = getCategoriesBySection(section.slug).length;
-                  return (
-                    <Link key={section.slug} href={`/catalog/${section.slug}`} className={SECTION_CHIP}>
-                      {section.title}
-                      <span className="ml-1 text-white/60">· {count}</span>
-                    </Link>
-                  );
-                })}
+                {tiles.map((section) => (
+                  <Link key={section.slug} href={`/catalog/${section.slug}`} className={SECTION_CHIP}>
+                    {section.title}
+                  </Link>
+                ))}
                 <Link href="/catalog?sort=new" className={SECTION_CHIP}>
                   Новинки
                 </Link>
