@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { formatPrice } from "@/lib/utils";
 import { requireAdmin } from "@/server/admin/guard";
 import { RolePicker } from "@/components/admin/RolePicker";
@@ -8,13 +10,34 @@ import { getUsers } from "@/server/repositories/users";
  * Клиенты — только чтение. Персональные данные здесь показываются
  * сотруднику магазина для обработки заказов; править их из админки
  * нельзя, покупатель делает это сам в личном кабинете.
+ *
+ * Поиск отдельный по каждому полю и считается на сервере: список растёт
+ * вместе с магазином, и держать его целиком в браузере ради фильтра
+ * незачем. У телефона сравниваются только цифры — записан он может быть
+ * с любыми скобками и пробелами.
  */
-export default async function AdminCustomersPage() {
+const digits = (value: string) => value.replace(/\D/g, "");
+
+export default async function AdminCustomersPage(props: PageProps<"/admin/customers">) {
   const admin = await requireAdmin();
+
+  const params = await props.searchParams;
+  const text = (key: string) =>
+    typeof params[key] === "string" ? params[key].trim().toLowerCase() : "";
+  const nameQuery = text("name");
+  const emailQuery = text("email");
+  const phoneQuery = digits(text("phone"));
+  const filtered = Boolean(nameQuery || emailQuery || phoneQuery);
 
   // Показываем всех, включая сотрудников: роль выдаётся здесь же, и
   // искать оператора в отдельном списке было бы странно.
-  const customers = getUsers();
+  const all = getUsers();
+  const customers = all.filter(
+    (user) =>
+      (!nameQuery || user.name.toLowerCase().includes(nameQuery)) &&
+      (!emailQuery || user.email.toLowerCase().includes(emailQuery)) &&
+      (!phoneQuery || digits(user.phone).includes(phoneQuery)),
+  );
   const orders = getOrders();
 
   const stats = new Map<string, { count: number; total: number }>();
@@ -33,7 +56,10 @@ export default async function AdminCustomersPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold">
-        Клиенты <span className="text-base font-normal text-muted">{customers.length}</span>
+        Клиенты{" "}
+        <span className="text-base font-normal text-muted">
+          {filtered ? `${customers.length} из ${all.length}` : all.length}
+        </span>
       </h1>
       <p className="mt-2 text-sm text-muted">
         Зарегистрированные покупатели и сотрудники. Заказов без регистрации:{" "}
@@ -41,8 +67,37 @@ export default async function AdminCustomersPage() {
         ни цен, ни финансов он не видит.
       </p>
 
+      <form className="mt-6 flex flex-wrap items-end gap-3">
+        {[
+          { name: "name", label: "Имя", placeholder: "Иван" },
+          { name: "email", label: "Почта", placeholder: "mail@example.com" },
+          { name: "phone", label: "Телефон", placeholder: "909" },
+        ].map((field) => (
+          <label key={field.name} className="flex flex-col gap-1 text-xs text-muted">
+            {field.label}
+            <input
+              type="search"
+              name={field.name}
+              defaultValue={typeof params[field.name] === "string" ? params[field.name] : ""}
+              placeholder={field.placeholder}
+              className="h-9 w-56 rounded border border-line bg-bg px-3 text-sm text-fg outline-none focus:border-accent"
+            />
+          </label>
+        ))}
+        <button type="submit" className="h-9 rounded border border-line px-4 text-sm hover:border-accent">
+          Найти
+        </button>
+        {filtered && (
+          <Link href="/admin/customers" className="h-9 self-end px-1 text-sm leading-9 text-muted hover:text-accent">
+            Сбросить
+          </Link>
+        )}
+      </form>
+
       {customers.length === 0 ? (
-        <p className="mt-8 text-sm text-muted">Пока никто не зарегистрировался.</p>
+        <p className="mt-8 text-sm text-muted">
+          {filtered ? "По этим условиям никого нет." : "Пока никто не зарегистрировался."}
+        </p>
       ) : (
         <div className="mt-6 overflow-x-auto rounded-lg border border-line bg-bg">
           <table className="w-full text-sm">
