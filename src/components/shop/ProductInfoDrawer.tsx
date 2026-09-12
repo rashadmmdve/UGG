@@ -78,14 +78,15 @@ export function ProductInfoDrawer({
               aria-label="Закрыть"
               tabIndex={open ? undefined : -1}
               onClick={() => setOpen(false)}
-              className={cn("absolute inset-0 bg-fg/30 transition-opacity duration-300", open ? "opacity-100" : "opacity-0")}
+              className={cn("absolute inset-0 bg-fg/30 transition-opacity duration-500", open ? "opacity-100" : "opacity-0")}
             />
             <aside
               role="dialog"
               aria-label="Описание и характеристики"
               inert={!open}
               className={cn(
-                "absolute inset-y-0 right-0 flex w-full flex-col bg-bg shadow-xl transition-transform duration-300 ease-out lg:w-1/2",
+                // Уже половины экрана и с плавным замедлением к концу хода.
+                "absolute inset-y-0 right-0 flex w-full flex-col bg-bg shadow-xl transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] lg:w-[40%] lg:max-w-2xl",
                 open ? "translate-x-0" : "translate-x-full",
               )}
             >
