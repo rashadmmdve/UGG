@@ -15,7 +15,6 @@ const COMPANY_LINKS = [
   { href: "/o-magazine", label: "О магазине" },
   { href: "/kontakty", label: "Контакты" },
   { href: "/articles", label: "Статьи" },
-  { href: "/oferta", label: "Публичная оферта" },
   { href: "/politika-konfidentsialnosti", label: "Политика конфиденциальности" },
 ];
 
@@ -99,16 +98,9 @@ export function Footer({
           </div>
         </div>
 
+        {/* Реквизиты ИП в подвале не печатаются — они на странице оферты. */}
         <div className="mt-10 border-t border-line pt-6 text-xs leading-relaxed text-muted">
-          {(contacts.legalName || contacts.inn) && (
-            <p>
-              {contacts.legalName}
-              {contacts.inn && ` · ИНН ${contacts.inn}`}
-              {contacts.ogrn && ` · ОГРН ${contacts.ogrn}`}
-              {contacts.address && ` · ${contacts.address}`}
-            </p>
-          )}
-          <p className="mt-2">© {new Date().getFullYear()}</p>
+          <p>© {new Date().getFullYear()}</p>
         </div>
       </div>
     </footer>
