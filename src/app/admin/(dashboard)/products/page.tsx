@@ -1,8 +1,36 @@
 import Link from "next/link";
+import { Fragment } from "react";
 
 import { BulkCheckbox, BulkPublishBar } from "@/components/admin/BulkPublish";
 import { formatPrice } from "@/lib/utils";
 import { getCategoryById, getProducts } from "@/server/repositories/catalog";
+import type { Product } from "@/lib/types";
+
+const GENDER_TITLE: Record<string, string> = { women: "Женские", men: "Мужские", kids: "Детские" };
+const GENDER_ORDER = ["women", "men", "kids"];
+
+/**
+ * Группы «пол → категория» в порядке разделов; внутри категории — как
+ * пришли из базы (новые первыми). Без категории — в конец раздела.
+ */
+function groupProducts(products: Product[]) {
+  const byGender = new Map<string, Map<string, Product[]>>();
+  for (const product of products) {
+    const gender = product.gender;
+    const category = product.primaryCategoryId ? getCategoryById(product.primaryCategoryId)?.title ?? "Без категории" : "Без категории";
+    const categories = byGender.get(gender) ?? new Map<string, Product[]>();
+    categories.set(category, [...(categories.get(category) ?? []), product]);
+    byGender.set(gender, categories);
+  }
+  const genders = [...byGender.keys()].sort((a, b) => (GENDER_ORDER.indexOf(a) + 99) % 99 - (GENDER_ORDER.indexOf(b) + 99) % 99);
+  return genders.map((gender) => ({
+    gender,
+    title: GENDER_TITLE[gender] ?? gender,
+    categories: [...byGender.get(gender)!.entries()]
+      .sort((a, b) => (a[0] === "Без категории" ? 1 : b[0] === "Без категории" ? -1 : a[0].localeCompare(b[0], "ru")))
+      .map(([title, items]) => ({ title, items })),
+  }));
+}
 
 export default async function AdminProductsPage(
   props: PageProps<"/admin/products">,
@@ -56,18 +84,30 @@ export default async function AdminProductsPage(
                 <th className="w-8 px-3 py-2" />
                 <th className="px-4 py-2 font-normal">Название</th>
                 <th className="px-4 py-2 font-normal">Артикул</th>
-                <th className="px-4 py-2 font-normal">Категория</th>
                 <th className="px-4 py-2 font-normal text-right">Цена</th>
                 <th className="px-4 py-2 font-normal text-right">Остаток</th>
                 <th className="px-4 py-2 font-normal">Статус</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
-              {products.map((product) => {
+              {groupProducts(products).map((group) => group.categories.map((category, index) => (
+                <Fragment key={`${group.gender}-${category.title}`}>
+                  {/* Заголовок раздела — перед первой категорией, категория — перед своими товарами. */}
+                  {index === 0 && (
+                    <tr className="bg-sand">
+                      <td colSpan={6} className="px-4 py-2 text-sm font-bold">
+                        {group.title}{" "}
+                        <span className="font-normal text-muted">{group.categories.reduce((n, c) => n + c.items.length, 0)}</span>
+                      </td>
+                    </tr>
+                  )}
+                  <tr className="bg-elevated">
+                    <td colSpan={6} className="px-4 py-1.5 text-xs font-semibold tracking-wide text-muted uppercase">
+                      {category.title} <span className="font-normal">{category.items.length}</span>
+                    </td>
+                  </tr>
+                  {category.items.map((product) => {
                 const stock = product.variants.reduce((sum, v) => sum + v.stock, 0);
-                const category = product.primaryCategoryId
-                  ? getCategoryById(product.primaryCategoryId)
-                  : null;
 
                 return (
                   <tr key={product.id} className="hover:bg-sand">
@@ -82,7 +122,6 @@ export default async function AdminProductsPage(
                       <span className="block text-xs text-muted">/product/{product.slug}</span>
                     </td>
                     <td className="px-4 py-2 text-muted">{product.sku ?? "—"}</td>
-                    <td className="px-4 py-2 text-muted">{category?.title ?? "—"}</td>
                     <td className="px-4 py-2 text-right">{formatPrice(product.price)}</td>
                     <td className={`px-4 py-2 text-right ${stock === 0 ? "text-danger" : ""}`}>
                       {stock}
@@ -101,6 +140,8 @@ export default async function AdminProductsPage(
                   </tr>
                 );
               })}
+                </Fragment>
+              )))}
             </tbody>
           </table>
         </div>
