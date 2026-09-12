@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { ChevronLeft, ChevronRight, Heart, LayoutDashboard, ShoppingBag, User } from "lucide-react";
+import { ChevronLeft, ChevronRight, Heart, LayoutDashboard, Search, ShoppingBag, User } from "lucide-react";
 
 import { Logo } from "@/components/Logo";
 import { useHydrated } from "@/lib/hooks/useHydrated";
@@ -146,7 +146,25 @@ export function Header({ menu }: { menu: MenuSection[] }) {
           20 px. Сдвиг за поле на 6 px оставляет крайний значок на тех же
           18 px от края, что и полоски бургера (поле 16 − 6 + 8 внутри ячейки).
         */}
-        <div className="-mr-1.5 ml-auto flex items-center gap-1 lg:mr-0">
+        {/* Поиск — в свободном месте между меню и значками, как на ugg.com.
+            На телефоне поле живёт в шторке меню. */}
+        <form action="/search" role="search" className="ml-auto hidden lg:block">
+          <label className="relative block">
+            <span className="sr-only">Поиск по каталогу</span>
+            <input
+              type="search"
+              name="q"
+              placeholder="Поиск"
+              autoComplete="off"
+              className="h-10 w-56 rounded border border-line bg-bg pr-10 pl-4 text-sm text-fg outline-none transition-[width,border-color] duration-300 placeholder:text-muted focus:w-72 focus:border-accent"
+            />
+            <button type="submit" aria-label="Найти" className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-fg">
+              <Search className="h-4.5 w-4.5" strokeWidth={1.8} />
+            </button>
+          </label>
+        </form>
+
+        <div className="-mr-1.5 ml-auto flex items-center gap-1 lg:ml-0 lg:mr-0">
           <Link
             href="/favorites"
             aria-label={`Избранное${favoritesCount ? `, ${favoritesCount}` : ""}`}
@@ -321,6 +339,18 @@ function MobileDrawer({
             aria-label="Мобильное меню"
           >
             <div className="px-5 pt-2">
+            <form action="/search" role="search" className="relative mb-2">
+              <input
+                type="search"
+                name="q"
+                placeholder="Поиск"
+                aria-label="Поиск по каталогу"
+                className="h-11 w-full rounded border border-line bg-bg pr-11 pl-4 text-base outline-none placeholder:text-muted focus:border-accent"
+              />
+              <button type="submit" aria-label="Найти" className="absolute inset-y-0 right-0 flex w-11 items-center justify-center">
+                <Search className="h-5 w-5" strokeWidth={1.8} />
+              </button>
+            </form>
             {menu.map((item) =>
               item.categories.some((c) => c.hasProducts) ? (
                 <button

@@ -221,6 +221,34 @@ export const getProductsBySection = cache((sectionSlug: string): Product[] => {
  * мужского разделов, и отметка у детского товара молча ничего не давала.
  * Галочка должна работать везде, где её видно.
  */
+/**
+ * Поиск по витрине: каждое слово запроса должно встретиться в названии,
+ * артикуле, названии модели или оттенка. Без полнотекстового индекса —
+ * товаров сотни, LIKE по ним отрабатывает мгновенно.
+ */
+export const searchProducts = cache((query: string): Product[] => {
+  const words = query
+    .toLowerCase()
+    .split(/\s+/)
+    .map((w) => w.trim())
+    .filter((w) => w.length >= 2)
+    .slice(0, 6);
+  if (words.length === 0) return [];
+
+  const haystack =
+    "lower(p.title || ' ' || coalesce(p.sku, '') || ' ' || coalesce(ml.title, '') || ' ' || coalesce(c.title, ''))";
+  const rows = getDb()
+    .prepare(
+      `SELECT p.* FROM products p
+       LEFT JOIN model_lines ml ON ml.id = p.model_line_id
+       LEFT JOIN colors c ON c.id = p.color_id
+       WHERE p.is_published = 1 AND ${words.map(() => `${haystack} LIKE ?`).join(" AND ")}
+       ORDER BY p.is_bestseller DESC, p.created_at DESC`,
+    )
+    .all(...words.map((w) => `%${w.replace(/[%_]/g, "")}%`)) as ProductRow[];
+  return hydrate(rows);
+});
+
 export const getSaleProducts = cache((): Product[] => {
   const rows = getDb()
     .prepare(
