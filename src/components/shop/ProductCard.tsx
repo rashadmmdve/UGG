@@ -76,7 +76,7 @@ export function ProductCard({
         </p>
       </Link>
 
-      <FavoriteButton productId={product.id} className="absolute top-1 right-1" iconClassName="h-5 w-5" />
+      <FavoriteButton productId={product.id} className="absolute top-0.5 right-0.5" iconClassName="h-4 w-4" />
     </article>
   );
 }
