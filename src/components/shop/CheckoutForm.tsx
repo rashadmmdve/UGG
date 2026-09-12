@@ -1,7 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { X } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
 
 import { AField, ATextarea } from "@/components/admin/ui";
@@ -46,6 +48,7 @@ export function CheckoutForm({
   const hydrated = useHydrated();
   const items = useCartStore((state) => state.items);
   const clear = useCartStore((state) => state.clear);
+  const remove = useCartStore((state) => state.remove);
 
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -269,15 +272,28 @@ export function CheckoutForm({
 
       <aside className="lg:col-span-5">
         <div className="rounded-lg border border-line p-6 lg:sticky lg:top-24">
-          <h2 className="label-caps">Ваш заказ</h2>
-          <ul className="mt-4 flex flex-col gap-2 border-b border-line pb-4">
+          <h2 className="label-caps text-fg">Ваш заказ</h2>
+          {/* Состав с фото и крестиком: передумать можно и здесь, не
+              возвращаясь в корзину. Последний товар убрал — форма сменится
+              на «корзина пуста». */}
+          <ul className="mt-4 flex flex-col divide-y divide-line border-b border-line">
             {items.map((item) => (
-              <li key={`${item.productId}-${item.variantId}`} className="flex justify-between gap-4 text-sm">
-                <span className="text-muted">
-                  {item.title}
-                  {sizeLabel(item.sizeEu) && ` · ${sizeLabel(item.sizeEu)}`} × {item.quantity}
-                </span>
+              <li key={`${item.productId}-${item.variantId}`} className="flex items-center gap-3 py-3 text-sm">
+                <Link href={`/product/${item.slug}`} className="relative block h-16 w-16 shrink-0 overflow-hidden rounded bg-elevated">
+                  {item.image && <Image src={item.image} alt={item.title} fill sizes="64px" className="object-contain" />}
+                </Link>
+                <div className="min-w-0 flex-1">
+                  <Link href={`/product/${item.slug}`} className="block text-fg hover:text-accent">{item.title}</Link>
+                  <p className="mt-0.5 text-xs text-muted">
+                    {sizeLabel(item.sizeEu) && `Размер ${sizeLabel(item.sizeEu)} · `}{item.quantity} шт.
+                  </p>
+                </div>
                 <span className="shrink-0 tabular-nums">{formatPrice(item.price * item.quantity)}</span>
+                <button type="button" aria-label={`Удалить ${item.title}`} title="Удалить из заказа"
+                  onClick={() => remove(item.productId, item.variantId)}
+                  className="shrink-0 text-muted transition-colors hover:text-fg">
+                  <X className="h-4 w-4" strokeWidth={1.6} />
+                </button>
               </li>
             ))}
           </ul>
