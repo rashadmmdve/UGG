@@ -53,14 +53,6 @@ export async function saveContentAction(
 
   const fieldErrors: Record<string, string> = {};
 
-  const inn = text(formData, "inn");
-  if (inn && !/^\d{10}$|^\d{12}$/.test(inn)) {
-    fieldErrors.inn = "ИНН — 10 цифр для организации или 12 для ИП";
-  }
-  const ogrn = text(formData, "ogrn");
-  if (ogrn && !/^\d{13}$|^\d{15}$/.test(ogrn)) {
-    fieldErrors.ogrn = "ОГРН — 13 цифр, ОГРНИП — 15";
-  }
   const email = text(formData, "email");
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     fieldErrors.email = "Проверьте формат почты";
@@ -104,9 +96,6 @@ export async function saveContentAction(
       phone: text(formData, "phone"),
       email,
       address: text(formData, "address"),
-      legalName: text(formData, "legalName"),
-      inn,
-      ogrn,
     },
     faq,
     legal: {

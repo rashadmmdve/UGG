@@ -58,17 +58,6 @@ export default function ContactsPage() {
         <p className="text-muted">Контакты заполняются в панели управления, раздел «Тексты сайта».</p>
       )}
 
-      {(contacts.legalName || contacts.inn) && (
-        <>
-          <h2>Реквизиты</h2>
-          <dl className="grid gap-2 sm:grid-cols-2">
-            {contacts.legalName && <div><dt className="text-xs text-muted">Продавец</dt><dd>{contacts.legalName}</dd></div>}
-            {contacts.inn && <div><dt className="text-xs text-muted">ИНН</dt><dd>{contacts.inn}</dd></div>}
-            {contacts.ogrn && <div><dt className="text-xs text-muted">ОГРН / ОГРНИП</dt><dd>{contacts.ogrn}</dd></div>}
-          </dl>
-        </>
-      )}
-
       <h2>Как с нами связаться</h2>
       <p>
         По вопросам заказа, обмена и возврата пишите на почту или звоните — так

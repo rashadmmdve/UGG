@@ -141,12 +141,6 @@ export function ContentForm({ content }: { content: SiteContent }) {
             defaultValue={content.contacts.email} error={errors.email} />
           <AField id="address" name="address" label="Адрес" defaultValue={content.contacts.address}
             error={errors.address} className="md:col-span-2" />
-          <AField id="legalName" name="legalName" label="Юридическое лицо или ИП"
-            defaultValue={content.contacts.legalName} error={errors.legalName} className="md:col-span-2" />
-          <AField id="inn" name="inn" label="ИНН" defaultValue={content.contacts.inn}
-            inputMode="numeric" error={errors.inn} />
-          <AField id="ogrn" name="ogrn" label="ОГРН / ОГРНИП" defaultValue={content.contacts.ogrn}
-            inputMode="numeric" error={errors.ogrn} />
         </div>
       </section>
 

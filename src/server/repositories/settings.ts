@@ -130,10 +130,6 @@ export type SiteContent = {
     phone: string;
     email: string;
     address: string;
-    /** Реквизиты в подвале — влияют на доверие и на коммерческие факторы. */
-    legalName: string;
-    inn: string;
-    ogrn: string;
   };
   faq: { question: string; answer: string }[];
   /**
@@ -162,9 +158,6 @@ const DEFAULT_CONTENT: SiteContent = {
     phone: "",
     email: "",
     address: "",
-    legalName: "",
-    inn: "",
-    ogrn: "",
   },
   faq: [],
   legal: { oferta: "", privacy: "" },
