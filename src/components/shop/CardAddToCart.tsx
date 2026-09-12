@@ -98,7 +98,7 @@ export function CardAddToCart({ product }: { product: Product }) {
       {/* Ряд размеров встаёт над кнопкой, закрывая название и цену.
           Кнопка при этом не сдвигается, а карточка не растёт. */}
       {pickingSize && (
-        <div className="absolute inset-x-0 bottom-full z-20 bg-bg pb-2">
+        <div className="absolute inset-x-0 bottom-full z-20 flex min-h-[5.25rem] flex-col justify-center bg-bg pb-2">
           <p className="mb-1.5 text-center text-[0.6875rem] text-muted">Выберите размер</p>
           <div className="flex flex-wrap justify-center gap-1">
             {available.map((variant) => (
