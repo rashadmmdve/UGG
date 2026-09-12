@@ -45,6 +45,9 @@ export function Header({ menu }: { menu: MenuSection[] }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   // Поиск на телефоне: выпадающая полоска под шапкой поверх страницы.
   const [searchOpen, setSearchOpen] = useState(false);
+  // Ключ поля: каждое открытие — новое пустое поле, но само оно не
+  // размонтируется при закрытии, иначе полоска схлопывалась бы рывком.
+  const [searchKey, setSearchKey] = useState(0);
   const [openSection, setOpenSection] = useState<string | null>(null);
   // Кнопка панели — только сотруднику, и каждому в свою: владельцу
   // админка, оператору панель оператора. См. useStaffRole.
@@ -126,6 +129,7 @@ export function Header({ menu }: { menu: MenuSection[] }) {
         <button
           type="button"
           onClick={() => {
+            if (!searchOpen) setSearchKey((k) => k + 1);
             setSearchOpen((v) => !v);
             setDrawerOpen(false);
           }}
@@ -269,13 +273,12 @@ export function Header({ menu }: { menu: MenuSection[] }) {
         ref={searchBar}
         inert={!searchOpen}
         className={cn(
-          "absolute inset-x-0 top-full border-b border-line bg-bg shadow-[0_18px_40px_-24px_rgba(0,0,0,0.35)] transition-all duration-300 lg:hidden",
-          searchOpen ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-2 opacity-0",
+          "absolute inset-x-0 top-full border-b border-line bg-bg shadow-[0_18px_40px_-24px_rgba(0,0,0,0.35)] transition-[opacity,transform] duration-300 ease-out lg:hidden",
+          searchOpen ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-3 opacity-0",
         )}
       >
         <div className="container-page py-3">
-          {/* Поле пересоздаётся при каждом открытии: курсор в него и пустой ввод. */}
-          {searchOpen && <SearchBox autoFocus inputClassName="h-11 text-base" onNavigate={() => setSearchOpen(false)} />}
+          <SearchBox key={searchKey} autoFocus={searchOpen} inputClassName="h-11 text-base" onNavigate={() => setSearchOpen(false)} />
         </div>
       </div>
 
