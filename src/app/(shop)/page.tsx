@@ -191,7 +191,7 @@ export default function HomePage() {
       )}
 
       {arrivals.length > 0 && (
-        <ProductRow title="Новинки" href="/catalog" products={arrivals} />
+        <ProductRow title="Новинки" href="/catalog?sort=new" products={arrivals} />
       )}
 
       {content.faq.length > 0 && (
@@ -216,10 +216,11 @@ function ProductRow({ title, href, products, eager = false }: {
 }) {
   return (
     <section className="container-page mt-14">
-      <div className="flex items-baseline justify-between">
-        <h2 className="heading-section">{title}</h2>
-        <Link href={href} className="text-sm text-accent hover:underline">Все товары →</Link>
-      </div>
+      {/* Ссылкой служит сам заголовок раздела: отдельная «Все товары»
+          дублировала бы его и уводила взгляд вправо. */}
+      <h2 className="heading-section">
+        <Link href={href} className="transition-colors hover:text-accent">{title}</Link>
+      </h2>
       <ul className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-4">
         {products.map((product, index) => (
           <li key={product.id}><ProductCard product={product} eager={eager && index < 4} /></li>
