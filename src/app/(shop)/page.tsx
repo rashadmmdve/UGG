@@ -45,7 +45,7 @@ export default function HomePage() {
           {content.home.heroSubtitle}
         </p>
       )}
-      <Link href="/catalog/zhenskie" className="mt-6 inline-flex h-12 items-center rounded-md bg-accent px-6 text-sm font-semibold text-white hover:bg-accent-hover">
+      <Link href="/catalog" className="mt-6 inline-flex h-12 items-center rounded-md bg-accent px-6 text-sm font-semibold text-white hover:bg-accent-hover">
         Смотреть коллекцию
       </Link>
     </>
