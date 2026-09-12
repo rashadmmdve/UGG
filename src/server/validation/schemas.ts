@@ -171,7 +171,8 @@ export const productSchema = z.object({
   slug: slugSchema,
   title: z.string().trim().min(2, "Укажите название").max(160),
   sku: z.string().trim().max(40).default(""),
-  description: z.string().trim().max(5000).default(""),
+  // Описание — разметкой (абзацы, списки), поэтому лимит с запасом.
+  description: z.string().trim().max(12000).default(""),
 
   gender: z.enum(["women", "men", "kids", "unisex"]),
   modelLineId: z.string().nullable().default(null),
