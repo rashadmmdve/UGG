@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight, Heart, LayoutDashboard, Search, ShoppingBag, User } from "lucide-react";
 
 import { Logo } from "@/components/Logo";
+import { SearchBox } from "@/components/layout/SearchBox";
 import { useHydrated } from "@/lib/hooks/useHydrated";
 import { useStaffRole } from "@/lib/hooks/useIsAdmin";
 import { cartCount, useCartStore } from "@/lib/store/cart";
@@ -44,7 +45,6 @@ export function Header({ menu }: { menu: MenuSection[] }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   // Поиск на телефоне: выпадающая полоска под шапкой поверх страницы.
   const [searchOpen, setSearchOpen] = useState(false);
-  const searchInput = useRef<HTMLInputElement>(null);
   const [openSection, setOpenSection] = useState<string | null>(null);
   // Кнопка панели — только сотруднику, и каждому в свою: владельцу
   // админка, оператору панель оператора. См. useStaffRole.
@@ -78,10 +78,9 @@ export function Header({ menu }: { menu: MenuSection[] }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [openSection]);
 
-  // Открыли поиск — курсор сразу в поле; Escape закрывает.
+  // Escape закрывает поиск.
   useEffect(() => {
     if (!searchOpen) return;
-    searchInput.current?.focus();
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") setSearchOpen(false);
     };
@@ -178,21 +177,7 @@ export function Header({ menu }: { menu: MenuSection[] }) {
         */}
         {/* Поиск — в свободном месте между меню и значками, как на ugg.com.
             На телефоне вместо поля — значок у бургера. */}
-        <form action="/search" role="search" className="ml-auto hidden lg:block">
-          <label className="relative block">
-            <span className="sr-only">Поиск по каталогу</span>
-            <input
-              type="search"
-              name="q"
-              placeholder="Поиск"
-              autoComplete="off"
-              className="h-10 w-56 rounded border border-line bg-bg pr-10 pl-4 text-sm text-fg outline-none transition-[width,border-color] duration-300 placeholder:text-muted focus:w-72 focus:border-accent"
-            />
-            <button type="submit" aria-label="Найти" className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-fg">
-              <Search className="h-4.5 w-4.5" strokeWidth={1.8} />
-            </button>
-          </label>
-        </form>
+        <SearchBox className="ml-auto hidden w-56 focus-within:w-72 transition-[width] duration-300 lg:block" inputClassName="text-sm" />
 
         <div className="-mr-1.5 ml-auto flex items-center gap-1 lg:ml-0 lg:mr-0">
           <Link
@@ -272,20 +257,10 @@ export function Header({ menu }: { menu: MenuSection[] }) {
           searchOpen ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-2 opacity-0",
         )}
       >
-        <form action="/search" role="search" className="container-page flex gap-2 py-3">
-          <input
-            ref={searchInput}
-            type="search"
-            name="q"
-            placeholder="Поиск по каталогу"
-            aria-label="Поиск по каталогу"
-            autoComplete="off"
-            className="h-11 min-w-0 flex-1 rounded border border-line bg-bg px-4 text-base outline-none placeholder:text-muted focus:border-accent"
-          />
-          <button type="submit" className="h-11 rounded bg-accent px-4 text-sm font-semibold text-white">
-            Найти
-          </button>
-        </form>
+        <div className="container-page py-3">
+          {/* Поле пересоздаётся при каждом открытии: курсор в него и пустой ввод. */}
+          {searchOpen && <SearchBox autoFocus inputClassName="h-11 text-base" onNavigate={() => setSearchOpen(false)} />}
+        </div>
       </div>
 
       <MobileDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} menu={menu} />
