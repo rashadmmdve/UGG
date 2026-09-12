@@ -9,9 +9,12 @@ import { cn } from "@/lib/utils";
 export function FavoriteButton({
   productId,
   className,
+  iconClassName,
 }: {
   productId: string;
   className?: string;
+  /** Размер самого сердца — в плитке каталога оно мельче, чем в карточке. */
+  iconClassName?: string;
 }) {
   const hydrated = useHydrated();
   const ids = useFavoritesStore((state) => state.ids);
@@ -35,7 +38,7 @@ export function FavoriteButton({
     >
       {/* Только сам знак: ни подложки, ни свечения. */}
       <Heart
-        className="h-6 w-6"
+        className={iconClassName ?? "h-6 w-6"}
         strokeWidth={1.6}
         fill={active ? "currentColor" : "none"}
       />
