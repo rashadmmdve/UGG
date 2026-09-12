@@ -442,6 +442,10 @@ export type Order = {
   cdek: CdekShipment | null;
   /** Кому из курьеров отдан заказ своей доставки; null — ещё никому. */
   courierId: string | null;
+  /** Почему отменён — пишет тот, кто отменял. */
+  cancelReason: string | null;
+  /** Когда вручён; по этой дате курьеру считают выручку за период. */
+  deliveredAt: string | null;
   createdAt: string;
   updatedAt: string;
 };

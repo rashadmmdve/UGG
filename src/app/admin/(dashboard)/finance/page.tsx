@@ -1,4 +1,6 @@
+import { CourierSettlement } from "@/components/admin/CourierSettlement";
 import { paymentLabel } from "@/lib/payment-kind";
+import { getCouriers } from "@/server/repositories/couriers";
 import { formatPrice } from "@/lib/utils";
 import { requireAdmin } from "@/server/admin/guard";
 import { getOrders } from "@/server/repositories/orders";
@@ -51,6 +53,12 @@ export default async function AdminFinancePage(props: PageProps<"/admin/finance"
 
   const since = periodStart(period.days);
 
+  // Расчёт с курьером: свой курьер и свой период, не зависящий от общего.
+  const courierId = typeof params.courier === "string" ? params.courier : "";
+  const from = typeof params.from === "string" ? params.from : "";
+  const to = typeof params.to === "string" ? params.to : "";
+  const couriers = getCouriers();
+
   const all = getOrders().filter((order) => order.createdAt >= since);
   const paid = all.filter((order) => order.paymentStatus === "paid" && order.status !== "cancelled");
 
@@ -95,6 +103,16 @@ export default async function AdminFinancePage(props: PageProps<"/admin/finance"
     }
   }
   const profit = revenueKnown - costKnown;
+
+  const courierOrders = courierId
+    ? getOrders()
+        .filter((order) => order.courierId === courierId && order.status === "completed" && order.deliveredAt)
+        .filter((order) => {
+          const day = order.deliveredAt!.slice(0, 10);
+          return (!from || day >= from) && (!to || day <= to);
+        })
+        .sort((a, b) => (a.deliveredAt! < b.deliveredAt! ? 1 : -1))
+    : [];
 
   const card = "rounded-lg border border-line bg-bg p-5";
   const tab =
@@ -212,6 +230,14 @@ export default async function AdminFinancePage(props: PageProps<"/admin/finance"
           </div>
         </dl>
       </section>
+
+      <CourierSettlement
+        couriers={couriers}
+        courierId={courierId}
+        from={from}
+        to={to}
+        orders={courierOrders}
+      />
     </div>
   );
 }

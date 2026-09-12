@@ -65,7 +65,7 @@ export async function cancelOrderAction(orderId: string) {
   const order = await ownedOrder(orderId);
   if (!order) return { ok: false as const, error: "Заказ не найден" };
 
-  const result = await cancelShipment(orderId);
+  const result = await cancelShipment(orderId, "Отменил покупатель из личного кабинета");
   if (result.ok) {
     revalidatePath("/account");
     // Остатки вернулись — наличие в карточках изменилось.

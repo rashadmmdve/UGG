@@ -14,10 +14,13 @@ export function CourierPicker({
   orderId,
   courierId,
   couriers,
+  locked = false,
 }: {
   orderId: string;
   courierId: string | null;
   couriers: Courier[];
+  /** Курьер назначен, а нажавший — оператор: менять уже нельзя. */
+  locked?: boolean;
 }) {
   const [value, setValue] = useState(courierId ?? "");
   const [message, setMessage] = useState<{ error?: string; success?: string }>({});
@@ -39,7 +42,7 @@ export function CourierPicker({
     <div>
       <select
         value={value}
-        disabled={pending}
+        disabled={pending || locked}
         onChange={(event) => assign(event.target.value)}
         aria-label="Курьер"
         className="w-full rounded border border-line bg-bg px-3 py-2 text-sm disabled:opacity-60"
@@ -53,6 +56,9 @@ export function CourierPicker({
         ))}
       </select>
 
+      {locked && (
+        <p className="mt-1 text-xs text-muted">Курьер назначен. Изменить его может только администратор.</p>
+      )}
       <div className="mt-2">
         <FormMessage error={message.error} success={message.success} />
       </div>

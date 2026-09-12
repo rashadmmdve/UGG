@@ -25,14 +25,25 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
-  // Путь в заголовке: layout админки решает по нему, пускать ли
-  // оператора, — серверные компоненты своего адреса не знают.
+  // Путь в заголовке: layout панели решает по нему, кого пускать и как
+  // себя называть, — серверные компоненты своего адреса не знают.
   const headers = new Headers(request.headers);
   headers.set("x-pathname", pathname);
-  const response = NextResponse.next({ request: { headers } });
+
+  // Панель оператора — те же страницы, что у владельца, но под своим
+  // адресом: /operator/… показывает /admin/…. Отдельная панель нужна
+  // не ради кода, а ради людей: оператор видит «свою» панель с тремя
+  // разделами, а не урезанную чужую.
+  const response = pathname.startsWith("/operator")
+    ? NextResponse.rewrite(
+        new URL(pathname.replace(/^\/operator/, "/admin") + request.nextUrl.search, request.url),
+        { request: { headers } },
+      )
+    : NextResponse.next({ request: { headers } });
 
   const isPrivate =
     pathname.startsWith("/admin") ||
+    pathname.startsWith("/operator") ||
     pathname.startsWith("/api") ||
     pathname.startsWith("/account") ||
     pathname.startsWith("/cart") ||

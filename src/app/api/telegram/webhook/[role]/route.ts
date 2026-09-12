@@ -224,7 +224,7 @@ export async function POST(
     }
 
     if (action === "cancel") {
-      const result = await cancelShipment(order.id);
+      const result = await cancelShipment(order.id, `Отменил курьер ${who} из Телеграма`);
       if (!result.ok) {
         await answerCallback(role, callback.id, result.error, true);
         return ok();

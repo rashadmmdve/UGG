@@ -385,7 +385,9 @@ export function mapUser(row: UserRow): User {
     passwordHash: row.password_hash,
     name: row.name,
     phone: row.phone,
-    role: row.role === "admin" ? "admin" : "customer",
+    // Незнакомая роль — покупатель: так неизвестное значение в базе не
+    // выдаёт прав, а известные проходят как есть.
+    role: row.role === "admin" || row.role === "operator" ? row.role : "customer",
     createdAt: row.created_at,
     emailVerifiedAt: row.email_verified_at ?? null,
     verifyTokenHash: row.verify_token_hash ?? null,
@@ -416,6 +418,8 @@ export type OrderRow = {
   payment_status: string;
   cdek: string | null;
   courier_id: string | null;
+  cancel_reason: string | null;
+  delivered_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -450,6 +454,8 @@ export function mapOrder(row: OrderRow): Order {
     status: row.status as Order["status"],
     paymentMethod: row.payment_method as Order["paymentMethod"],
     courierId: row.courier_id ?? null,
+    cancelReason: row.cancel_reason ?? null,
+    deliveredAt: row.delivered_at ?? null,
     paymentStatus: row.payment_status as Order["paymentStatus"],
     cdek: row.cdek ? parseJson<Order["cdek"]>(row.cdek, null) : null,
     createdAt: row.created_at,

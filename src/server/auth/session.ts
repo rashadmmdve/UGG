@@ -95,7 +95,7 @@ export async function createSession(userId: string, remember: boolean): Promise<
   store.set(SESSION_COOKIE, token, { httpOnly: true, ...options });
 
   const user = getUserById(userId);
-  if (user?.role === "admin") store.set(ROLE_COOKIE, "admin", options);
+  if (user?.role === "admin" || user?.role === "operator") store.set(ROLE_COOKIE, user.role, options);
   else store.delete(ROLE_COOKIE);
 }
 

@@ -215,6 +215,8 @@ export async function submitOrder(input: unknown): Promise<CheckoutResult> {
     paymentStatus: data.paymentMethod === "online" ? "pending" : "unpaid",
     cdek: null,
     courierId: null,
+    cancelReason: null,
+    deliveredAt: null,
   });
 
   if (promocodeId) incrementPromocodeUsage(promocodeId);

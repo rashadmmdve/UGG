@@ -1,0 +1,11 @@
+[Unit]
+Description=UGG shop: списки курьерам каждое утро
+
+[Timer]
+# 09:00 по Москве. Сервер живёт по UTC, поэтому часовой пояс указан явно.
+OnCalendar=*-*-* 09:00:00 Europe/Moscow
+Persistent=true
+Unit=ugg-dispatch.service
+
+[Install]
+WantedBy=timers.target

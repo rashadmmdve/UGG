@@ -16,9 +16,12 @@ export function completeOrder(orderId: string): Order | null {
   if (!order || order.status === "cancelled") return null;
 
   updateOrderStatus(orderId, "completed");
-  if (order.paymentMethod === "on_delivery" && order.paymentStatus !== "paid") {
-    patchOrder(orderId, { paymentStatus: "paid" });
-  }
+  patchOrder(orderId, {
+    deliveredAt: order.deliveredAt ?? new Date().toISOString(),
+    ...(order.paymentMethod === "on_delivery" && order.paymentStatus !== "paid"
+      ? { paymentStatus: "paid" as const }
+      : {}),
+  });
 
   return getOrderById(orderId);
 }

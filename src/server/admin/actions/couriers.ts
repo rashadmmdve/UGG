@@ -9,7 +9,7 @@ import {
   getCourierById,
   updateCourier,
 } from "@/server/repositories/couriers";
-import { getOrderById, setOrderCourier } from "@/server/repositories/orders";
+import { getOrderById, patchOrder, setOrderCourier } from "@/server/repositories/orders";
 import { notifyDelivery } from "@/server/telegram/notify";
 
 /**
@@ -64,13 +64,23 @@ export async function assignCourierAction(
   orderId: string,
   courierId: string | null,
 ): Promise<Result> {
-  if (!(await assertStaff())) return { ok: false, error: "Нет доступа" };
+  const staff = await assertStaff();
+  if (!staff) return { ok: false, error: "Нет доступа" };
 
   const order = getOrderById(orderId);
   if (!order) return { ok: false, error: "Заказ не найден" };
   if (courierId && !getCourierById(courierId)) {
     return { ok: false, error: "Курьер не найден" };
   }
+
+  // Оператор назначает один раз. Переиграть — только владельцу: иначе
+  // заказ гулял бы между курьерами, и никто не отвечал бы за него.
+  if (order.courierId && staff.role !== "admin") {
+    return { ok: false, error: "Курьер уже назначен — изменить его может только администратор" };
+  }
+
+  // Назначение подтверждает заказ: оператор его рассмотрел и отдал в работу.
+  if (courierId && order.status === "new") patchOrder(orderId, { status: "confirmed" });
 
   const updated = setOrderCourier(orderId, courierId);
   if (!updated) return { ok: false, error: "Не удалось сохранить" };

@@ -61,7 +61,7 @@ export async function syncShipment(orderId: string): Promise<Order | null> {
   const status = await getCdekOrderStatus(order.cdek.uuid).catch(() => null);
   if (!status) return order;
 
-  const patch: Partial<Pick<Order, "status" | "paymentStatus" | "cdek">> = {
+  const patch: Partial<Pick<Order, "status" | "paymentStatus" | "cdek" | "deliveredAt">> = {
     cdek: {
       ...order.cdek,
       cdekNumber: status.cdekNumber ?? order.cdek.cdekNumber,
@@ -77,6 +77,7 @@ export async function syncShipment(orderId: string): Promise<Order | null> {
     if (status.statusCode === DELIVERED_CODE) next = "completed";
     else if (HANDED_OVER_CODES.has(status.statusCode)) next = "shipped";
     if (next !== order.status) patch.status = next;
+    if (next === "completed" && !order.deliveredAt) patch.deliveredAt = new Date().toISOString();
 
     // Вручили — значит наложенный платёж собран: СДЭК не отдаёт посылку,
     // не получив денег. Отметка об оплате не ждёт менеджера.
@@ -98,7 +99,7 @@ export type CancelResult = { ok: true } | { ok: false; error: string };
  * Отмена заказа. Возвращает остатки в каталог и удаляет отправление
  * в СДЭК, если оно было создано.
  */
-export async function cancelShipment(orderId: string): Promise<CancelResult> {
+export async function cancelShipment(orderId: string, reason = ""): Promise<CancelResult> {
   const order = getOrderById(orderId);
   if (!order) return { ok: false, error: "Заказ не найден" };
   if (order.status === "cancelled") return { ok: true };
@@ -136,7 +137,12 @@ export async function cancelShipment(orderId: string): Promise<CancelResult> {
     if (payment.status === "pending") updatePaymentStatus(payment.externalId, "canceled");
   }
 
-  patchOrder(orderId, { status: "cancelled", paymentStatus, cdek: null });
+  patchOrder(orderId, {
+    status: "cancelled",
+    paymentStatus,
+    cdek: null,
+    cancelReason: reason.trim() || null,
+  });
   return { ok: true };
 }
 

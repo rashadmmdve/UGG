@@ -1,0 +1,10 @@
+[Unit]
+Description=UGG shop: утренние списки курьерам в Телеграм
+After=ugg.service
+Requires=ugg.service
+
+[Service]
+Type=oneshot
+User=ugg
+# Секрет — из общего .env.local: тот же, что читает приложение.
+ExecStart=/bin/bash -c 'set -a; . /srv/ugg/shared/.env.local; set +a; curl -fsS -m 60 -X POST -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3000/api/cron/dispatch'

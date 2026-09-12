@@ -49,10 +49,23 @@ export async function assertStaff(): Promise<PublicUser | null> {
  * проверку на одной из них — вопрос времени.
  */
 export function isOperatorPath(pathname: string): boolean {
+  const rest = pathname.replace(/^\/(admin|operator)/, "");
   return (
-    pathname === "/admin/orders" ||
-    pathname.startsWith("/admin/orders/") ||
-    pathname === "/admin/couriers" ||
-    pathname.startsWith("/admin/couriers/")
+    rest === "/dispatch" ||
+    rest === "/orders" ||
+    rest.startsWith("/orders/") ||
+    rest === "/couriers" ||
+    rest.startsWith("/couriers/")
   );
+}
+
+/**
+ * Какая панель открыта. Одна и та же страница живёт под /admin и под
+ * /operator — proxy подменяет адрес, а здесь по исходному пути решается,
+ * как панель себя называет и куда вести ссылки.
+ */
+export type Panel = "admin" | "operator";
+
+export function panelOf(pathname: string): Panel {
+  return pathname.startsWith("/operator") ? "operator" : "admin";
 }

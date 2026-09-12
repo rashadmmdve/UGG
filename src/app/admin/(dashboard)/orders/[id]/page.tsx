@@ -13,6 +13,7 @@ import {
   updateOrderStatusAction,
   updatePaymentStatusAction,
 } from "@/server/admin/actions/orders";
+import { requireStaff } from "@/server/admin/guard";
 import { canCancel } from "@/server/orders/shipment";
 import { getCouriers } from "@/server/repositories/couriers";
 import { getOrderById } from "@/server/repositories/orders";
@@ -28,6 +29,7 @@ export default async function AdminOrderPage(props: PageProps<"/admin/orders/[id
   const order = getOrderById(id);
   if (!order) notFound();
 
+  const staff = await requireStaff();
   const isCancelled = order.status === "cancelled";
   const couriers = getCouriers();
   const payments = order.paymentMethod === "online" ? getPaymentsByOrderId(order.id) : [];
@@ -111,6 +113,7 @@ export default async function AdminOrderPage(props: PageProps<"/admin/orders/[id
                   orderId={order.id}
                   courierId={order.courierId}
                   couriers={couriers.filter((courier) => courier.isActive)}
+                  locked={Boolean(order.courierId) && staff.role !== "admin"}
                 />
               </div>
             </section>
@@ -125,6 +128,13 @@ export default async function AdminOrderPage(props: PageProps<"/admin/orders/[id
             canCancel={canCancel(order)}
             isCancelled={isCancelled}
           />
+
+          {order.cancelReason && (
+            <section className="rounded-lg border border-danger/40 bg-bg p-5">
+              <h2 className="font-semibold">Причина отмены</h2>
+              <p className="mt-2 text-sm leading-relaxed">{order.cancelReason}</p>
+            </section>
+          )}
 
           {order.comment && (
             <section className="rounded-lg border border-line bg-bg p-5">

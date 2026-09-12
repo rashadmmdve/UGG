@@ -86,11 +86,13 @@ export async function updatePaymentStatusAction(formData: FormData): Promise<voi
   refreshOrderPages(id);
 }
 
-export async function cancelOrderAction(orderId: string): Promise<CancelResult> {
-  if (!(await assertStaff())) return { ok: false, error: "Нет доступа" };
+export async function cancelOrderAction(orderId: string, reason: string): Promise<CancelResult> {
+  const staff = await assertStaff();
+  if (!staff) return { ok: false, error: "Нет доступа" };
+  if (!reason.trim()) return { ok: false, error: "Укажите причину отмены" };
 
   const order = getOrderById(orderId);
-  const result = await cancelShipment(orderId);
+  const result = await cancelShipment(orderId, `${reason.trim()} — ${staff.name || staff.email}`);
   if (result.ok) {
     if (order) {
       revalidateOrderProducts(order);

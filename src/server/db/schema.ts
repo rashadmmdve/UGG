@@ -18,7 +18,7 @@ import type { Database } from "better-sqlite3";
  * IF NOT EXISTS. Версия схемы хранится в user_version — по ней будут
  * добавляться миграции, когда структура изменится.
  */
-const SCHEMA_VERSION = 7;
+const SCHEMA_VERSION = 8;
 
 function readDdl(): string {
   return fs.readFileSync(
@@ -59,6 +59,12 @@ export function applySchema(db: Database): void {
   if (current < 7) {
     addColumn(db, "orders", "courier_id", "TEXT");
     db.exec("CREATE INDEX IF NOT EXISTS idx_orders_courier ON orders(courier_id)");
+  }
+  // Причина отмены — чтобы через месяц было понятно, почему; дата
+  // вручения — чтобы считать курьеру за период, а не «когда-то».
+  if (current < 8) {
+    addColumn(db, "orders", "cancel_reason", "TEXT");
+    addColumn(db, "orders", "delivered_at", "TEXT");
   }
 
   if (current < SCHEMA_VERSION) {

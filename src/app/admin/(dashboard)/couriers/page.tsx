@@ -1,5 +1,5 @@
 import { SubmitButton } from "@/components/admin/ui";
-import { requireAdmin } from "@/server/admin/guard";
+import { requireStaff } from "@/server/admin/guard";
 import { deleteCourierAction, saveCourierAction } from "@/server/admin/actions/couriers";
 import { getCouriers } from "@/server/repositories/couriers";
 import { getOrders } from "@/server/repositories/orders";
@@ -15,7 +15,8 @@ import { getOrders } from "@/server/repositories/orders";
  * чужих. Курьер узнаёт его командой /id в группе доставки.
  */
 export default async function AdminCouriersPage() {
-  await requireAdmin();
+  const staff = await requireStaff();
+  const canEdit = staff.role === "admin";
 
   const couriers = getCouriers();
   const orders = getOrders();
@@ -41,6 +42,7 @@ export default async function AdminCouriersPage() {
         ответит числом, его и впишите.
       </p>
 
+      {canEdit && (
       <section className="mt-6 rounded-lg border border-line bg-bg p-5">
         <h2 className="font-semibold">Новый курьер</h2>
         <form action={saveCourierAction} className="mt-3 grid gap-3 sm:grid-cols-[1fr_1fr_1fr_auto]">
@@ -50,6 +52,7 @@ export default async function AdminCouriersPage() {
           <SubmitButton>Добавить</SubmitButton>
         </form>
       </section>
+      )}
 
       {couriers.length === 0 ? (
         <p className="mt-8 text-sm text-muted">Курьеров пока нет.</p>

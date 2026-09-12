@@ -118,8 +118,8 @@ export function createOrder(input: NewOrder): Order {
          (id, number, user_id, customer, delivery, comment, items,
           subtotal, discount, delivery_price, package_weight, total,
           promocode, status, payment_method, payment_status, cdek, courier_id,
-          created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          cancel_reason, delivered_at, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .run(
       order.id,
@@ -140,6 +140,8 @@ export function createOrder(input: NewOrder): Order {
       order.paymentStatus,
       order.cdek ? JSON.stringify(order.cdek) : null,
       order.courierId,
+      order.cancelReason,
+      order.deliveredAt,
       order.createdAt,
       order.updatedAt,
     );
@@ -215,7 +217,9 @@ export function setOrderCourier(id: string, courierId: string | null): Order | n
 
 export function patchOrder(
   id: string,
-  patch: Partial<Pick<Order, "status" | "paymentStatus" | "paymentMethod" | "cdek" | "comment">>,
+  patch: Partial<
+    Pick<Order, "status" | "paymentStatus" | "paymentMethod" | "cdek" | "comment" | "cancelReason" | "deliveredAt">
+  >,
 ): Order | null {
   const existing = getOrderById(id);
   if (!existing) return null;
@@ -225,7 +229,8 @@ export function patchOrder(
   getDb()
     .prepare(
       `UPDATE orders
-       SET status = ?, payment_status = ?, payment_method = ?, cdek = ?, comment = ?, updated_at = ?
+       SET status = ?, payment_status = ?, payment_method = ?, cdek = ?, comment = ?,
+           cancel_reason = ?, delivered_at = ?, updated_at = ?
        WHERE id = ?`,
     )
     .run(
@@ -234,6 +239,8 @@ export function patchOrder(
       next.paymentMethod,
       next.cdek ? JSON.stringify(next.cdek) : null,
       next.comment,
+      next.cancelReason,
+      next.deliveredAt,
       next.updatedAt,
       id,
     );

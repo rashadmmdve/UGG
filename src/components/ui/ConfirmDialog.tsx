@@ -18,6 +18,8 @@ export function ConfirmDialog({
   confirmLabel = "Подтвердить",
   cancelLabel = "Отмена",
   pending = false,
+  disabled = false,
+  children,
   onConfirm,
   onClose,
 }: {
@@ -27,6 +29,10 @@ export function ConfirmDialog({
   confirmLabel?: string;
   cancelLabel?: string;
   pending?: boolean;
+  /** Подтвердить пока нельзя — например, не заполнено обязательное поле. */
+  disabled?: boolean;
+  /** Что-то между текстом и кнопками: поле для причины, список, предупреждение. */
+  children?: React.ReactNode;
   onConfirm: () => void;
   onClose: () => void;
 }) {
@@ -64,12 +70,13 @@ export function ConfirmDialog({
       >
         <h2 className="font-display text-2xl">{title}</h2>
         <p className="mt-3 text-sm leading-relaxed text-muted">{description}</p>
+        {children && <div className="mt-4">{children}</div>}
 
         <div className="mt-8 flex flex-col gap-2 sm:flex-row-reverse">
           <Button
             type="button"
             onClick={onConfirm}
-            disabled={pending}
+            disabled={pending || disabled}
             className="sm:flex-1"
           >
             {confirmLabel}

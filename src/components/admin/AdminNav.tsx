@@ -12,6 +12,7 @@ import type { UserRole } from "@/lib/types";
  */
 const SECTIONS: { href: string; label: string; group?: string; staff?: true }[] = [
   { href: "/admin", label: "Обзор" },
+  { href: "/admin/dispatch", label: "Распределение", staff: true },
   { href: "/admin/orders", label: "Заказы", staff: true },
   { href: "/admin/couriers", label: "Курьеры", staff: true },
   { href: "/admin/products", label: "Товары" },
@@ -35,12 +36,16 @@ const SECTIONS: { href: string; label: string; group?: string; staff?: true }[] 
   { href: "/admin/content", label: "Тексты сайта", group: "Прочее" },
 ];
 
-export function AdminNav({ role }: { role: UserRole }) {
+export function AdminNav({ role, base = "/admin" }: { role: UserRole; base?: "/admin" | "/operator" }) {
   const pathname = usePathname();
 
-  // Оператору показываем только то, что ему открыто: пункт, который
-  // всё равно приведёт к отказу, — это ложное обещание.
-  const sections = role === "operator" ? SECTIONS.filter((item) => item.staff) : SECTIONS;
+  // В панели оператора — только её разделы, кто бы её ни открыл: пункт,
+  // который всё равно приведёт к отказу, — это ложное обещание, а
+  // владельцу в ней нужно видеть то же, что видит оператор.
+  const sections = (role === "operator" || base === "/operator"
+    ? SECTIONS.filter((item) => item.staff)
+    : SECTIONS
+  ).map((item) => ({ ...item, href: item.href.replace(/^\/admin/, base) }));
 
   /**
    * Пункт активен, если путь совпадает или лежит под ним. Исключение —
@@ -49,8 +54,8 @@ export function AdminNav({ role }: { role: UserRole }) {
    */
   const isActive = (href: string) => {
     if (pathname === href) return true;
-    if (href === "/admin") return false;
-    const hasLongerSibling = SECTIONS.some(
+    if (href === base) return false;
+    const hasLongerSibling = sections.some(
       (s) => s.href !== href && s.href.startsWith(`${href}/`) && pathname.startsWith(s.href),
     );
     return !hasLongerSibling && pathname.startsWith(`${href}/`);

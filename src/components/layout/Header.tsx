@@ -8,7 +8,7 @@ import { ChevronDown, Heart, LayoutDashboard, ShoppingBag, User } from "lucide-r
 
 import { Logo } from "@/components/Logo";
 import { useHydrated } from "@/lib/hooks/useHydrated";
-import { useIsAdmin } from "@/lib/hooks/useIsAdmin";
+import { useStaffRole } from "@/lib/hooks/useIsAdmin";
 import { cartCount, useCartStore } from "@/lib/store/cart";
 import { useFavoritesStore } from "@/lib/store/favorites";
 import type { MenuSection } from "@/lib/types";
@@ -32,8 +32,9 @@ export function Header({ menu }: { menu: MenuSection[] }) {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [openSection, setOpenSection] = useState<string | null>(null);
-  // Кнопка админки — только вошедшему администратору, см. useIsAdmin.
-  const isAdmin = useIsAdmin();
+  // Кнопка панели — только сотруднику, и каждому в свою: владельцу
+  // админка, оператору панель оператора. См. useStaffRole.
+  const staffRole = useStaffRole();
 
   const hydrated = useHydrated();
   const items = useCartStore((state) => state.items);
@@ -82,11 +83,11 @@ export function Header({ menu }: { menu: MenuSection[] }) {
 
         {/* Вход в админку стоит слева, у бургера: справа значки покупателя,
             и хозяйская кнопка среди них читается как ещё один из них. */}
-        {isAdmin && (
+        {staffRole && (
           <Link
-            href="/admin"
-            aria-label="Админ-панель"
-            title="Админ-панель"
+            href={staffRole === "operator" ? "/operator/dispatch" : "/admin"}
+            aria-label={staffRole === "operator" ? "Панель оператора" : "Админ-панель"}
+            title={staffRole === "operator" ? "Панель оператора" : "Админ-панель"}
             className="-ml-1 flex h-10 w-9 items-center justify-center transition-colors hover:text-accent lg:-ml-2 lg:w-10"
           >
             <LayoutDashboard className="h-5 w-5" strokeWidth={1.6} />

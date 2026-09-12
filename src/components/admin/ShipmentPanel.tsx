@@ -42,6 +42,7 @@ export function ShipmentPanel({
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<{ error?: string; success?: string }>({});
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [reason, setReason] = useState("");
   const [selfOpen, setSelfOpen] = useState(false);
 
   function register() {
@@ -72,7 +73,7 @@ export function ShipmentPanel({
 
   function cancel() {
     startTransition(async () => {
-      const result = await cancelOrderAction(orderId);
+      const result = await cancelOrderAction(orderId, reason);
       setConfirmOpen(false);
       setMessage(result.ok ? { success: "Заказ отменён, остатки возвращены" } : { error: result.error });
     });
@@ -162,13 +163,25 @@ export function ShipmentPanel({
       <ConfirmDialog
         open={confirmOpen}
         title={`Отменить заказ ${orderNumber}?`}
-        description="Остатки вернутся в каталог, отправление в СДЭК будет удалено. Вернуть заказ обратно после отмены нельзя."
+        description="Остатки вернутся в каталог, отправление в СДЭК будет удалено. Причина сохранится в заказе."
         confirmLabel="Отменить заказ"
         cancelLabel="Не отменять"
         pending={pending}
+        disabled={!reason.trim()}
         onConfirm={cancel}
         onClose={() => setConfirmOpen(false)}
-      />
+      >
+        <label className="block text-xs font-medium text-muted">
+          Причина отмены
+          <textarea
+            value={reason}
+            onChange={(event) => setReason(event.target.value)}
+            rows={3}
+            placeholder="Покупатель передумал, не дозвонились, нет размера…"
+            className="mt-1 w-full rounded border border-line bg-bg px-3 py-2 text-sm text-fg outline-none focus:border-accent"
+          />
+        </label>
+      </ConfirmDialog>
     </section>
   );
 }
