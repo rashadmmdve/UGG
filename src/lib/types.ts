@@ -131,6 +131,8 @@ export type MenuSection = {
 // Товары
 // ─────────────────────────────────────────────────────────────────────────────
 
+export type ProductSpec = { label: string; value: string };
+
 export type ProductVariant = {
   id: string;
   /** Размер в европейской системе — основной для российского покупателя. */
@@ -176,6 +178,8 @@ export type Product = {
 
   materials: Material[];
   seasons: Season[];
+  /** Характеристики для блока «Описание товара»: подпись и значение. */
+  specs: ProductSpec[];
   /** Высота голенища и каблука в сантиметрах — параметры карточки. */
   shaftHeightCm: number | null;
   heelHeightCm: number | null;

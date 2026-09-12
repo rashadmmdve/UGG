@@ -64,6 +64,7 @@ export function saveProduct(input: ProductInput): Product {
       input.groupId || null,
       JSON.stringify(input.materials),
       JSON.stringify(input.seasons),
+      JSON.stringify(input.specs),
       input.shaftHeightCm,
       input.heelHeightCm,
       input.price,
@@ -86,7 +87,7 @@ export function saveProduct(input: ProductInput): Product {
         `UPDATE products SET
            slug = ?, title = ?, sku = ?, description = ?, gender = ?,
            model_line_id = ?, color_id = ?, primary_category_id = ?, group_id = ?,
-           materials = ?, seasons = ?, shaft_height_cm = ?, heel_height_cm = ?,
+           materials = ?, seasons = ?, specs = ?, shaft_height_cm = ?, heel_height_cm = ?,
            price = ?, old_price = ?, cost_price = ?, images = ?, weight = ?, length = ?, width = ?,
            height = ?, is_published = ?, is_bestseller = ?, is_sale = ?,
            seo = ?, updated_at = ?
@@ -96,11 +97,11 @@ export function saveProduct(input: ProductInput): Product {
       db.prepare(
         `INSERT INTO products
            (slug, title, sku, description, gender, model_line_id, color_id,
-            primary_category_id, group_id, materials, seasons, shaft_height_cm,
+            primary_category_id, group_id, materials, seasons, specs, shaft_height_cm,
             heel_height_cm, price, old_price, cost_price, images, weight, length, width,
             height, is_published, is_bestseller, is_sale, seo, updated_at,
             id, rating_value, rating_count, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                  ?, NULL, 0, ?)`,
       ).run(...values, id, now);
     }
@@ -196,6 +197,7 @@ export function cloneProduct(sourceId: string): Product | null {
     groupId: source.groupId ?? source.slug,
     materials: source.materials,
     seasons: source.seasons,
+    specs: source.specs,
     shaftHeightCm: source.shaftHeightCm,
     heelHeightCm: source.heelHeightCm,
     price: source.price,

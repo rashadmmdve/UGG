@@ -88,6 +88,10 @@ CREATE TABLE IF NOT EXISTS products (
   -- маржи в блоке «Цены».
   cost_price          INTEGER,
   images              TEXT NOT NULL DEFAULT '[]',
+  -- Характеристики «название — значение» для блока «Описание товара»:
+  -- материал верха, подошва, сезон и т. п. Свободный список, а не
+  -- столбцы: у поставщиков наборы полей разные.
+  specs               TEXT NOT NULL DEFAULT '[]',
   weight              INTEGER,
   length              INTEGER,
   width               INTEGER,

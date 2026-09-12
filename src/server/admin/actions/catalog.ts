@@ -65,6 +65,23 @@ function readSeo(formData: FormData) {
   };
 }
 
+/**
+ * Характеристики из формы: по строке «Название: значение». Так владелец
+ * правит их как текст, а на витрине они становятся таблицей.
+ */
+function parseSpecs(text: string): { label: string; value: string }[] {
+  return text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const at = line.indexOf(":");
+      if (at <= 0) return null;
+      return { label: line.slice(0, at).trim(), value: line.slice(at + 1).trim() };
+    })
+    .filter((spec): spec is { label: string; value: string } => Boolean(spec && spec.label && spec.value));
+}
+
 type VariantDraft = {
   id?: string;
   sizeEu: string | number;
@@ -121,6 +138,7 @@ export async function saveProductAction(
     groupId: stringOrNull(formData.get("groupId")),
     materials: jsonField<string[]>(formData, "materials", []),
     seasons: jsonField<string[]>(formData, "seasons", []),
+    specs: parseSpecs(String(formData.get("specs") ?? "")),
     shaftHeightCm: numberOrNull(formData.get("shaftHeightCm")),
     heelHeightCm: numberOrNull(formData.get("heelHeightCm")),
     // Владелец вводит цену и цену со скидкой; храним продажную и цену

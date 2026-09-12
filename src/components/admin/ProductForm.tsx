@@ -312,6 +312,16 @@ export function ProductForm({
             error={errors.description}
             className="md:col-span-2"
           />
+          <ATextarea
+            id="specs"
+            name="specs"
+            label="Характеристики (блок «Описание товара»)"
+            defaultValue={(product?.specs ?? []).map((spec) => `${spec.label}: ${spec.value}`).join("\n")}
+            rows={8}
+            hint="По одной в строке: «Материал верха: Замша». Пусто — блок на витрине не показывается."
+            error={errors.specs}
+            className="md:col-span-2"
+          />
         </div>
       </section>
 

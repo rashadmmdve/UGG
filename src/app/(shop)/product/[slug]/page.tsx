@@ -156,6 +156,22 @@ export default async function ProductPage(props: PageProps<"/product/[slug]">) {
             <ProductPurchase product={product} />
           </div>
 
+          {/* Характеристики под кнопкой — свёрнутым блоком, как раньше
+              размерная сетка: кому нужно, раскроет. */}
+          {product.specs.length > 0 && (
+            <details className="mt-6 rounded-lg border border-line p-4">
+              <summary className="cursor-pointer text-sm font-medium">Описание товара</summary>
+              <dl className="mt-3 grid gap-y-2 text-sm sm:grid-cols-[max-content_1fr] sm:gap-x-6">
+                {product.specs.map((spec) => (
+                  <div key={spec.label} className="contents">
+                    <dt className="text-muted">{spec.label}</dt>
+                    <dd>{spec.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </details>
+          )}
+
 
           {product.description && (
             <div className="mt-8 text-sm leading-relaxed">{product.description}</div>

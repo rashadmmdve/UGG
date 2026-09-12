@@ -185,6 +185,10 @@ export const productSchema = z.object({
     .array(z.enum(["ovchina", "zamsha", "kozha", "vyazanyj", "tekstil"]))
     .default([]),
   seasons: z.array(z.enum(["winter", "demi", "summer", "home"])).default([]),
+  specs: z
+    .array(z.object({ label: z.string().trim().min(1).max(60), value: z.string().trim().min(1).max(300) }))
+    .max(30)
+    .default([]),
   shaftHeightCm: z.coerce.number().min(0).max(60).nullable().default(null),
   heelHeightCm: z.coerce.number().min(0).max(20).nullable().default(null),
 

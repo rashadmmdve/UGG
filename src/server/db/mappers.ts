@@ -10,6 +10,7 @@ import type {
   Order,
   Payment,
   Product,
+  ProductSpec,
   ProductVariant,
   Promocode,
   Redirect,
@@ -160,6 +161,7 @@ export type ProductRow = {
   group_id: string | null;
   materials: string;
   seasons: string;
+  specs: string;
   shaft_height_cm: number | null;
   heel_height_cm: number | null;
   price: number;
@@ -228,6 +230,7 @@ export function mapProduct(
     groupId: row.group_id,
     materials: parseJson<Material[]>(row.materials, []),
     seasons: parseJson<Season[]>(row.seasons, []),
+    specs: parseJson<ProductSpec[]>(row.specs, []),
     shaftHeightCm: row.shaft_height_cm,
     heelHeightCm: row.heel_height_cm,
     price: row.price,
