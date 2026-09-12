@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { Search } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
@@ -20,11 +21,14 @@ export function SearchBox({
   autoFocus = false,
   className,
   inputClassName,
+  icon = false,
   onNavigate,
 }: {
   autoFocus?: boolean;
   className?: string;
   inputClassName?: string;
+  /** Лупа справа в поле — в шапке на компьютере. */
+  icon?: boolean;
   /** Переход по подсказке или Enter — родитель закрывает свою панель. */
   onNavigate?: () => void;
 }) {
@@ -108,9 +112,15 @@ export function SearchBox({
             autoComplete="off"
             className={cn(
               "h-10 w-full rounded border border-line bg-bg px-4 text-fg outline-none transition-[border-color] placeholder:text-muted focus:border-accent",
+              icon && "pr-10",
               inputClassName,
             )}
           />
+          {icon && (
+            <span className="pointer-events-none absolute inset-y-0 right-0 flex w-10 items-center justify-center text-fg">
+              <Search className="h-4.5 w-4.5" strokeWidth={1.8} />
+            </span>
+          )}
         </label>
       </form>
 
