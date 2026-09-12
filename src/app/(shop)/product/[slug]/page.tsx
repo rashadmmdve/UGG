@@ -127,9 +127,12 @@ export default async function ProductPage(props: PageProps<"/product/[slug]">) {
                         href={`/product/${item.slug}`}
                         title={itemColor ? `${item.title} — ${itemColor.title}` : item.title}
                         aria-current={current ? "page" : undefined}
+                        // Рамок нет: текущий оттенок отмечен тонкой линией
+                        // снизу — так ряд читается как фотографии, а не как
+                        // набор кнопок.
                         className={cn(
-                          "relative block h-16 w-16 overflow-hidden rounded-md border bg-white transition-colors",
-                          current ? "border-fg" : "border-line hover:border-fg",
+                          "relative block h-16 w-16 overflow-hidden bg-white pb-1.5 transition-colors after:absolute after:inset-x-0 after:bottom-0 after:h-0.5",
+                          current ? "after:bg-fg" : "after:bg-transparent hover:after:bg-line-strong",
                         )}
                       >
                         {image ? (
