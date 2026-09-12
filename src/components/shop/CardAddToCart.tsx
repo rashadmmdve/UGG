@@ -95,11 +95,12 @@ export function CardAddToCart({ product }: { product: Product }) {
         )}
       </button>
 
-      {/* Всплывает вверх от кнопки, закрывая цену и название. */}
+      {/* Ряд размеров встаёт над кнопкой, закрывая название и цену.
+          Кнопка при этом не сдвигается, а карточка не растёт. */}
       {pickingSize && (
-        <div className="absolute inset-x-0 bottom-0 z-20 rounded-md border border-line bg-bg p-2 shadow-[0_-10px_28px_-14px_rgba(0,0,0,0.45)]">
-          <p className="mb-1.5 text-[0.6875rem] text-muted">Выберите размер</p>
-          <div className="flex flex-wrap gap-1">
+        <div className="absolute inset-x-0 bottom-full z-20 bg-bg pb-2">
+          <p className="mb-1.5 text-center text-[0.6875rem] text-muted">Выберите размер</p>
+          <div className="flex flex-wrap justify-center gap-1">
             {available.map((variant) => (
               <button
                 key={variant.id}
