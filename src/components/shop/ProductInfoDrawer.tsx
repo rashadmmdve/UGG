@@ -64,7 +64,8 @@ export function ProductInfoDrawer({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="mt-6 inline-flex h-11 items-center rounded-md border border-line px-5 text-sm font-medium transition-colors hover:border-accent"
+        // Текстом с линией снизу, не кнопкой: чтобы не спутать с размерами.
+        className="mt-6 inline-block border-b border-fg pb-0.5 text-sm font-medium transition-colors hover:text-muted hover:border-muted"
       >
         Характеристики
       </button>
