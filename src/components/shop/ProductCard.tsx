@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { CardAddToCart } from "@/components/shop/CardAddToCart";
 import { FavoriteButton } from "@/components/shop/FavoriteButton";
 import { formatPrice } from "@/lib/utils";
 import type { Product } from "@/lib/types";
@@ -27,7 +28,10 @@ export function ProductCard({
   const image = product.images[0];
 
   return (
-    <article className="group relative">
+    // Колонка во всю высоту ячейки сетки: кнопка прижата к низу, и у
+    // соседних карточек она стоит на одной линии, даже если название
+    // занимает одну строку, а не две.
+    <article className="group relative flex h-full flex-col">
       <Link href={`/product/${product.slug}`} className="block">
         {/*
           object-contain, а не cover: снимок вписывается в плитку целиком и
@@ -65,7 +69,7 @@ export function ProductCard({
           )}
         </div>
 
-        <h3 className="mt-3 line-clamp-2 text-sm leading-snug group-hover:text-accent">
+        <h3 className="mt-3 line-clamp-2 min-h-[2.25rem] text-sm leading-snug group-hover:text-accent">
           {product.title}
         </h3>
         <p className="mt-1 flex items-baseline gap-2">
@@ -75,6 +79,10 @@ export function ProductCard({
           )}
         </p>
       </Link>
+
+      <div className="mt-auto pt-2">
+        <CardAddToCart product={product} />
+      </div>
 
       <FavoriteButton productId={product.id} className="absolute top-0.5 right-0.5" iconClassName="h-4 w-4" />
     </article>
