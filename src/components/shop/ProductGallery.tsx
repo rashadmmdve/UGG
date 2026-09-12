@@ -189,9 +189,11 @@ function PhotoLightbox({
           type="button"
           onClick={onClose}
           aria-label="Закрыть фото"
-          className="absolute top-2 right-2 flex h-11 w-11 items-center justify-center text-white hover:opacity-70"
+          className="absolute top-2 right-2 flex h-11 w-11 items-center justify-center text-fg hover:opacity-70"
         >
-          <X className="h-7 w-7 drop-shadow-[0_0_6px_rgba(0,0,0,0.7)]" strokeWidth={1.5} />
+          {/* Чёрный крестик со светлым ореолом: фото открываются на белом
+              фоне, и белый значок на них терялся. */}
+          <X className="h-7 w-7 drop-shadow-[0_0_6px_rgba(255,255,255,0.9)]" strokeWidth={1.5} />
         </button>
       </div>
     </div>,
