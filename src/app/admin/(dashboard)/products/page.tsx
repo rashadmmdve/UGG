@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { BulkCheckbox, BulkPublishBar } from "@/components/admin/BulkPublish";
 import { formatPrice } from "@/lib/utils";
 import { getCategoryById, getProducts } from "@/server/repositories/catalog";
 
@@ -41,6 +42,8 @@ export default async function AdminProductsPage(
         />
       </form>
 
+      {products.length > 0 && <BulkPublishBar total={products.length} />}
+
       {products.length === 0 ? (
         <p className="mt-8 text-sm text-muted">
           {query ? "Ничего не найдено." : "Товаров пока нет — создайте первый."}
@@ -50,6 +53,7 @@ export default async function AdminProductsPage(
           <table className="w-full text-sm">
             <thead className="bg-elevated text-left text-xs text-muted">
               <tr>
+                <th className="w-8 px-3 py-2" />
                 <th className="px-4 py-2 font-normal">Название</th>
                 <th className="px-4 py-2 font-normal">Артикул</th>
                 <th className="px-4 py-2 font-normal">Категория</th>
@@ -67,6 +71,7 @@ export default async function AdminProductsPage(
 
                 return (
                   <tr key={product.id} className="hover:bg-sand">
+                    <td className="px-3 py-2"><BulkCheckbox id={product.id} /></td>
                     <td className="px-4 py-2">
                       <Link
                         href={`/admin/products/${product.id}`}

@@ -377,3 +377,12 @@ export function saveSizeChart(input: Omit<SizeChart, "id"> & { id?: string }): v
 export function deleteSizeChart(id: string): void {
   getDb().prepare("DELETE FROM size_charts WHERE id = ?").run(id);
 }
+
+/** Показать или скрыть сразу несколько товаров — массовое действие из списка. */
+export function setProductsPublished(ids: string[], published: boolean): number {
+  if (ids.length === 0) return 0;
+  const placeholders = ids.map(() => "?").join(",");
+  return getDb()
+    .prepare(`UPDATE products SET is_published = ?, updated_at = ? WHERE id IN (${placeholders})`)
+    .run(published ? 1 : 0, new Date().toISOString(), ...ids).changes;
+}

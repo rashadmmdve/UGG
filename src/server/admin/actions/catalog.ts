@@ -1,5 +1,7 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+
 import { nanoid } from "nanoid";
 import { redirect } from "next/navigation";
 
@@ -22,6 +24,7 @@ import {
   saveModelLine,
   saveProduct,
   saveSizeChart,
+  setProductsPublished,
 } from "@/server/repositories/catalog-write";
 import {
   revalidateCatalog,
@@ -187,6 +190,19 @@ export async function saveProductAction(
   if (!existingId) redirect(`/admin/products/${product.id}?created=1`);
 
   return { success: "Сохранено" };
+}
+
+/**
+ * Массово скрыть или показать товары, отмеченные галочками в списке.
+ * Скрытый товар остаётся в базе, просто не выводится на витрине.
+ */
+export async function setProductsPublishedAction(formData: FormData): Promise<void> {
+  if (!(await assertAdmin())) return;
+  const ids = formData.getAll("ids").map(String).filter(Boolean);
+  const published = formData.get("publish") === "1";
+  setProductsPublished(ids, published);
+  revalidatePath("/admin/products");
+  revalidatePath("/", "layout");
 }
 
 export async function deleteProductAction(formData: FormData): Promise<void> {
