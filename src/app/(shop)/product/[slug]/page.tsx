@@ -82,7 +82,11 @@ export default async function ProductPage(props: PageProps<"/product/[slug]">) {
 
         <div className="lg:pl-4">
           {modelLine && <p className="label-caps">{modelLine.title}</p>}
-          <h1 className="heading-section mt-1">{product.seo.h1 || product.title}</h1>
+          {/* На 2 px мельче общего заголовка раздела: у товара название
+              длинное, и в колонке оно занимало слишком много места. */}
+          <h1 className="heading-section mt-1 text-[clamp(1.375rem,3.7vw,1.75rem)]">
+            {product.seo.h1 || product.title}
+          </h1>
           <div className="mt-4 flex items-baseline gap-3">
             <span className="text-2xl font-bold">{formatPrice(product.price)}</span>
             {discount > 0 && product.oldPrice && (
