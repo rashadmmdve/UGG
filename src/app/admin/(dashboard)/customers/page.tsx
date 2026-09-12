@@ -1,6 +1,6 @@
 import { formatPrice } from "@/lib/utils";
 import { requireAdmin } from "@/server/admin/guard";
-import { setUserRoleAction } from "@/server/admin/actions/users";
+import { RolePicker } from "@/components/admin/RolePicker";
 import { getOrders } from "@/server/repositories/orders";
 import { getUsers } from "@/server/repositories/users";
 
@@ -70,26 +70,7 @@ export default async function AdminCustomersPage() {
                       {customer.id === admin.id ? (
                         <span className="text-xs text-muted">это вы</span>
                       ) : (
-                        <form action={setUserRoleAction} className="flex gap-1">
-                          <input type="hidden" name="id" value={customer.id} />
-                          <select
-                            key={customer.role}
-                            name="role"
-                            defaultValue={customer.role}
-                            aria-label={`Роль: ${customer.email}`}
-                            className="h-8 rounded border border-line bg-bg px-2 text-xs"
-                          >
-                            <option value="customer">Покупатель</option>
-                            <option value="operator">Оператор</option>
-                            <option value="admin">Администратор</option>
-                          </select>
-                          <button
-                            type="submit"
-                            className="rounded border border-line px-2 text-xs hover:border-accent"
-                          >
-                            ОК
-                          </button>
-                        </form>
+                        <RolePicker id={customer.id} role={customer.role} email={customer.email} />
                       )}
                     </td>
                     <td className="px-4 py-2 text-right">{entry.count}</td>
