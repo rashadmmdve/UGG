@@ -9,8 +9,8 @@ import { verifyEmailToken } from "@/server/auth/verification";
  *
  * Обработчик маршрута, а не страница: вход выставляет куку сессии, а
  * серверный компонент при отрисовке менять куки не может. Успех —
- * сразу в кабинет; неудача — на страницу подтверждения с объяснением
- * и кнопкой «отправить письмо ещё раз».
+ * вход и на главную, к покупкам; неудача — на страницу подтверждения
+ * с объяснением и кнопкой «отправить письмо ещё раз».
  */
 export async function GET(request: Request) {
   const token = new URL(request.url).searchParams.get("token") ?? "";
@@ -21,5 +21,5 @@ export async function GET(request: Request) {
   }
 
   await createSession(result.user.id, true);
-  return NextResponse.redirect(`${SITE_URL}/account?verified=1`, 303);
+  return NextResponse.redirect(`${SITE_URL}/`, 303);
 }
