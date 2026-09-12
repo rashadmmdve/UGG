@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight, Heart, LayoutDashboard, Search, ShoppingBag, User } from "lucide-react";
 
@@ -42,6 +42,9 @@ const UNDERLINE =
 export function Header({ menu }: { menu: MenuSection[] }) {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  // Поиск на телефоне: выпадающая полоска под шапкой поверх страницы.
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchInput = useRef<HTMLInputElement>(null);
   const [openSection, setOpenSection] = useState<string | null>(null);
   // Кнопка панели — только сотруднику, и каждому в свою: владельцу
   // админка, оператору панель оператора. См. useStaffRole.
@@ -61,6 +64,7 @@ export function Header({ menu }: { menu: MenuSection[] }) {
     const id = setTimeout(() => {
       setOpenSection(null);
       setDrawerOpen(false);
+      setSearchOpen(false);
     }, 0);
     return () => clearTimeout(id);
   }, [pathname]);
@@ -73,6 +77,17 @@ export function Header({ menu }: { menu: MenuSection[] }) {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [openSection]);
+
+  // Открыли поиск — курсор сразу в поле; Escape закрывает.
+  useEffect(() => {
+    if (!searchOpen) return;
+    searchInput.current?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSearchOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [searchOpen]);
 
   const active = menu.find((section) => section.slug === openSection) ?? null;
   // В меню попадают только непустые категории — см. пояснение у разметки.
@@ -93,14 +108,19 @@ export function Header({ menu }: { menu: MenuSection[] }) {
         <BurgerButton open={drawerOpen} onClick={() => setDrawerOpen((v) => !v)} />
 
         {/* Поиск на телефоне — значком сразу за бургером, как на ugg.com;
-            ведёт на страницу поиска с готовым полем ввода. */}
-        <Link
-          href="/search"
+            по нему под шапкой раскрывается поле поверх страницы. */}
+        <button
+          type="button"
+          onClick={() => {
+            setSearchOpen((v) => !v);
+            setDrawerOpen(false);
+          }}
           aria-label="Поиск"
+          aria-expanded={searchOpen}
           className="-ml-3 flex h-10 w-9 items-center justify-center transition-colors hover:text-accent lg:hidden"
         >
           <Search className="h-5 w-5" strokeWidth={1.6} />
-        </Link>
+        </button>
 
         {/* Вход в админку стоит слева, у бургера: справа значки покупателя,
             и хозяйская кнопка среди них читается как ещё один из них. */}
@@ -241,6 +261,31 @@ export function Header({ menu }: { menu: MenuSection[] }) {
             )}
           </div>
         )}
+      </div>
+
+      {/* Полоска поиска на телефоне: лежит поверх страницы и ничего не
+          сдвигает — absolute под шапкой, а не в потоке. */}
+      <div
+        inert={!searchOpen}
+        className={cn(
+          "absolute inset-x-0 top-full border-b border-line bg-bg shadow-[0_18px_40px_-24px_rgba(0,0,0,0.35)] transition-all duration-300 lg:hidden",
+          searchOpen ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-2 opacity-0",
+        )}
+      >
+        <form action="/search" role="search" className="container-page flex gap-2 py-3">
+          <input
+            ref={searchInput}
+            type="search"
+            name="q"
+            placeholder="Поиск по каталогу"
+            aria-label="Поиск по каталогу"
+            autoComplete="off"
+            className="h-11 min-w-0 flex-1 rounded border border-line bg-bg px-4 text-base outline-none placeholder:text-muted focus:border-accent"
+          />
+          <button type="submit" className="h-11 rounded bg-accent px-4 text-sm font-semibold text-white">
+            Найти
+          </button>
+        </form>
       </div>
 
       <MobileDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} menu={menu} />
