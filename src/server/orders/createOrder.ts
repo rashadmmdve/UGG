@@ -214,6 +214,7 @@ export async function submitOrder(input: unknown): Promise<CheckoutResult> {
     // Картой — заказ ждёт платежа; при получении — деньги соберёт СДЭК.
     paymentStatus: data.paymentMethod === "online" ? "pending" : "unpaid",
     cdek: null,
+    courierId: null,
   });
 
   if (promocodeId) incrementPromocodeUsage(promocodeId);

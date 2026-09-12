@@ -1,4 +1,6 @@
 import { formatPrice } from "@/lib/utils";
+import { requireAdmin } from "@/server/admin/guard";
+import { setUserRoleAction } from "@/server/admin/actions/users";
 import { getOrders } from "@/server/repositories/orders";
 import { getUsers } from "@/server/repositories/users";
 
@@ -7,8 +9,12 @@ import { getUsers } from "@/server/repositories/users";
  * сотруднику магазина для обработки заказов; править их из админки
  * нельзя, покупатель делает это сам в личном кабинете.
  */
-export default function AdminCustomersPage() {
-  const customers = getUsers().filter((user) => user.role === "customer");
+export default async function AdminCustomersPage() {
+  const admin = await requireAdmin();
+
+  // Показываем всех, включая сотрудников: роль выдаётся здесь же, и
+  // искать оператора в отдельном списке было бы странно.
+  const customers = getUsers();
   const orders = getOrders();
 
   const stats = new Map<string, { count: number; total: number }>();
@@ -30,7 +36,9 @@ export default function AdminCustomersPage() {
         Клиенты <span className="text-base font-normal text-muted">{customers.length}</span>
       </h1>
       <p className="mt-2 text-sm text-muted">
-        Зарегистрированные покупатели. Заказов без регистрации: {guestOrders}.
+        Зарегистрированные покупатели и сотрудники. Заказов без регистрации:{" "}
+        {guestOrders}. Оператору открыты только заказы и курьеры — ни товаров,
+        ни цен, ни финансов он не видит.
       </p>
 
       {customers.length === 0 ? (
@@ -44,6 +52,7 @@ export default function AdminCustomersPage() {
                 <th className="px-4 py-2 font-normal">Почта</th>
                 <th className="px-4 py-2 font-normal">Телефон</th>
                 <th className="px-4 py-2 font-normal">Регистрация</th>
+                <th className="px-4 py-2 font-normal">Роль</th>
                 <th className="px-4 py-2 font-normal text-right">Заказов</th>
                 <th className="px-4 py-2 font-normal text-right">Сумма</th>
               </tr>
@@ -57,6 +66,32 @@ export default function AdminCustomersPage() {
                     <td className="px-4 py-2 text-muted">{customer.email}</td>
                     <td className="px-4 py-2 text-muted">{customer.phone || "—"}</td>
                     <td className="px-4 py-2 text-muted">{customer.createdAt.slice(0, 10)}</td>
+                    <td className="px-4 py-2">
+                      {customer.id === admin.id ? (
+                        <span className="text-xs text-muted">это вы</span>
+                      ) : (
+                        <form action={setUserRoleAction} className="flex gap-1">
+                          <input type="hidden" name="id" value={customer.id} />
+                          <select
+                            key={customer.role}
+                            name="role"
+                            defaultValue={customer.role}
+                            aria-label={`Роль: ${customer.email}`}
+                            className="h-8 rounded border border-line bg-bg px-2 text-xs"
+                          >
+                            <option value="customer">Покупатель</option>
+                            <option value="operator">Оператор</option>
+                            <option value="admin">Администратор</option>
+                          </select>
+                          <button
+                            type="submit"
+                            className="rounded border border-line px-2 text-xs hover:border-accent"
+                          >
+                            ОК
+                          </button>
+                        </form>
+                      )}
+                    </td>
                     <td className="px-4 py-2 text-right">{entry.count}</td>
                     <td className="px-4 py-2 text-right">{formatPrice(entry.total)}</td>
                   </tr>

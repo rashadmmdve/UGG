@@ -255,3 +255,16 @@ CREATE TABLE IF NOT EXISTS settings (
   key   TEXT PRIMARY KEY,
   value TEXT NOT NULL
 );
+
+-- Курьеры своей доставки. Телеграм-идентификатор — чтобы бот показывал
+-- курьеру его заказы, а не все подряд; узнаётся командой /id в группе.
+CREATE TABLE IF NOT EXISTS couriers (
+  id           TEXT PRIMARY KEY,
+  name         TEXT NOT NULL,
+  phone        TEXT NOT NULL DEFAULT '',
+  telegram_id  TEXT NOT NULL DEFAULT '',
+  is_active    INTEGER NOT NULL DEFAULT 1,
+  created_at   TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_couriers_telegram ON couriers(telegram_id);

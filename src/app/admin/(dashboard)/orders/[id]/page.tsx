@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { CourierPicker } from "@/components/admin/CourierPicker";
 import { RestoreOrderButton } from "@/components/admin/RestoreOrderButton";
 import { ShipmentPanel } from "@/components/admin/ShipmentPanel";
 import { SubmitButton } from "@/components/admin/ui";
@@ -13,6 +14,7 @@ import {
   updatePaymentStatusAction,
 } from "@/server/admin/actions/orders";
 import { canCancel } from "@/server/orders/shipment";
+import { getCouriers } from "@/server/repositories/couriers";
 import { getOrderById } from "@/server/repositories/orders";
 import { getPaymentsByOrderId } from "@/server/repositories/payments";
 import type { OrderStatus, PaymentStatus } from "@/lib/types";
@@ -27,6 +29,7 @@ export default async function AdminOrderPage(props: PageProps<"/admin/orders/[id
   if (!order) notFound();
 
   const isCancelled = order.status === "cancelled";
+  const couriers = getCouriers();
   const payments = order.paymentMethod === "online" ? getPaymentsByOrderId(order.id) : [];
 
   return (
@@ -95,6 +98,23 @@ export default async function AdminOrderPage(props: PageProps<"/admin/orders/[id
               </tfoot>
             </table>
           </section>
+
+          {isSelfDelivery(order.delivery) && (
+            <section className="rounded-lg border border-line bg-bg p-5">
+              <h2 className="font-semibold">Курьер</h2>
+              <p className="mt-1 text-xs text-muted">
+                Заказ везём сами. Назначенный курьер увидит его в группе «Доставка»;
+                нераспределённые заказы видны всем курьерам.
+              </p>
+              <div className="mt-3">
+                <CourierPicker
+                  orderId={order.id}
+                  courierId={order.courierId}
+                  couriers={couriers.filter((courier) => courier.isActive)}
+                />
+              </div>
+            </section>
+          )}
 
           <ShipmentPanel
             orderId={order.id}

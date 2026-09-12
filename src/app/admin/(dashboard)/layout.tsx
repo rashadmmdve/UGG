@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 import { AdminNav } from "@/components/admin/AdminNav";
 import { Logo } from "@/components/Logo";
-import { requireAdmin } from "@/server/admin/guard";
+import { isOperatorPath, requireStaff } from "@/server/admin/guard";
 import { logoutAction } from "@/server/auth/actions";
 
 /**
@@ -15,7 +17,13 @@ import { logoutAction } from "@/server/auth/actions";
 export default async function AdminDashboardLayout({
   children,
 }: LayoutProps<"/admin">) {
-  const admin = await requireAdmin();
+  const admin = await requireStaff();
+
+  // Оператор ведёт заказы и курьеров; всё прочее в админке — владельцу.
+  if (admin.role === "operator") {
+    const pathname = (await headers()).get("x-pathname") ?? "";
+    if (!isOperatorPath(pathname)) redirect("/admin/orders");
+  }
 
   return (
     <div className="flex min-h-screen bg-sand">
@@ -28,7 +36,7 @@ export default async function AdminDashboardLayout({
         </div>
 
         <div className="mt-6 flex-1 overflow-y-auto">
-          <AdminNav />
+          <AdminNav role={admin.role} />
         </div>
 
         <div className="mt-6 border-t border-line px-3 pt-4 text-xs text-muted">

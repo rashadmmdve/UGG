@@ -141,6 +141,14 @@ export function updateUser(
   return { ...existing, ...next };
 }
 
+/**
+ * Роль пользователя. Отдельно от updateUser: там правка своих данных
+ * покупателем, а здесь — выдача прав сотруднику, и путать их не стоит.
+ */
+export function setUserRole(id: string, role: User["role"]): void {
+  getDb().prepare("UPDATE users SET role = ? WHERE id = ?").run(role, id);
+}
+
 export function updatePasswordHash(id: string, passwordHash: string): void {
   getDb()
     .prepare("UPDATE users SET password_hash = ? WHERE id = ?")

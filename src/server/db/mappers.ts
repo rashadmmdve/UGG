@@ -415,6 +415,7 @@ export type OrderRow = {
   payment_method: string;
   payment_status: string;
   cdek: string | null;
+  courier_id: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -448,6 +449,7 @@ export function mapOrder(row: OrderRow): Order {
     promocode: row.promocode,
     status: row.status as Order["status"],
     paymentMethod: row.payment_method as Order["paymentMethod"],
+    courierId: row.courier_id ?? null,
     paymentStatus: row.payment_status as Order["paymentStatus"],
     cdek: row.cdek ? parseJson<Order["cdek"]>(row.cdek, null) : null,
     createdAt: row.created_at,

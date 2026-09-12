@@ -2,7 +2,7 @@ import "server-only";
 
 import { redirect } from "next/navigation";
 
-import { getCurrentAdmin } from "@/server/auth/session";
+import { getCurrentAdmin, getCurrentStaff } from "@/server/auth/session";
 import type { PublicUser } from "@/lib/types";
 
 /**
@@ -25,4 +25,34 @@ export async function requireAdmin(): Promise<PublicUser> {
 /** Вариант для серверных действий: возвращает null вместо редиректа. */
 export async function assertAdmin(): Promise<PublicUser | null> {
   return getCurrentAdmin();
+}
+
+/**
+ * То же для работы с заказами: её ведёт и оператор.
+ *
+ * Всё остальное — товары, цены, тексты, деньги — остаётся за
+ * администратором: там по-прежнему assertAdmin.
+ */
+export async function requireStaff(): Promise<PublicUser> {
+  const staff = await getCurrentStaff();
+  if (!staff) redirect("/");
+  return staff;
+}
+
+export async function assertStaff(): Promise<PublicUser | null> {
+  return getCurrentStaff();
+}
+
+/**
+ * Что открыто оператору. Остальное в админке — только владельцу, и
+ * проверяется это в одном месте, в layout: страниц много, а забыть
+ * проверку на одной из них — вопрос времени.
+ */
+export function isOperatorPath(pathname: string): boolean {
+  return (
+    pathname === "/admin/orders" ||
+    pathname.startsWith("/admin/orders/") ||
+    pathname === "/admin/couriers" ||
+    pathname.startsWith("/admin/couriers/")
+  );
 }

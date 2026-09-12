@@ -117,9 +117,9 @@ export function createOrder(input: NewOrder): Order {
       `INSERT INTO orders
          (id, number, user_id, customer, delivery, comment, items,
           subtotal, discount, delivery_price, package_weight, total,
-          promocode, status, payment_method, payment_status, cdek,
+          promocode, status, payment_method, payment_status, cdek, courier_id,
           created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .run(
       order.id,
@@ -139,6 +139,7 @@ export function createOrder(input: NewOrder): Order {
       order.paymentMethod,
       order.paymentStatus,
       order.cdek ? JSON.stringify(order.cdek) : null,
+      order.courierId,
       order.createdAt,
       order.updatedAt,
     );
@@ -192,6 +193,24 @@ export function setSelfDelivery(id: string): Order | null {
     .run(JSON.stringify(next.delivery), next.total, next.updatedAt, id);
 
   return next;
+}
+
+/**
+ * Отдать заказ курьеру или забрать обратно.
+ *
+ * Живёт отдельным запросом, а не общим patchOrder: назначение делает
+ * оператор десятками за смену, и трогать при этом остальные поля заказа
+ * незачем.
+ */
+export function setOrderCourier(id: string, courierId: string | null): Order | null {
+  const existing = getOrderById(id);
+  if (!existing) return null;
+
+  getDb()
+    .prepare("UPDATE orders SET courier_id = ?, updated_at = ? WHERE id = ?")
+    .run(courierId, nowIso(), id);
+
+  return { ...existing, courierId, updatedAt: nowIso() };
 }
 
 export function patchOrder(

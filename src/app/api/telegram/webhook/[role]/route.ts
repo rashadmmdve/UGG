@@ -59,10 +59,15 @@ type Callback = {
   id: string;
   data?: string;
   message?: { message_id: number; chat: Chat };
-  from?: { first_name?: string; username?: string };
+  from?: { id?: number; first_name?: string; username?: string };
 };
 
-type Message = { message_id: number; chat: Chat; text?: string };
+type Message = {
+  message_id: number;
+  chat: Chat;
+  text?: string;
+  from?: { id?: number; first_name?: string; username?: string };
+};
 
 const ok = () => NextResponse.json({ ok: true });
 
@@ -80,10 +85,13 @@ function rootMenu(): Card {
  * Номер на кнопке, а не в тексте: нажимать по списку удобнее, чем искать
  * команду, и курьеру не нужно ничего печатать на морозе.
  */
-function orderList(): Card {
-  const orders = activeDeliveryOrders();
+function orderList(telegramId?: number): Card {
+  const orders = activeDeliveryOrders(telegramId);
   if (orders.length === 0) {
-    return { text: "Активных заказов на доставку нет.", buttons: [[{ text: "⟵ Меню", callback_data: "menu" }]] };
+    return {
+      text: "Заказов на доставку для вас сейчас нет.",
+      buttons: [[{ text: "⟵ Меню", callback_data: "menu" }]],
+    };
   }
 
   const buttons: InlineButton[][] = [];
@@ -134,6 +142,13 @@ export async function POST(
       const menu = rootMenu();
       await sendMessage(role, menu.text, menu.buttons);
     }
+
+    // /id — узнать свой идентификатор в Телеграме: его вписывают курьеру
+    // в админке, чтобы бот показывал ему только его заказы.
+    if (role === "delivery" && command === "/id" && message.from?.id) {
+      const who = message.from.username ? `@${message.from.username}` : (message.from.first_name ?? "");
+      await sendMessage(role, `🆔 <b>${message.from.id}</b> — ${who}\nВпишите это число курьеру в админке.`);
+    }
     return ok();
   }
 
@@ -169,7 +184,7 @@ export async function POST(
 
     // Меню и список ничего не меняют — просто переписывают сообщение.
     if (action === "menu" || action === "list") {
-      const card = action === "menu" ? rootMenu() : orderList();
+      const card = action === "menu" ? rootMenu() : orderList(callback.from?.id);
       await editMessage(role, chat, messageId, card.text, card.buttons);
       await answerCallback(role, callback.id, "");
       return ok();

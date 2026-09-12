@@ -25,7 +25,11 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
-  const response = NextResponse.next();
+  // Путь в заголовке: layout админки решает по нему, пускать ли
+  // оператора, — серверные компоненты своего адреса не знают.
+  const headers = new Headers(request.headers);
+  headers.set("x-pathname", pathname);
+  const response = NextResponse.next({ request: { headers } });
 
   const isPrivate =
     pathname.startsWith("/admin") ||

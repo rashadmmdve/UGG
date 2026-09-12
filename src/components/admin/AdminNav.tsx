@@ -4,17 +4,20 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/utils";
+import type { UserRole } from "@/lib/types";
 
 /**
  * Разделы админки. Порядок — по частоте использования: заказы и товары
  * открывают каждый день, настройки логистики — раз в год.
  */
-const SECTIONS: { href: string; label: string; group?: string }[] = [
+const SECTIONS: { href: string; label: string; group?: string; staff?: true }[] = [
   { href: "/admin", label: "Обзор" },
-  { href: "/admin/orders", label: "Заказы" },
+  { href: "/admin/orders", label: "Заказы", staff: true },
+  { href: "/admin/couriers", label: "Курьеры", staff: true },
   { href: "/admin/products", label: "Товары" },
   { href: "/admin/prices", label: "Цены" },
   { href: "/admin/reviews", label: "Отзывы" },
+  { href: "/admin/finance", label: "Финансы" },
 
   { href: "/admin/categories", label: "Категории", group: "Каталог" },
   { href: "/admin/model-lines", label: "Модельные линии", group: "Каталог" },
@@ -32,8 +35,12 @@ const SECTIONS: { href: string; label: string; group?: string }[] = [
   { href: "/admin/content", label: "Тексты сайта", group: "Прочее" },
 ];
 
-export function AdminNav() {
+export function AdminNav({ role }: { role: UserRole }) {
   const pathname = usePathname();
+
+  // Оператору показываем только то, что ему открыто: пункт, который
+  // всё равно приведёт к отказу, — это ложное обещание.
+  const sections = role === "operator" ? SECTIONS.filter((item) => item.staff) : SECTIONS;
 
   /**
    * Пункт активен, если путь совпадает или лежит под ним. Исключение —
@@ -52,11 +59,11 @@ export function AdminNav() {
   return (
     <nav className="text-sm">
       <ul className="space-y-0.5">
-        {SECTIONS.map((section, index) => {
+        {sections.map((section, index) => {
           // Заголовок группы — перед первым пунктом группы: сравниваем с
           // предыдущим элементом списка, а не копим состояние при рендере.
           const showGroup =
-            section.group && section.group !== SECTIONS[index - 1]?.group;
+            section.group && section.group !== sections[index - 1]?.group;
 
           return (
             <li key={section.href}>

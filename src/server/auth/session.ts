@@ -135,3 +135,14 @@ export async function getCurrentAdmin(): Promise<PublicUser | null> {
   const user = await getCurrentUser();
   return user && user.role === "admin" ? user : null;
 }
+
+/**
+ * Сотрудник магазина: оператор или владелец.
+ *
+ * Оператору открыты заказы и курьеры, владельцу — всё остальное тоже.
+ * Разделяют их не здесь, а там, где решается конкретный доступ.
+ */
+export async function getCurrentStaff(): Promise<PublicUser | null> {
+  const user = await getCurrentUser();
+  return user && (user.role === "admin" || user.role === "operator") ? user : null;
+}

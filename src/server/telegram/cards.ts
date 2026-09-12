@@ -4,6 +4,7 @@ import { SITE_URL } from "@/lib/constants";
 import { isSelfDelivery } from "@/lib/delivery";
 import { paymentLabel } from "@/lib/payment-kind";
 import { formatPrice, sizeLabel } from "@/lib/utils";
+import { getCourierById, getCourierByTelegramId } from "@/server/repositories/couriers";
 import { getOrders } from "@/server/repositories/orders";
 import type { InlineButton } from "@/server/telegram/client";
 import type { Order } from "@/lib/types";
@@ -70,8 +71,11 @@ export function deliveryCard(order: Order): Card {
     ? "✅ Оплачен — брать деньги не нужно"
     : `К получению: <b>${formatPrice(order.total)}</b>`;
 
+  const courier = order.courierId ? getCourierById(order.courierId) : null;
+
   const text = [
     `🚚 <b>Заказ ${escape(order.number)}</b>`,
+    courier ? `Курьер: ${escape(courier.name)}` : "Курьер не назначен",
     where(order),
     `${escape(order.customer.name)} · ${phoneLink(order.customer.phone)}`,
     due,
@@ -114,18 +118,25 @@ export function paymentCard(order: Order, asked = false): Card {
 }
 
 /**
- * Заказы для меню курьера: те, что везём сами и ещё в работе.
+ * Заказы для меню: те, что везём сами и ещё в работе.
  *
- * Вручённые и отменённые не показываем — курьеру нужен список дел, а не
- * архив; за архивом есть админка.
+ * Вручённые и отменённые не показываем — нужен список дел, а не архив;
+ * за архивом есть админка.
+ *
+ * Курьер видит только свои: узнаём его по идентификатору в Телеграме,
+ * который подставляет сам Телеграм, — подделать нельзя. Нераспределённые
+ * заказы видны всем: их как раз и нужно кому-то забрать. Кто в группе не
+ * курьер (оператор, владелец), видит всё.
  */
-export function activeDeliveryOrders(limit = 20): Order[] {
+export function activeDeliveryOrders(telegramId?: string | number, limit = 20): Order[] {
+  const courier = telegramId ? getCourierByTelegramId(telegramId) : null;
+
   return getOrders()
-    .filter(
-      (order) =>
-        isSelfDelivery(order.delivery) &&
-        order.status !== "cancelled" &&
-        order.status !== "completed",
-    )
+    .filter((order) => {
+      if (!isSelfDelivery(order.delivery)) return false;
+      if (order.status === "cancelled" || order.status === "completed") return false;
+      if (courier) return order.courierId === courier.id || order.courierId === null;
+      return true;
+    })
     .slice(0, limit);
 }

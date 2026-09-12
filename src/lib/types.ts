@@ -291,7 +291,15 @@ export type Article = {
 // Пользователи
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type UserRole = "customer" | "admin";
+/**
+ * Кто пользуется магазином.
+ *
+ * customer — покупатель; operator — сотрудник, который ведёт заказы:
+ * видит их, общается с покупателями и раздаёт курьерам, но не трогает
+ * ни товары, ни цены, ни деньги; admin — владелец, которому доступно
+ * всё, включая работу оператора.
+ */
+export type UserRole = "customer" | "operator" | "admin";
 
 export type User = {
   id: string;
@@ -432,6 +440,8 @@ export type Order = {
   paymentMethod: PaymentMethod;
   paymentStatus: PaymentStatus;
   cdek: CdekShipment | null;
+  /** Кому из курьеров отдан заказ своей доставки; null — ещё никому. */
+  courierId: string | null;
   createdAt: string;
   updatedAt: string;
 };
