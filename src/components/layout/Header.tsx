@@ -177,7 +177,7 @@ export function Header({ menu }: { menu: MenuSection[] }) {
         */}
         {/* Поиск — в свободном месте между меню и значками, как на ugg.com.
             На телефоне вместо поля — значок у бургера. */}
-        <SearchBox className="ml-auto hidden w-56 focus-within:w-72 transition-[width] duration-300 lg:block" inputClassName="text-sm" />
+        <SearchBox className="ml-auto hidden w-[336px] focus-within:w-[400px] transition-[width] duration-300 lg:block" inputClassName="text-sm" />
 
         <div className="-mr-1.5 ml-auto flex items-center gap-1 lg:ml-0 lg:mr-0">
           <Link
