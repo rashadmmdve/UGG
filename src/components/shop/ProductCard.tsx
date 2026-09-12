@@ -69,7 +69,7 @@ export function ProductCard({
           )}
         </div>
 
-        <h3 className="mt-3 line-clamp-2 min-h-[2.25rem] text-center text-sm leading-snug group-hover:text-accent">
+        <h3 className="mt-3 line-clamp-2 min-h-[2.25rem] text-sm leading-snug group-hover:text-accent">
           {product.title}
         </h3>
         <p className="mt-1 flex items-baseline justify-center gap-2">
