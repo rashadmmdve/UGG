@@ -98,7 +98,7 @@ export function ProductPurchase({ product }: { product: Product }) {
                   setError(false);
                 }}
                 className={cn(
-                  "min-h-12 min-w-14 rounded-md border px-3.5 py-2 text-sm font-medium transition-colors",
+                  "min-h-12 min-w-14 rounded-md border px-[9px] py-2 text-sm font-medium transition-colors",
                   selected
                     ? "border-accent bg-accent text-white"
                     : "border-line text-fg hover:border-accent",

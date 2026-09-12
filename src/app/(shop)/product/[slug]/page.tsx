@@ -83,8 +83,6 @@ export default async function ProductPage(props: PageProps<"/product/[slug]">) {
         <div className="lg:pl-4">
           {modelLine && <p className="label-caps">{modelLine.title}</p>}
           <h1 className="heading-section mt-1">{product.seo.h1 || product.title}</h1>
-          {product.sku && <p className="mt-2 text-xs text-muted">Артикул {product.sku}</p>}
-
           <div className="mt-4 flex items-baseline gap-3">
             <span className="text-2xl font-bold">{formatPrice(product.price)}</span>
             {discount > 0 && product.oldPrice && (
@@ -95,12 +93,13 @@ export default async function ProductPage(props: PageProps<"/product/[slug]">) {
             )}
           </div>
 
+          {/* Цвет — словом, без кружка; артикул сразу под ним. */}
           {color && (
-            <p className="mt-4 flex items-center gap-2 text-sm">
-              <span className="h-4 w-4 rounded-full border border-line" style={{ backgroundColor: color.hex }} aria-hidden />
+            <p className="mt-4 text-sm">
               Цвет: <span className="font-medium">{color.title}</span>
             </p>
           )}
+          {product.sku && <p className={cn("text-xs text-muted", color ? "mt-1" : "mt-4")}>Артикул {product.sku}</p>}
 
           {/*
             Другие цвета этой модели — миниатюрами, а не кружками краски.
