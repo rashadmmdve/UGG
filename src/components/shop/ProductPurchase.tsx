@@ -98,7 +98,7 @@ export function ProductPurchase({ product }: { product: Product }) {
                   setError(false);
                 }}
                 className={cn(
-                  "min-h-11 min-w-12 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors",
+                  "min-h-12 min-w-14 rounded-md border px-3.5 py-2 text-sm font-medium transition-colors",
                   selected
                     ? "border-accent bg-accent text-white"
                     : "border-line text-fg hover:border-accent",
@@ -107,7 +107,7 @@ export function ProductPurchase({ product }: { product: Product }) {
               >
                 <span className="block leading-tight">{item.sizeEu}</span>
                 {note && (
-                  <span className={cn("block text-[10px] font-normal leading-tight", selected ? "text-white/80" : "text-muted")}>
+                  <span className={cn("mt-0.5 block text-[11px] font-normal leading-tight", selected ? "text-white/80" : "text-muted")}>
                     {note}
                   </span>
                 )}
