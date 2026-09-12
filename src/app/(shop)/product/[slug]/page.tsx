@@ -124,7 +124,7 @@ export default async function ProductPage(props: PageProps<"/product/[slug]">) {
                         title={itemColor ? `${item.title} — ${itemColor.title}` : item.title}
                         aria-current={current ? "page" : undefined}
                         className={cn(
-                          "relative block h-16 w-16 overflow-hidden rounded-md border bg-elevated transition-colors",
+                          "relative block h-16 w-16 overflow-hidden rounded-md border bg-white transition-colors",
                           current ? "border-fg" : "border-line hover:border-fg",
                         )}
                       >
