@@ -56,18 +56,13 @@ export function ProductCard({
 
           <div className="pointer-events-none absolute inset-0 bg-fg/[0.06]" aria-hidden />
 
-          <div className="absolute top-2 left-2 flex flex-col gap-1">
-            {discount > 0 && (
-              <span className="rounded bg-sale px-1.5 py-0.5 text-[0.6875rem] font-semibold text-white">
-                −{discount}%
-              </span>
-            )}
-            {!inStock && (
-              <span className="rounded bg-fg/80 px-1.5 py-0.5 text-[0.6875rem] font-medium text-white">
-                Нет в наличии
-              </span>
-            )}
-          </div>
+          {/* Процент скидки на плитке не рисуем — он виден по зачёркнутой
+              цене под ней. Остаётся только предупреждение об остатке. */}
+          {!inStock && (
+            <span className="absolute top-2 left-2 rounded bg-fg/80 px-1.5 py-0.5 text-[0.6875rem] font-medium text-white">
+              Нет в наличии
+            </span>
+          )}
         </div>
 
         <h3 className="mt-3 line-clamp-2 text-sm leading-snug group-hover:text-accent">
