@@ -99,18 +99,24 @@ export function CardAddToCart({ product }: { product: Product }) {
           Кнопка при этом не сдвигается, а карточка не растёт. */}
       {pickingSize && (
         <div className="absolute inset-x-0 bottom-full z-20 flex min-h-[5.25rem] flex-col justify-center bg-bg pb-2">
-          <p className="mb-1.5 text-center text-[0.6875rem] text-muted">Выберите размер</p>
           <div className="flex flex-wrap justify-center gap-1">
-            {available.map((variant) => (
-              <button
-                key={variant.id}
-                type="button"
-                onClick={() => addVariant(variant)}
-                className="h-8 min-w-9 rounded border border-line px-1.5 text-xs font-medium hover:border-accent"
-              >
-                {variant.sizeEu}
-              </button>
-            ))}
+            {available.map((variant) => {
+              // Под размером — US и длина стельки, как в карточке товара.
+              const note = [variant.sizeUs && `US ${variant.sizeUs}`, variant.insoleCm && `${variant.insoleCm} см`]
+                .filter(Boolean)
+                .join(" · ");
+              return (
+                <button
+                  key={variant.id}
+                  type="button"
+                  onClick={() => addVariant(variant)}
+                  className="min-w-9 rounded border border-line px-1.5 py-1 text-center text-xs font-medium hover:border-accent"
+                >
+                  <span className="block leading-tight">{variant.sizeEu}</span>
+                  {note && <span className="block text-[9px] leading-tight font-normal text-muted">{note}</span>}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
