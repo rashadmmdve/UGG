@@ -7,7 +7,7 @@ import { FormMessage } from "@/components/admin/ui";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { formatPrice, sizeLabel } from "@/lib/utils";
 import { assignCourierAction } from "@/server/admin/actions/couriers";
-import { dispatchNowAction } from "@/server/admin/actions/dispatch";
+import { dispatchNowAction, setDailyDispatchAction } from "@/server/admin/actions/dispatch";
 import { cancelOrderAction } from "@/server/admin/actions/orders";
 import type { Courier } from "@/server/repositories/couriers";
 import type { Order } from "@/lib/types";
@@ -16,22 +16,26 @@ import type { Order } from "@/lib/types";
  * Стол оператора: новые заказы своей доставки — раздать или отменить.
  *
  * Каждая строка решается на месте: выбрал курьера — заказ подтверждён и
- * ушёл ему в Телеграм; нажал «Отменить» — обязательная причина, и заказ
+ * закреплён за ним; нажал «Отменить» — обязательная причина, и заказ
  * закрыт с ней. Ходить в карточку заказа ради этого не нужно.
+ *
+ * В Телеграм ничего не уходит само: курьеры получают списки по кнопке
+ * «Отправить сейчас» или утром — если включена галочка.
  *
  * Строка после решения исчезает: список — это то, что ещё не решено.
  */
 export function DispatchBoard({
   orders,
   couriers,
-  canDispatch,
+  daily,
 }: {
   orders: Order[];
   couriers: Courier[];
-  /** Кнопка «разослать сейчас» — по умолчанию списки уходят утром сами. */
-  canDispatch: boolean;
+  /** Включена ли утренняя рассылка — галочка рядом с кнопкой. */
+  daily: boolean;
 }) {
   const [rows, setRows] = useState(orders);
+  const [dailyOn, setDailyOn] = useState(daily);
   const [message, setMessage] = useState<{ error?: string; success?: string }>({});
   const [cancelling, setCancelling] = useState<Order | null>(null);
   const [reason, setReason] = useState("");
@@ -44,7 +48,7 @@ export function DispatchBoard({
       if (result.ok) {
         setRows((current) => current.filter((item) => item.id !== order.id));
         const courier = couriers.find((item) => item.id === courierId);
-        setMessage({ success: `${order.number} → ${courier?.name ?? "курьер"}: подтверждён и ушёл в Телеграм` });
+        setMessage({ success: `${order.number} → ${courier?.name ?? "курьер"}: подтверждён` });
       } else {
         setMessage({ error: result.error });
       }
@@ -81,23 +85,47 @@ export function DispatchBoard({
     });
   }
 
+  function toggleDaily(next: boolean) {
+    setDailyOn(next);
+    startTransition(async () => {
+      const result = await setDailyDispatchAction(next);
+      if (!result.ok) {
+        setDailyOn(!next);
+        setMessage({ error: "Не удалось сохранить настройку" });
+      }
+    });
+  }
+
   const select =
     "h-9 rounded border border-line bg-bg px-2 text-sm text-fg outline-none focus:border-accent disabled:opacity-60";
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <FormMessage error={message.error} success={message.success} />
-        {canDispatch && (
-          <button
-            type="button"
-            onClick={dispatchNow}
+      <div className="flex flex-wrap items-center gap-4 rounded-lg border border-line bg-bg px-4 py-3">
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={dailyOn}
             disabled={pending}
-            className="ml-auto h-9 rounded border border-line px-4 text-sm hover:border-accent disabled:opacity-60"
-          >
-            Разослать списки курьерам сейчас
-          </button>
-        )}
+            onChange={(event) => toggleDaily(event.target.checked)}
+            className="h-4 w-4 accent-[var(--accent)]"
+          />
+          Отправлять списки курьерам каждое утро в 9:00
+        </label>
+        <button
+          type="button"
+          onClick={dispatchNow}
+          disabled={pending}
+          className="h-9 rounded bg-accent px-4 text-sm font-semibold text-white hover:bg-accent-hover disabled:opacity-60"
+        >
+          Отправить сейчас
+        </button>
+        <span className="text-xs text-muted">
+          Курьеры получают заказы только так — по кнопке или утром, если включено.
+        </span>
+      </div>
+      <div className="mt-3">
+        <FormMessage error={message.error} success={message.success} />
       </div>
 
       {rows.length === 0 ? (

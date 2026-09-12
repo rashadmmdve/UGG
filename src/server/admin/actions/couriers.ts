@@ -10,7 +10,6 @@ import {
   updateCourier,
 } from "@/server/repositories/couriers";
 import { getOrderById, patchOrder, setOrderCourier } from "@/server/repositories/orders";
-import { notifyDelivery } from "@/server/telegram/notify";
 
 /**
  * Курьеры и раздача заказов.
@@ -57,8 +56,8 @@ export async function deleteCourierAction(formData: FormData): Promise<void> {
 /**
  * Отдать заказ курьеру. Пустое значение — снять назначение.
  *
- * Назначенному курьеру заказ сразу приходит в группу доставки: иначе он
- * узнал бы о нём, только открыв меню.
+ * В Телеграм при этом ничего не уходит: курьер получит список, когда
+ * оператор раздаст всё и нажмёт «Отправить сейчас».
  */
 export async function assignCourierAction(
   orderId: string,
@@ -84,8 +83,6 @@ export async function assignCourierAction(
 
   const updated = setOrderCourier(orderId, courierId);
   if (!updated) return { ok: false, error: "Не удалось сохранить" };
-
-  if (courierId) notifyDelivery(updated);
 
   revalidatePath(`/admin/orders/${orderId}`);
   refresh();

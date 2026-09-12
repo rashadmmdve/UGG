@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { getDispatchSettings } from "@/server/repositories/settings";
 import { dispatchToCouriers } from "@/server/telegram/dispatch";
 
 /**
@@ -15,6 +16,12 @@ export async function POST(request: Request): Promise<Response> {
   const secret = process.env.CRON_SECRET;
   if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) {
     return NextResponse.json({ error: "Не наш запрос" }, { status: 401 });
+  }
+
+  // Таймер тикает каждое утро, но рассылает только с включённой
+  // галочкой: решение — за человеком, а не за расписанием.
+  if (!getDispatchSettings().daily) {
+    return NextResponse.json({ skipped: true, reason: "ежедневная рассылка выключена" });
   }
 
   const result = await dispatchToCouriers();

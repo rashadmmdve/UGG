@@ -18,7 +18,7 @@ import {
   updateOrderPaymentStatus,
   updateOrderStatus,
 } from "@/server/repositories/orders";
-import { notifyCancelled, notifyDelivery, notifyRestored } from "@/server/telegram/notify";
+import { notifyCancelled, notifyRestored } from "@/server/telegram/notify";
 import { revalidateProduct } from "@/server/seo/revalidate";
 import { orderStatusSchema } from "@/server/validation/schemas";
 import type { Order, PaymentStatus } from "@/lib/types";
@@ -147,7 +147,6 @@ export async function selfDeliveryAction(
   const result = await selfDelivery(orderId);
   if (!result.ok) return result;
 
-  notifyDelivery(result.order);
   refreshOrderPages(orderId);
   return { ok: true };
 }

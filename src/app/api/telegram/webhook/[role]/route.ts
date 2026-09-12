@@ -27,7 +27,7 @@ import {
   type ChatRole,
   type InlineButton,
 } from "@/server/telegram/client";
-import { notifyCancelled, notifyDelivery, notifyPayments } from "@/server/telegram/notify";
+import { notifyCancelled, notifyPayments } from "@/server/telegram/notify";
 
 /**
  * Разговор с ботами в группах.
@@ -260,7 +260,6 @@ export async function POST(
       }
       await clearButtons(role, chat, messageId);
       await answerCallback(role, callback.id, "Везём сами: доставка убрана, покупателю ушло письмо");
-      notifyDelivery(result.order);
       return ok();
     }
 

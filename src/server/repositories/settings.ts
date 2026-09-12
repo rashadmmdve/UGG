@@ -78,6 +78,24 @@ export function saveLogistics(settings: LogisticsSettings): void {
   writeSetting("logistics", settings);
 }
 
+/**
+ * Рассылка списков курьерам.
+ *
+ * Сама по себе она не уходит: курьеры получают заказы только тогда,
+ * когда оператор нажал «Отправить сейчас» — или каждое утро, если
+ * владелец включил галочку. Выключено по умолчанию: пусть первое время
+ * человек решает, когда списки готовы.
+ */
+export type DispatchSettings = { daily: boolean };
+
+export const getDispatchSettings = cache((): DispatchSettings =>
+  readSetting<DispatchSettings>("dispatch", { daily: false }),
+);
+
+export function saveDispatchSettings(settings: DispatchSettings): void {
+  writeSetting("dispatch", settings);
+}
+
 /** Редактируемые тексты и изображения витрины. */
 export type SiteContent = {
   home: {

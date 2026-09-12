@@ -8,7 +8,6 @@ import { chatId, sendMessage, type InlineButton } from "@/server/telegram/client
 import {
   adminLink,
   composition,
-  deliveryCard,
   escape,
   paymentCard,
   phoneLink,
@@ -62,16 +61,9 @@ export function notifyNewOrder(order: Order): void {
     `новый заказ ${order.number}`,
   );
 
-  // В группу оплаты заказ сам не попадает: там работают по просьбе
-  // курьера, когда покупатель на месте решил платить картой. Иначе
-  // группа заполнялась бы заказами, по которым никто ничего не просил.
-  if (isSelfDelivery(order.delivery)) notifyDelivery(order);
-}
-
-/** Заказ курьерам: адрес, телефон, сумма к получению и кнопки. */
-export function notifyDelivery(order: Order): void {
-  const card = deliveryCard(order);
-  safe(sendMessage("delivery", card.text, card.buttons), `заказ курьерам ${order.number}`);
+  // Курьерам заказ сам не уходит: они получают список, когда оператор
+  // всё раздал и нажал «Отправить» (или утром, если включена рассылка).
+  // В группу оплаты — тоже нет: там работают по просьбе курьера.
 }
 
 /**
@@ -142,8 +134,4 @@ export function notifyStrayPayment(order: Order, amount: number): void {
 export function notifyRestored(order: Order, by: string): void {
   const text = `↩️ <b>Заказ ${escape(order.number)}</b> восстановлен (${escape(by)})`;
   safe(sendMessage("orders", text), `восстановление ${order.number}`);
-  if (isSelfDelivery(order.delivery)) {
-    const card = deliveryCard(order);
-    safe(sendMessage("delivery", card.text, card.buttons), `восстановление ${order.number}`);
-  }
 }

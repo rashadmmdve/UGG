@@ -3,18 +3,20 @@ import { isSelfDelivery } from "@/lib/delivery";
 import { requireStaff } from "@/server/admin/guard";
 import { getCouriers } from "@/server/repositories/couriers";
 import { getOrders } from "@/server/repositories/orders";
+import { getDispatchSettings } from "@/server/repositories/settings";
 
 /**
  * Распределение — рабочее место оператора.
  *
  * Здесь только то, что требует решения: заказы своей доставки без
  * курьера. Оператор отдаёт каждый курьеру (заказ при этом
- * подтверждается) или отменяет с причиной. Утром курьеры получают свои
- * списки в Телеграм сами; кнопка «разослать сейчас» — на случай, когда
- * ждать утра нельзя.
+ * подтверждается) или отменяет с причиной. Курьерам списки уходят
+ * только по кнопке «Отправить сейчас» — или утром, если включена
+ * галочка ежедневной рассылки.
  */
 export default async function AdminDispatchPage() {
-  const staff = await requireStaff();
+  await requireStaff();
+  const { daily } = getDispatchSettings();
 
   const orders = getOrders().filter(
     (order) =>
@@ -33,9 +35,9 @@ export default async function AdminDispatchPage() {
       </h1>
       <p className="mt-2 max-w-3xl text-sm text-muted">
         Заказы своей доставки, которые ещё никому не отданы. Выберите курьера —
-        заказ подтвердится и уйдёт ему в Телеграм. Отмена — с причиной, она
-        сохранится в заказе. Утром в 9:00 каждый курьер получает список своих
-        заказов на день.
+        заказ подтвердится и закрепится за ним. Отмена — с причиной, она
+        сохранится в заказе. Когда всё роздано, нажмите «Отправить сейчас» —
+        каждый курьер получит в Телеграм свой список.
       </p>
 
       {couriers.length === 0 && (
@@ -45,7 +47,7 @@ export default async function AdminDispatchPage() {
       )}
 
       <div className="mt-6">
-        <DispatchBoard orders={orders} couriers={couriers} canDispatch={staff.role === "admin" || staff.role === "operator"} />
+        <DispatchBoard orders={orders} couriers={couriers} daily={daily} />
       </div>
     </div>
   );

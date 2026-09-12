@@ -1,6 +1,9 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+
 import { assertStaff } from "@/server/admin/guard";
+import { saveDispatchSettings } from "@/server/repositories/settings";
 import { dispatchToCouriers, type DispatchResult } from "@/server/telegram/dispatch";
 
 /**
@@ -18,4 +21,12 @@ export async function dispatchNowAction(): Promise<
     console.error("Рассылка курьерам не удалась:", error);
     return { ok: false, error: "Телеграм не ответил. Попробуйте ещё раз через минуту." };
   }
+}
+
+/** Включить или выключить утреннюю рассылку. */
+export async function setDailyDispatchAction(enabled: boolean): Promise<{ ok: boolean }> {
+  if (!(await assertStaff())) return { ok: false };
+  saveDispatchSettings({ daily: enabled });
+  revalidatePath("/admin/dispatch");
+  return { ok: true };
 }
