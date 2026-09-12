@@ -17,8 +17,6 @@ import {
   getProductsByCategory,
   getProductsByGroup,
   getPublishedProducts,
-  getSizeChartById,
-  getSizeCharts,
 } from "@/server/repositories/catalog";
 import { getApprovedReviews } from "@/server/repositories/reviews";
 import { productCrumbs } from "@/server/seo/breadcrumbs";
@@ -55,10 +53,6 @@ export default async function ProductPage(props: PageProps<"/product/[slug]">) {
   const reviews = getApprovedReviews(product.id);
   const color = product.colorId ? getColorById(product.colorId) : null;
   const modelLine = product.modelLineId ? getModelLineById(product.modelLineId) : null;
-  // Сетка — по полу товара, линия — запасной вариант.
-  const sizeChart =
-    getSizeCharts().find((chart) => chart.gender === product.gender) ??
-    (modelLine?.sizeChartId ? getSizeChartById(modelLine.sizeChartId) : null);
   // Весь цветовой ряд модели, включая текущий товар: в блоке «Другие цвета»
   // показываются все варианты, текущий — подсвеченным.
   const colorways = product.groupId ? getProductsByGroup(product.groupId) : [];
@@ -162,27 +156,6 @@ export default async function ProductPage(props: PageProps<"/product/[slug]">) {
             <ProductPurchase product={product} />
           </div>
 
-          {sizeChart && (
-            <details className="mt-6 rounded-lg border border-line p-4">
-              <summary className="cursor-pointer text-sm font-medium">{sizeChart.title}</summary>
-              <table className="mt-3 w-full text-sm">
-                <thead className="text-left text-xs text-muted">
-                  <tr><th className="pb-2 font-normal">EU</th><th className="pb-2 font-normal">US</th><th className="pb-2 font-normal">UK</th><th className="pb-2 font-normal">Стелька</th></tr>
-                </thead>
-                <tbody>
-                  {sizeChart.rows.map((row) => (
-                    <tr key={row.sizeEu} className="border-t border-line">
-                      <td className="py-1.5">{row.sizeEu}</td>
-                      <td className="py-1.5">{row.sizeUs ?? "—"}</td>
-                      <td className="py-1.5">{row.sizeUk ?? "—"}</td>
-                      <td className="py-1.5">{row.insoleCm} см</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <p className="mt-3 text-xs text-muted">Измерьте стопу от пятки до большого пальца и выберите ближайшую длину стельки.</p>
-            </details>
-          )}
 
           {product.description && (
             <div className="mt-8 text-sm leading-relaxed">{product.description}</div>
@@ -198,8 +171,6 @@ export default async function ProductPage(props: PageProps<"/product/[slug]">) {
             {product.heelHeightCm && (
               <div><dt className="text-xs text-muted">Высота каблука</dt><dd>{product.heelHeightCm} см</dd></div>
             )}
-            <div><dt className="text-xs text-muted">Доставка</dt><dd>СДЭК по России, пункт выдачи или курьер</dd></div>
-            <div><dt className="text-xs text-muted">Возврат</dt><dd>14 дней, если не подошёл размер</dd></div>
           </dl>
         </div>
       </div>
