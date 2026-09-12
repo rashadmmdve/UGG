@@ -36,7 +36,7 @@ export function ProductGallery({
   return (
     <div className="flex flex-col gap-3">
       <div
-        className="relative aspect-square w-full cursor-zoom-in overflow-hidden rounded-lg bg-elevated"
+        className="relative aspect-square w-full cursor-zoom-in overflow-hidden rounded-lg bg-white"
         onClick={(event) => {
           // Клик по стрелке или сердцу не должен открывать кадр.
           if ((event.target as HTMLElement).closest("button")) return;
@@ -99,7 +99,7 @@ export function ProductGallery({
               aria-label={`Фото ${index + 1}`}
               aria-current={index === active}
               className={cn(
-                "relative aspect-square overflow-hidden rounded border bg-elevated transition-colors",
+                "relative aspect-square overflow-hidden rounded border bg-white transition-colors",
                 index === active ? "border-accent" : "border-line hover:border-line-strong",
               )}
             >
