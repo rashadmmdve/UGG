@@ -92,6 +92,16 @@ export function Header({ menu }: { menu: MenuSection[] }) {
       <div className="container-page relative flex h-16 items-center gap-6">
         <BurgerButton open={drawerOpen} onClick={() => setDrawerOpen((v) => !v)} />
 
+        {/* Поиск на телефоне — значком сразу за бургером, как на ugg.com;
+            ведёт на страницу поиска с готовым полем ввода. */}
+        <Link
+          href="/search"
+          aria-label="Поиск"
+          className="-ml-3 flex h-10 w-9 items-center justify-center transition-colors hover:text-accent lg:hidden"
+        >
+          <Search className="h-5 w-5" strokeWidth={1.6} />
+        </Link>
+
         {/* Вход в админку стоит слева, у бургера: справа значки покупателя,
             и хозяйская кнопка среди них читается как ещё один из них. */}
         {staffRole && (
@@ -147,7 +157,7 @@ export function Header({ menu }: { menu: MenuSection[] }) {
           18 px от края, что и полоски бургера (поле 16 − 6 + 8 внутри ячейки).
         */}
         {/* Поиск — в свободном месте между меню и значками, как на ugg.com.
-            На телефоне поле живёт в шторке меню. */}
+            На телефоне вместо поля — значок у бургера. */}
         <form action="/search" role="search" className="ml-auto hidden lg:block">
           <label className="relative block">
             <span className="sr-only">Поиск по каталогу</span>
@@ -339,18 +349,6 @@ function MobileDrawer({
             aria-label="Мобильное меню"
           >
             <div className="px-5 pt-2">
-            <form action="/search" role="search" className="relative mb-2">
-              <input
-                type="search"
-                name="q"
-                placeholder="Поиск"
-                aria-label="Поиск по каталогу"
-                className="h-11 w-full rounded border border-line bg-bg pr-11 pl-4 text-base outline-none placeholder:text-muted focus:border-accent"
-              />
-              <button type="submit" aria-label="Найти" className="absolute inset-y-0 right-0 flex w-11 items-center justify-center">
-                <Search className="h-5 w-5" strokeWidth={1.8} />
-              </button>
-            </form>
             {menu.map((item) =>
               item.categories.some((c) => c.hasProducts) ? (
                 <button
