@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { ChevronDown, Heart, LayoutDashboard, ShoppingBag, User } from "lucide-react";
+import { ChevronLeft, ChevronRight, Heart, LayoutDashboard, ShoppingBag, User } from "lucide-react";
 
 import { Logo } from "@/components/Logo";
 import { useHydrated } from "@/lib/hooks/useHydrated";
@@ -21,9 +21,20 @@ const NAV_LINKS = [
 ];
 
 /**
+ * Подчёркивание пункта шапки, как на ugg.com: тонкая линия под текстом
+ * вырастает слева направо при наведении и остаётся у текущего раздела.
+ * Рисуется псевдоэлементом, чтобы не дёргать разметку; transform вместо
+ * width — так линия анимируется без перерасчёта макета.
+ */
+const UNDERLINE =
+  "relative after:absolute after:inset-x-0 after:-bottom-1 after:h-0.5 after:origin-left " +
+  "after:scale-x-0 after:bg-fg after:transition-transform after:duration-300 after:ease-out " +
+  "hover:after:scale-x-100 data-on:after:scale-x-100 motion-reduce:after:transition-none";
+
+/**
  * Шапка витрины: логотип слева, разделы каталога с выпадающими меню
  * по центру, избранное, корзина и кабинет справа. На мобильном — бургер
- * со шторкой и аккордеонами по разделам.
+ * со шторкой в два экрана: разделы, затем категории раздела.
  *
  * Все ссылки меню — обычные <a href>, а не кнопки: робот должен обходить
  * категории через шапку.
@@ -108,22 +119,13 @@ export function Header({ menu }: { menu: MenuSection[] }) {
               onMouseEnter={() => setOpenSection(section.categories.length ? section.slug : null)}
               onFocus={() => setOpenSection(section.categories.length ? section.slug : null)}
               aria-expanded={section.categories.length ? openSection === section.slug : undefined}
-              className={cn(
-                "flex items-center gap-1 text-base font-medium transition-colors hover:text-accent",
-                pathname.startsWith(section.href) ? "text-accent" : "text-fg",
-              )}
+              // Без стрелок, как на ugg.com: о выпадающем меню говорит
+              // само наведение, а подчёркивание держится, пока оно открыто.
+              // data-on держит линию у текущего раздела и пока открыто его меню.
+              data-on={pathname.startsWith(section.href) || openSection === section.slug || undefined}
+              className={cn(UNDERLINE, "text-base font-medium text-fg")}
             >
               {section.title}
-              {/* Стрелка разворачивается на 180°, пока открыто меню раздела. */}
-              {section.categories.length > 0 && (
-                <ChevronDown
-                  className={cn(
-                    "h-4 w-4 opacity-60 transition-transform duration-300 ease-out",
-                    openSection === section.slug && "rotate-180",
-                  )}
-                  strokeWidth={2}
-                />
-              )}
             </Link>
           ))}
           {NAV_LINKS.map((link) => (
@@ -131,10 +133,8 @@ export function Header({ menu }: { menu: MenuSection[] }) {
               key={link.href}
               href={link.href}
               onMouseEnter={() => setOpenSection(null)}
-              className={cn(
-                "text-base font-medium transition-colors hover:text-accent",
-                pathname.startsWith(link.href) ? "text-accent" : "text-fg",
-              )}
+              data-on={pathname.startsWith(link.href) || undefined}
+              className={cn(UNDERLINE, "text-base font-medium text-fg")}
             >
               {link.label}
             </Link>
@@ -256,7 +256,9 @@ function MobileDrawer({
   menu: MenuSection[];
 }) {
   const hydrated = useHydrated();
-  const [expanded, setExpanded] = useState<string | null>(null);
+  // Открытый раздел — второй «экран» меню. Как на ugg.com: список
+  // разделов, нажатие уводит вправо в список категорий, «Назад» — обратно.
+  const [section, setSection] = useState<MenuSection | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -271,7 +273,17 @@ function MobileDrawer({
     };
   }, [open, onClose]);
 
+  // После закрытия возвращаемся на первый экран — но уже за кадром,
+  // когда шторка уехала: иначе списки перелистнутся у всех на глазах.
+  useEffect(() => {
+    if (open) return;
+    const id = setTimeout(() => setSection(null), 300);
+    return () => clearTimeout(id);
+  }, [open]);
+
   if (!hydrated) return null;
+
+  const row = "flex w-full items-center justify-between border-b border-line py-3.5 text-left text-[15px] font-medium";
 
   // Портал в body: у шапки backdrop-filter, а он делает из неё containing
   // block для position:fixed — без портала шторка не растянулась бы на экран.
@@ -283,82 +295,97 @@ function MobileDrawer({
         !open && "pointer-events-none",
       )}
     >
+      {/* Затемнение справа от шторки: тап по нему закрывает меню. */}
+      <div
+        onClick={onClose}
+        aria-hidden
+        className={cn("absolute inset-0 bg-black/40 transition-opacity duration-300", open ? "opacity-100" : "opacity-0")}
+      />
       <div
         className={cn(
-          "h-full overflow-y-auto bg-bg transition-transform duration-300 ease-out",
+          "absolute inset-y-0 left-0 w-[82%] max-w-sm overflow-hidden bg-bg shadow-xl transition-transform duration-300 ease-out",
           open ? "translate-x-0" : "-translate-x-full",
         )}
       >
-        <nav className="container-page flex flex-col py-6" aria-label="Мобильное меню">
-          {menu.map((section) => {
-            const isOpen = expanded === section.slug;
-            return (
-              <div key={section.slug} className="border-b border-line">
-                <div className="flex items-center">
-                  <Link
-                    href={section.href}
-                    tabIndex={open ? undefined : -1}
-                    onClick={onClose}
-                    className="flex-1 py-3 text-base font-semibold"
-                  >
+        {/* Два экрана рядом, шириной в две шторки; сдвиг на половину
+            показывает второй. Так листается без перестроения списка. */}
+        <div
+          className={cn(
+            "flex h-full w-[200%] transition-transform duration-300 ease-out",
+            section ? "-translate-x-1/2" : "translate-x-0",
+          )}
+        >
+          <nav
+            inert={!open || Boolean(section)}
+            className="flex h-full w-1/2 flex-col overflow-y-auto"
+            aria-label="Мобильное меню"
+          >
+            <div className="px-5 pt-2">
+            {menu.map((item) =>
+              item.categories.some((c) => c.hasProducts) ? (
+                <button
+                  key={item.slug}
+                  type="button"
+                  onClick={() => setSection(item)}
+                  className={row}
+                >
+                  {item.title}
+                  <ChevronRight className="h-5 w-5 text-muted" strokeWidth={1.6} />
+                </button>
+              ) : (
+                <Link key={item.slug} href={item.href} onClick={onClose} className={row}>
+                  {item.title}
+                </Link>
+              ),
+            )}
+            {NAV_LINKS.map((link) => (
+              <Link key={link.href} href={link.href} onClick={onClose} className={row}>
+                {link.label}
+              </Link>
+            ))}
+            </div>
+            {/* Серый низ с кабинетом — как на ugg.com. */}
+            <div className="mt-auto flex flex-col gap-1 bg-elevated px-5 py-4 text-sm">
+              <Link href="/account" onClick={onClose} className="flex items-center gap-2 py-2">
+                <User className="h-4 w-4" strokeWidth={1.6} /> Личный кабинет
+              </Link>
+              <Link href="/favorites" onClick={onClose} className="flex items-center gap-2 py-2">
+                <Heart className="h-4 w-4" strokeWidth={1.6} /> Избранное
+              </Link>
+            </div>
+          </nav>
+
+          <div inert={!open || !section} className="h-full w-1/2 overflow-y-auto px-5 pt-2">
+            {/* Как на ugg.com: «‹ Все разделы», затем название раздела
+                (ссылка на него целиком) и его категории. */}
+            <button
+              type="button"
+              onClick={() => setSection(null)}
+              className="flex w-full items-center gap-1 border-b border-line py-3.5 text-left text-sm font-semibold"
+            >
+              <ChevronLeft className="h-4 w-4" strokeWidth={2} />
+              Все разделы
+            </button>
+            {section && (
+              <ul>
+                <li>
+                  <Link href={section.href} onClick={onClose} className={cn(row, "font-semibold")}>
                     {section.title}
                   </Link>
-                  {section.categories.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setExpanded(isOpen ? null : section.slug)}
-                      aria-expanded={isOpen}
-                      aria-label={`Категории: ${section.title}`}
-                      className="flex h-10 w-10 items-center justify-center"
-                    >
-                      <ChevronDown
-                        className={cn("h-4 w-4 transition-transform", isOpen ? "rotate-180" : "")}
-                        strokeWidth={2}
-                      />
-                    </button>
-                  )}
-                </div>
-                <div className={cn("grid transition-[grid-template-rows] duration-300", isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
-                  <ul className="overflow-hidden">
-                    {/* Только непустые категории — как и в меню на широком экране. */}
-                    {section.categories.filter((c) => c.hasProducts).length > 0 ? (
-                      section.categories
-                        .filter((category) => category.hasProducts)
-                        .map((category) => (
-                          <li key={category.slug}>
-                            <Link
-                              href={category.href}
-                              tabIndex={open && isOpen ? undefined : -1}
-                              onClick={onClose}
-                              className="block py-2 pl-3 text-sm"
-                            >
-                              {category.title}
-                            </Link>
-                          </li>
-                        ))
-                    ) : (
-                      <li className="py-2 pl-3 text-sm text-muted">
-                        В этом разделе пока нет товаров.
-                      </li>
-                    )}
-                    <li className="pb-3" />
-                  </ul>
-                </div>
-              </div>
-            );
-          })}
-          {NAV_LINKS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              tabIndex={open ? undefined : -1}
-              onClick={onClose}
-              className="border-b border-line py-3 text-base font-semibold"
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
+                </li>
+                {section.categories
+                  .filter((category) => category.hasProducts)
+                  .map((category) => (
+                    <li key={category.slug}>
+                      <Link href={category.href} onClick={onClose} className={cn(row, "font-normal")}>
+                        {category.title}
+                      </Link>
+                    </li>
+                  ))}
+              </ul>
+            )}
+          </div>
+        </div>
       </div>
     </div>,
     document.body,
