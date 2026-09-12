@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { Loader2, MapPin, Truck } from "lucide-react";
 
 import { AField } from "@/components/admin/ui";
-import { CHECKOUT_INPUT } from "@/components/shop/checkout-styles";
 import { isSelfDelivery } from "@/lib/delivery";
 import { cn } from "@/lib/utils";
 import {
@@ -154,11 +153,11 @@ export function DeliveryPicker({
           autoComplete="off"
           placeholder="Город *"
           labelHidden
-          inputClassName={CHECKOUT_INPUT}
+         
           hint={city ? undefined : "Начните вводить название и выберите город из списка"}
           error={fieldErrors.cityCode || fieldErrors.city}
         />
-        {searching && <Loader2 className="absolute top-4 right-3 h-4 w-4 animate-spin text-muted" />}
+        {searching && <Loader2 className="absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 animate-spin text-muted" />}
         {suggestions.length > 0 && (
           <ul className={dropdown}>
             {suggestions.map((item) => (
@@ -192,7 +191,7 @@ export function DeliveryPicker({
           autoComplete="street-address"
           placeholder="Ваш адрес: улица, дом, квартира *"
           labelHidden
-          inputClassName={CHECKOUT_INPUT}
+         
           hint="Доставим сами и бесплатно — курьер позвонит и согласует время"
           error={fieldErrors.address}
         />
@@ -208,7 +207,7 @@ export function DeliveryPicker({
             disabled={!city}
             placeholder={city ? "Пункт выдачи: начните вводить адрес *" : "Сначала выберите город"}
             labelHidden
-            inputClassName={CHECKOUT_INPUT}
+           
             hint={pointHint}
             error={fieldErrors.pointCode}
           />
@@ -244,7 +243,7 @@ export function DeliveryPicker({
           autoComplete="street-address"
           placeholder="Ваш адрес: улица, дом, квартира *"
           labelHidden
-          inputClassName={CHECKOUT_INPUT}
+         
           error={fieldErrors.address}
         />
       )}

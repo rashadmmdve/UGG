@@ -12,7 +12,6 @@ import { cartSubtotal, useCartStore } from "@/lib/store/cart";
 import { cn, formatPrice, plural, sizeLabel } from "@/lib/utils";
 import { quoteDeliveryAction } from "@/server/cdek/actions";
 import { previewPromocode, submitOrder } from "@/server/orders/createOrder";
-import { CHECKOUT_INPUT } from "@/components/shop/checkout-styles";
 import type {
   CdekCity,
   CdekDeliveryPoint,
@@ -206,9 +205,9 @@ export function CheckoutForm({
         <fieldset>
           <legend className="mb-4 text-lg font-semibold">1. Контактные данные</legend>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <AField id="co-name" name="name" label="Имя" placeholder="Ваше имя *" labelHidden inputClassName={CHECKOUT_INPUT} autoComplete="name" defaultValue={user?.name ?? ""} error={fieldErrors.name} />
-            <AField id="co-phone" name="phone" type="tel" label="Телефон" placeholder="Контактный телефон *" labelHidden inputClassName={CHECKOUT_INPUT} autoComplete="tel" defaultValue={user?.phone ?? ""} error={fieldErrors.phone} />
-            <AField id="co-email" name="email" type="email" label="Почта" placeholder="Ваш e-mail *" labelHidden inputClassName={CHECKOUT_INPUT} autoComplete="email" defaultValue={user?.email ?? ""} error={fieldErrors.email} className="sm:col-span-2" />
+            <AField id="co-name" name="name" label="Имя" placeholder="Ваше имя *" labelHidden autoComplete="name" defaultValue={user?.name ?? ""} error={fieldErrors.name} />
+            <AField id="co-phone" name="phone" type="tel" label="Телефон" placeholder="Контактный телефон *" labelHidden autoComplete="tel" defaultValue={user?.phone ?? ""} error={fieldErrors.phone} />
+            <AField id="co-email" name="email" type="email" label="Почта" placeholder="Ваш e-mail *" labelHidden autoComplete="email" defaultValue={user?.email ?? ""} error={fieldErrors.email} className="sm:col-span-2" />
           </div>
         </fieldset>
 
@@ -263,7 +262,7 @@ export function CheckoutForm({
           />
           {quoteError && <p role="alert" className="mt-3 text-sm text-danger">{quoteError}</p>}
           <div className="mt-5">
-            <ATextarea id="co-comment" name="comment" label="Комментарий к заказу" placeholder="Комментарий к заказу (необязательно)" labelHidden inputClassName={CHECKOUT_INPUT} rows={3} />
+            <ATextarea id="co-comment" name="comment" label="Комментарий к заказу" placeholder="Комментарий к заказу (необязательно)" labelHidden rows={3} />
           </div>
         </fieldset>
       </div>
