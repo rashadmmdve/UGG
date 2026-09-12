@@ -38,7 +38,7 @@ export function ProductCard({
         {/* Плитка 3:4 на светло-сером: фото приходят квадратными и встают
             по центру, поля сверху и снизу заливает ровный фон. Рамки нет —
             границу плитки задаёт сама заливка. */}
-        <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-elevated">
+        <div className="relative aspect-[3/4] overflow-hidden bg-elevated">
           {image ? (
             <Image
               src={image}
