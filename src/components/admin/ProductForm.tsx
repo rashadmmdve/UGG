@@ -640,6 +640,8 @@ export function ProductForm({
           defaultChecked={product?.isPublished ?? false} />
         <ACheckbox id="isBestseller" name="isBestseller" label="Показывать в хитах на главной"
           defaultChecked={product?.isBestseller ?? false} />
+        <ACheckbox id="isNew" name="isNew" label="Показывать в новинках"
+          defaultChecked={product?.isNew ?? false} />
         {/*
           Раздел «Распродажа» собирается вручную этой галочкой, а не по
           наличию старой цены: скидка бывает и вне распродажи.

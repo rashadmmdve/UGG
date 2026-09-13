@@ -75,8 +75,6 @@ export function PricingTable({ rows }: { rows: PricingRow[] }) {
               <th className="px-3 py-2 text-right font-normal">Скидка</th>
               <th className="px-3 py-2 text-right font-normal">Себестоимость</th>
               <th className="px-3 py-2 text-right font-normal">Маржа</th>
-              <th className="px-3 py-2 text-center font-normal">Распродажа</th>
-              <th className="px-3 py-2 text-center font-normal">Хиты</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
@@ -113,14 +111,6 @@ export function PricingTable({ rows }: { rows: PricingRow[] }) {
                   </td>
                   <td className={`px-3 py-1.5 text-right tabular-nums ${m !== null && m < 0 ? "text-danger" : "text-muted"}`}>
                     {m === null ? "—" : `${m}%`}
-                  </td>
-                  <td className="px-3 py-1.5 text-center">
-                    <input type="checkbox" name={`insale_${row.id}`} defaultChecked={row.isSale}
-                      aria-label={`В распродаже: ${row.title}`} className="h-4 w-4 accent-[var(--accent)]" />
-                  </td>
-                  <td className="px-3 py-1.5 text-center">
-                    <input type="checkbox" name={`hit_${row.id}`} defaultChecked={row.isBestseller}
-                      aria-label={`В хитах: ${row.title}`} className="h-4 w-4 accent-[var(--accent)]" />
                   </td>
                 </tr>
               );

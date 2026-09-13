@@ -209,6 +209,7 @@ export const productSchema = z.object({
 
   isPublished: z.boolean(),
   isBestseller: z.boolean(),
+  isNew: z.boolean(),
   isSale: z.boolean(),
   seo: seoFieldsSchema,
 })

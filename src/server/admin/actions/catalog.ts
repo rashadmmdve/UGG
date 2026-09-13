@@ -157,6 +157,7 @@ export async function saveProductAction(
     height: formData.get("height"),
     isPublished: formData.get("isPublished") === "on",
     isBestseller: formData.get("isBestseller") === "on",
+    isNew: formData.get("isNew") === "on",
     isSale: formData.get("isSale") === "on",
     seo: readSeo(formData),
   });

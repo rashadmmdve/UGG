@@ -80,8 +80,6 @@ export type PricingPatch = {
   price: number;
   oldPrice: number | null;
   costPrice: number | null;
-  isSale: boolean;
-  isBestseller: boolean;
 };
 
 /**
@@ -97,7 +95,7 @@ export function applyPricing(patches: PricingPatch[]): number {
     );
     const write = db.prepare(
       `UPDATE products
-       SET price = ?, old_price = ?, cost_price = ?, is_sale = ?, is_bestseller = ?, updated_at = ?
+       SET price = ?, old_price = ?, cost_price = ?, updated_at = ?
        WHERE id = ?`,
     );
     const now = nowIso();
@@ -105,33 +103,17 @@ export function applyPricing(patches: PricingPatch[]): number {
 
     for (const patch of patches) {
       const current = read.get(patch.id) as
-        | {
-            price: number;
-            old_price: number | null;
-            cost_price: number | null;
-            is_sale: number;
-            is_bestseller: number;
-          }
+        | { price: number; old_price: number | null; cost_price: number | null }
         | undefined;
       if (!current) continue;
 
       const same =
         current.price === patch.price &&
         current.old_price === patch.oldPrice &&
-        current.cost_price === patch.costPrice &&
-        current.is_sale === (patch.isSale ? 1 : 0) &&
-        current.is_bestseller === (patch.isBestseller ? 1 : 0);
+        current.cost_price === patch.costPrice;
       if (same) continue;
 
-      write.run(
-        patch.price,
-        patch.oldPrice,
-        patch.costPrice,
-        patch.isSale ? 1 : 0,
-        patch.isBestseller ? 1 : 0,
-        now,
-        patch.id,
-      );
+      write.run(patch.price, patch.oldPrice, patch.costPrice, now, patch.id);
       changed++;
     }
 

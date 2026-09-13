@@ -201,6 +201,8 @@ export type Product = {
 
   isPublished: boolean;
   isBestseller: boolean;
+  /** Показывать в «Новинках» на главной. */
+  isNew: boolean;
   /** Отмечен для раздела «Распродажа» — вручную, галочкой в карточке. */
   isSale: boolean;
 

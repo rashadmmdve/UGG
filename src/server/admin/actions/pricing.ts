@@ -31,8 +31,6 @@ function toStored(input: {
   base: number | null;
   sale: number | null;
   costPrice: number | null;
-  isSale: boolean;
-  isBestseller: boolean;
 }): Check {
   if (input.base === null) return { ok: false, error: `${input.title}: цена пустая.` };
   if (input.sale !== null && input.sale >= input.base) {
@@ -45,15 +43,14 @@ function toStored(input: {
       price: input.sale ?? input.base,
       oldPrice: input.sale === null ? null : input.base,
       costPrice: input.costPrice,
-      isSale: input.isSale,
-      isBestseller: input.isBestseller,
     },
   };
 }
 
 /**
- * Сохранить таблицу. Поля: base_<id>, sale_<id>, cost_<id>, insale_<id>,
- * hit_<id>; ids — список строк, которые были на экране.
+ * Сохранить таблицу. Поля: base_<id>, sale_<id>, cost_<id>; ids — список
+ * строк, которые были на экране. Галочки «распродажа», «хиты» и
+ * «новинки» живут в карточке товара и отсюда не меняются.
  */
 export async function savePricingAction(
   _prev: ActionState,
@@ -84,8 +81,6 @@ export async function savePricingAction(
       base,
       sale,
       costPrice,
-      isSale: formData.get(`insale_${id}`) === "on",
-      isBestseller: formData.get(`hit_${id}`) === "on",
     });
     if (result.ok) patches.push(result.patch);
     else errors.push(result.error);
@@ -146,8 +141,6 @@ export async function importPricingAction(
       base: item.price ?? basePrice(current),
       sale: item.salePrice === undefined ? salePrice(current) : item.salePrice,
       costPrice: item.costPrice === undefined ? current.costPrice : item.costPrice,
-      isSale: item.isSale === undefined ? current.isSale : item.isSale,
-      isBestseller: item.isBestseller === undefined ? current.isBestseller : item.isBestseller,
     });
     if (result.ok) patches.push(result.patch);
     else errors.push(`Строка ${item.line}: ${result.error}`);

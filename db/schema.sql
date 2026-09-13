@@ -101,6 +101,9 @@ CREATE TABLE IF NOT EXISTS products (
   -- Участие в распродаже отмечается вручную в админке, а не выводится из
   -- старой цены: скидка бывает и вне распродажи, и наоборот.
   is_sale             INTEGER NOT NULL DEFAULT 0,
+  -- Новинки на главной собираются этой галочкой, а не по дате: товар
+  -- могли завести месяц назад, а в продажу пустить сегодня.
+  is_new              INTEGER NOT NULL DEFAULT 0,
   rating_value        REAL,
   rating_count        INTEGER NOT NULL DEFAULT 0,
   seo                 TEXT NOT NULL DEFAULT '{}',

@@ -18,7 +18,7 @@ import type { Database } from "better-sqlite3";
  * IF NOT EXISTS. Версия схемы хранится в user_version — по ней будут
  * добавляться миграции, когда структура изменится.
  */
-const SCHEMA_VERSION = 10;
+const SCHEMA_VERSION = 11;
 
 function readDdl(): string {
   return fs.readFileSync(
@@ -70,6 +70,7 @@ export function applySchema(db: Database): void {
   // подписи «36 (US 5 — 22 см)», а сетка по полу для этого слишком груба.
   if (current < 9) addColumn(db, "product_variants", "size_us", "TEXT");
   if (current < 10) addColumn(db, "products", "specs", "TEXT NOT NULL DEFAULT '[]'");
+  if (current < 11) addColumn(db, "products", "is_new", "INTEGER NOT NULL DEFAULT 0");
 
   if (current < SCHEMA_VERSION) {
     db.pragma(`user_version = ${SCHEMA_VERSION}`);

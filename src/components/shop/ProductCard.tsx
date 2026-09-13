@@ -69,10 +69,10 @@ export function ProductCard({
           )}
         </div>
 
-        <h3 className="mt-3 line-clamp-2 min-h-[2.25rem] text-sm leading-snug group-hover:text-accent">
+        <h3 className="mt-3 line-clamp-2 min-h-[2.1rem] text-sm leading-snug group-hover:text-accent">
           {product.title}
         </h3>
-        <p className="mt-1 flex items-baseline gap-2">
+        <p className="flex items-baseline gap-2">
           <span className="font-semibold">{formatPrice(product.price)}</span>
           {discount > 0 && product.oldPrice && (
             <span className="text-xs text-muted line-through">{formatPrice(product.oldPrice)}</span>

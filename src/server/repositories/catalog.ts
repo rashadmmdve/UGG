@@ -286,10 +286,16 @@ export const getBestsellers = cache((limit = 8): Product[] => {
 });
 
 export const getNewArrivals = cache((limit = 10): Product[] => {
-  const rows = getDb()
-    .prepare(
-      "SELECT * FROM products WHERE is_published = 1 ORDER BY created_at DESC LIMIT ?",
-    )
+  const db = getDb();
+  // Сначала отмеченные галочкой «Новинки»; если таких нет — просто
+  // недавно заведённые, чтобы блок на главной не остался пустым.
+  const marked = db
+    .prepare("SELECT * FROM products WHERE is_published = 1 AND is_new = 1 ORDER BY created_at DESC LIMIT ?")
+    .all(limit) as ProductRow[];
+  if (marked.length > 0) return hydrate(marked);
+
+  const rows = db
+    .prepare("SELECT * FROM products WHERE is_published = 1 ORDER BY created_at DESC LIMIT ?")
     .all(limit) as ProductRow[];
   return hydrate(rows);
 });
