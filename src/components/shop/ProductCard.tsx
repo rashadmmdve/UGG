@@ -72,10 +72,11 @@ export function ProductCard({
         <h3 className="mt-3 line-clamp-2 min-h-[2.1rem] text-sm leading-snug group-hover:text-accent">
           {product.title}
         </h3>
-        <p className="flex items-baseline gap-2">
-          <span className="font-semibold">{formatPrice(product.price)}</span>
+        {/* Высота строки зафиксирована: цены крупнее, а плитка не выросла. */}
+        <p className="flex h-6 items-center gap-2 leading-none">
+          <span className="text-[17px] font-semibold">{formatPrice(product.price)}</span>
           {discount > 0 && product.oldPrice && (
-            <span className="text-xs text-muted line-through">{formatPrice(product.oldPrice)}</span>
+            <span className="text-sm text-muted line-through">{formatPrice(product.oldPrice)}</span>
           )}
         </p>
       </Link>
