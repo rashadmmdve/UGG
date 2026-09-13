@@ -6,7 +6,7 @@ import { JsonLd } from "@/components/JsonLd";
 import { Logo } from "@/components/Logo";
 import { HeroCarousel } from "@/components/shop/HeroCarousel";
 import { ProductCard } from "@/components/shop/ProductCard";
-import { SITE_DESCRIPTION, SITE_NAME } from "@/lib/constants";
+import { SALE_SECTION, SITE_DESCRIPTION, SITE_NAME } from "@/lib/constants";
 import { homeTiles } from "@/server/catalog/sections";
 import { cn } from "@/lib/utils";
 import { getBestsellers, getNewArrivals } from "@/server/repositories/catalog";
@@ -129,45 +129,25 @@ export default function HomePage() {
       </section>
 
       <section className="container-page">
-        {/* Разделы — рядом под героем */}
-        {/* Сетка всегда на четыре колонки: без распродажи четвёртое место
-            пустует, зато плитки не растягиваются и фото не теряют резкость. */}
-        <div className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {tiles.map((section) => (
-            // Пропорция 3:4: плитки остаются вертикальными на любой ширине
-            // экрана, и высота меняется вместе с шириной колонки.
-            // Подпись — только введённая в админке; без неё ссылку
-            // называет aria-label, чтобы плитка не стала безымянной.
-            <Link key={section.slug} href={`/catalog/${section.slug}`}
-              aria-label={section.caption ? undefined : section.title}
-              className="group relative flex aspect-[3/4] flex-col justify-end overflow-hidden rounded-xl border border-line bg-bg p-5 transition hover:border-accent">
-              {content.sectionImages?.[section.slug] && (
-                <>
-                  <Image
-                    src={content.sectionImages[section.slug]!}
-                    alt=""
-                    fill
-                    sizes="(min-width: 1024px) 25vw, 50vw"
-                    className="object-contain transition-transform duration-300 group-hover:scale-[1.03]"
-                  />
-                  {/* Затемнение снизу: белое название на светлом снимке иначе не читается. */}
-                  {section.caption && (
-                    <span className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent" />
-                  )}
-                </>
-              )}
-              {section.caption && (
-                <span
-                  className={cn(
-                    "relative text-lg font-semibold",
-                    content.sectionImages?.[section.slug] ? "text-white" : "group-hover:text-accent",
-                  )}
-                >
-                  {section.caption}
-                </span>
-              )}
-            </Link>
-          ))}
+        {/* Разделы под героем: три квадрата — женские, мужские, детские, а
+            распродажа под ними одним прямоугольником во всю ширину тройки. */}
+        <div className="mt-4 grid grid-cols-3 gap-2 sm:gap-4">
+          {tiles
+            .filter((section) => section.slug !== SALE_SECTION.slug)
+            .map((section) => (
+              <SectionTile key={section.slug} section={section} image={content.sectionImages?.[section.slug]} className="aspect-square" />
+            ))}
+          {tiles
+            .filter((section) => section.slug === SALE_SECTION.slug)
+            .map((section) => (
+              <SectionTile
+                key={section.slug}
+                section={section}
+                image={content.sectionImages?.[section.slug]}
+                className="col-span-3 aspect-[3/1]"
+                wide
+              />
+            ))}
         </div>
       </section>
 
@@ -227,5 +207,55 @@ function ProductRow({ title, href, products, eager = false }: {
         ))}
       </ul>
     </section>
+  );
+}
+
+/**
+ * Плитка раздела на главной. Фото заполняет плитку целиком, подпись —
+ * только введённая в админке; без неё ссылку называет aria-label.
+ */
+function SectionTile({ section, image, className, wide = false }: {
+  section: { slug: string; title: string; caption: string | null };
+  image?: string | null;
+  className?: string;
+  wide?: boolean;
+}) {
+  return (
+    <Link
+      href={`/catalog/${section.slug}`}
+      aria-label={section.caption ? undefined : section.title}
+      className={cn("group relative flex flex-col justify-end overflow-hidden bg-sand p-3 sm:p-5", className)}
+    >
+      {image && (
+        <>
+          <Image
+            src={image}
+            alt=""
+            fill
+            sizes={wide ? "100vw" : "33vw"}
+            // Широкую плитку не обрезаем: баннер распродажи с надписью
+            // целиком, пока под неё не загружен широкий снимок.
+            className={cn(
+              "transition-transform duration-300 group-hover:scale-[1.03]",
+              wide ? "object-contain" : "object-cover",
+            )}
+          />
+          {/* Затемнение снизу: белое название на светлом снимке иначе не читается. */}
+          {section.caption && (
+            <span className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent" />
+          )}
+        </>
+      )}
+      {section.caption && (
+        <span
+          className={cn(
+            "relative text-xs font-semibold sm:text-lg",
+            image ? "text-white" : "group-hover:text-accent",
+          )}
+        >
+          {section.caption}
+        </span>
+      )}
+    </Link>
   );
 }
