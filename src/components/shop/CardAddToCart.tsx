@@ -50,7 +50,7 @@ export function CardAddToCart({ product }: { product: Product }) {
 
   if (available.length === 0) {
     return (
-      <button type="button" disabled className="h-10 w-full rounded-md bg-line-strong text-sm font-semibold text-white">
+      <button type="button" disabled className="h-10 w-full bg-line-strong text-sm font-semibold text-white">
         Нет в наличии
       </button>
     );
@@ -82,7 +82,7 @@ export function CardAddToCart({ product }: { product: Product }) {
         disabled={added}
         onClick={() => (sizeless ? addVariant(available[0]) : setPickingSize((v) => !v))}
         className={cn(
-          "inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-md bg-accent text-sm font-semibold text-white transition-colors",
+          "inline-flex h-10 w-full items-center justify-center gap-1.5 bg-accent text-sm font-semibold text-white transition-colors",
           added ? "disabled:bg-accent" : "hover:bg-accent-hover",
         )}
       >

@@ -61,7 +61,7 @@ export function ProductPurchase({ product }: { product: Product }) {
   }
 
   const buttonClass = cn(
-    "inline-flex h-12 w-full items-center justify-center gap-2 rounded-md text-sm font-semibold text-white transition-colors disabled:cursor-not-allowed",
+    "inline-flex h-12 w-full items-center justify-center gap-2 text-sm font-semibold text-white transition-colors disabled:cursor-not-allowed",
     // Цвет не меняется: о добавлении говорит подпись, а две секунды
     // кнопка просто не нажимается, чтобы не удвоить количество.
     added ? "bg-accent disabled:bg-accent" : "bg-accent hover:bg-accent-hover disabled:bg-line-strong",
