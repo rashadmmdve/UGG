@@ -46,8 +46,10 @@ export default function CatalogPage() {
           header={
             <>
               <h1 className="heading-section">Каталог</h1>
-              {/* Кнопки одной ширины: сетка в равные колонки, а не поток. */}
-              <nav aria-label="Разделы" className="mt-5 grid max-w-2xl grid-cols-2 gap-2 sm:grid-cols-4">
+              {/* Кнопки одной ширины в два ряда по две: на широком экране
+                  заголовок живёт в узкой левой колонке, и четыре в ряд там
+                  не помещаются. */}
+              <nav aria-label="Разделы" className="mt-5 grid max-w-md grid-cols-2 gap-2">
                 {tiles.map((section) => (
                   <Link key={section.slug} href={`/catalog/${section.slug}`} className={SECTION_CHIP}>
                     {section.title}
